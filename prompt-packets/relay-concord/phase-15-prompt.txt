@@ -1,0 +1,68 @@
+PHASE 15 — CONFLICTS, ESCALATION, ADVERSARIAL VERIFICATION.
+
+Phase 14 is complete and verified: queued runs, grounded patches with mandatory mechanical evidence validation, spend
+caps, per-run cost.
+
+This phase implements the behavior that makes the whole system defensible: sometimes the responsible action is to refuse
+to edit, name the owner, and say what is missing. Escalation is a first-class success, not an error path.
+
+SCOPE
+
+1. Conflict detection — `concord-core/src/conflicts.ts`, all five kinds from `contracts.md` §15:
+   - `authority_disagreement` — two authoritative-tier claims disagree on the value;
+   - `insufficient_evidence` — the required evidence for a patch cannot be resolved;
+   - `ambiguous_ownership` — two T5_HUMAN records claim the same key with different values, or the doc unit's owner and
+     the fact's owner disagree on a change that affects both;
+   - `temporal_contradiction` — a T4_RELEASE record asserts a transition inconsistent with the current authoritative
+     value;
+   - `circular_reference` — doc unit A cites B as the source and B cites A.
+
+2. `Conflict` records — verbatim disagreeing claims (≥ 2), `missing_information` (what would resolve it),
+   `likely_owner` (from `FACT_REGISTRY`), and a `suggested_question` phrased as something you would actually put to that
+   owner. `resolution` is typed `z.null()` and stays null. Do not widen it. The type system must forbid Concord from
+   inventing a resolution (invariant I7).
+
+3. Conflict blocking — a conflict on a fact key blocks every impact on that key in that run. Those impacts get
+   `disposition: "unresolved"` with the conflict attached, and appear in the report with the conflict, not hidden behind
+   it.
+
+4. Adversarial verification — for every non-deterministic finding, before it is surfaced:
+   - PROPOSER emits `{claim, evidence[], proposed_action}` via structured output;
+   - FALSIFIER is a SEPARATE call with no shared context and no sight of the proposer's reasoning, instructed to REFUTE
+     the claim given the same evidence, defaulting to `refuted: true` under uncertainty;
+   - a refuted finding is recorded with `disposition: "suppressed"` AND its refutation text — never deleted. The public
+     UI shows suppressed findings; that is what makes the failure modes inspectable (`constraints.md` §AP6).
+   Batch falsification at ≤ 5 concurrent (Workers allows 6 simultaneous outgoing connections).
+
+5. Escalation UI — a page per run listing conflicts with: the disagreeing claims side by side with their tiers and
+   locators, what information is missing, the likely owner, and the suggested question. Plus the suppressed-findings
+   list with refutations.
+
+6. PLANT THE FIXTURE — add to `fixtures/eval/defects.json` at least: one `CONTRADICTION` where a T4 release record
+   asserts a platform enablement that T3 config denies; one `insufficient_evidence` case; one `ambiguous_ownership`
+   case with two competing decision records. Record their `expected_action` as `UNRESOLVED_CONFLICT`.
+
+TESTS (required)
+- `concord-core/test/conflicts.test.ts`: the T3-vs-T4 contradiction produces `UNRESOLVED_CONFLICT`, NO patch, a named
+  owner, and non-empty `missing_information`; `resolution === null` in every case (invariant I7); all five conflict kinds
+  are reachable.
+- `concord-core/test/falsification.test.ts`: a refuted finding is retained as `suppressed` with refutation text and does
+  not appear as an active finding; concurrency never exceeds 5.
+- A test that a conflict blocks every impact on its fact key in that run, and that those impacts still appear with a
+  terminal disposition.
+- Re-run Phase 10, 12, 13, 14 tests unchanged.
+
+HARD RULES
+- Concord never resolves a conflict. Not with a heuristic, not with a tiebreak it invented, not with "the newer source
+  wins". If a future phase adds human resolution, it adds a separate record authored by a human — it does not widen
+  `Conflict.resolution`.
+- Suppressed findings are stored and displayed, never deleted.
+- The falsifier must not see the proposer's reasoning. Separate call, separate context.
+- Do not build the evaluation harness yet — but note that this phase's outputs are what it will score.
+
+DONE WHEN
+The planted contradiction escalates correctly with owner and information gap; at least one suppressed finding is visible
+with its refutation; all five conflict kinds are exercised; no conflict is ever auto-resolved.
+
+Report: the escalation record verbatim for the planted contradiction, including the suggested question; one suppressed
+finding with its refutation; and the suppression rate you observed across a full run.

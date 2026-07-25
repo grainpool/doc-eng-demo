@@ -1,0 +1,12 @@
+# Local agent settings
+.claude/settings.local.json
+
+# Redundant packaging of prompt-packets/relay-concord/ — regenerate on demand
+prompt-packets/*.zip
+
+# Node / build (for when the monorepo lands in phase 01)
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+*.log

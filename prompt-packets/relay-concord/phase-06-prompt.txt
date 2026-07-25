@@ -1,0 +1,52 @@
+PHASE 06 — ARTIFACTS, PROVENANCE, LINEAGE.
+
+Phase 05 is complete and verified: analysis sessions work end to end, the NL layer routes and refuses correctly.
+
+Make every analysis output a durable artifact whose origin is fully answerable. This is the phase that creates most of
+Concord's later documentation requirements, so provenance completeness matters more than UI polish.
+
+SCOPE
+
+1. Persistence — for every completed turn, persist each output:
+   - plots → R2 as PNG at `artifacts/{projectId}/{artifactId}/{name}.png`;
+   - tables → R2 as CSV;
+   - scalar results → R2 as JSON;
+   - an `operation_record` artifact capturing the resolved `{operation_id, params}` (this is the "recorded operation
+     definition" the product needs — NOT generated code).
+   Insert `artifact` + `artifact_provenance` rows per `contracts.md` §6.
+
+2. Provenance — captured VERBATIM from the `KernelResult` of that turn: `runtime_versions` and
+   `kernel_image_digest` come from the same response that produced the numbers. Never re-query `/versions` when writing
+   the row (`constraints.md` §AP4). Also record `source_file_id`, `source_file_sha256`, `operation_id`, `params`,
+   `params_hash`, `session_id`, `turn_id`, `generated_at`, `duration_ms`.
+
+3. Lineage — `derived_from_artifact_ids` supports artifact → artifact chains. When a turn's input is a previous turn's
+   derived table (e.g. filter → correlate), record the link. Build `GET /api/artifacts/:id/lineage` returning the graph
+   and a simple, readable lineage view in the UI (a nested list is fine; do not build a graph-layout engine).
+
+4. Retention — derive `retention_expires_at` from the `retention.artifact.days` fact. Do NOT implement deletion; the
+   product FACT and the displayed expiry are what matter for documentation. Show the expiry on the artifact detail page.
+
+5. UI — artifact list per project, artifact detail answering plainly: which source file, which operation, which
+   parameters, which package versions, when, and how long it took. Download endpoints for each artifact kind.
+
+TESTS (required)
+- `relay-api/test/provenance.test.ts`:
+  * inserting an artifact without complete provenance FAILS (assert the throw — schema `NOT NULL` plus a Zod parse at
+    the insert site);
+  * provenance `runtime_versions` equals the mocked kernel response for that turn, not a later lookup;
+  * a two-step chain (filter → correlate) produces correct `derived_from_artifact_ids` and the lineage endpoint resolves
+    it.
+- A test that `retention_expires_at` changes when the `retention.artifact.days` fact changes.
+
+HARD RULES
+- No artifact row may exist without complete provenance (invariant I2). Enforce in the schema AND at the insert site.
+- Provenance is captured at computation time, never reconstructed.
+- No CLI, no copy-registry formalization, no releases in this phase.
+
+DONE WHEN
+An artifact detail page answers all five provenance questions from the deployed app; a filter → correlate chain shows
+its lineage; the incomplete-provenance test proves insertion is impossible.
+
+Report: the artifact kinds you persist, a sample provenance record verbatim, and the lineage output for the two-step
+chain.

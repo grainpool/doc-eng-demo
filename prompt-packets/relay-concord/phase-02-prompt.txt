@@ -1,0 +1,59 @@
+PHASE 02 — CONTRACTS, FACT REGISTRY, D1 SCHEMA.
+
+Phase 01 is complete and verified: the walking skeleton is deployed and all five dependency checks pass. Read
+`COMPAT.md` before starting — it may change details of what follows.
+
+Build the freeze surface: the `@relay/contracts` package and the Relay database schema. Nothing user-facing.
+
+SCOPE
+
+1. `packages/contracts` — depends on `zod` ONLY (`constraints.md` §G3). Export:
+   - ID helpers: prefixed ULIDs per `contracts.md` §2 (`prj`, `fil`, `ses`, `trn`, `art`, `rel`, `run`, `imp`, `pat`,
+     `cfl`) plus the deterministic doc-unit id builder/parser (`{surface}:{path}#{anchor}`).
+   - `ErrorCode` closed enum (extend Phase 01's), the error envelope schema, and the copy-id type.
+   - `FACT_REGISTRY` exactly as specified in `contracts.md` §3.1, as a frozen `const`. Templated families
+     (`analysis.operation.<op_id>.enabled`, `cli.command.<path>.flags`, `cli.command.<path>.summary`) get a matcher
+     function, not 40 literal keys.
+   - `FactTier`, `FactClaim`, `ProductTruthSnapshot` (§3.2).
+   - `OPERATION_IDS` (§4.1) and a per-operation params Zod schema for all eight, including the `filter_rows`
+     `Predicate` shape from §4.2. Also `DatasetRef` and `KernelResult`.
+   - Plan and platform enums; `MODEL_ID`; `RELAY_NAME`/`CONCORD_NAME` branding constants.
+   - `zodToJsonSchema(schema)` helper wrapping `z.toJSONSchema()`, used later for Anthropic `output_config.format`.
+     Structured-output JSON Schemas are always DERIVED from the Zod contract, never hand-written twice.
+
+2. D1 migration `migrations/0001_relay_init.sql` for: `project`, `file`, `analysis_session`, `session_turn`,
+   `artifact`, `artifact_provenance`, `model_call`, `copy_entry` (staged for Phase 08). Forward-only; never edit an
+   applied migration afterwards (`constraints.md` §G6). Booleans are `INTEGER 0/1` — normalize at the repository layer
+   so `0`/`1` never leaks into a contract type. Index the columns the later phases read: `file.project_id`,
+   `artifact.project_id`, `artifact_provenance.artifact_id`, `session_turn.session_id`, `model_call.run_id`.
+   `artifact_provenance` columns are `NOT NULL` — provenance completeness must be enforced by the schema, not a comment.
+
+3. Tier resolvers — `packages/relay-api/src/truth/`. One module per tier with a common interface
+   `resolve(env): Promise<FactClaim[]>`. In this phase implement T1_SCHEMA (import the enforcement constants — create
+   `relay-api/src/limits.ts` now with the size/type/row limits as the single enforcement point) and T3_CONFIG (create
+   `packages/contracts/src/product-config.ts` with terminology, platform availability, plan gating, retention, and
+   feature flags). T0, T2, T4, T5 return `[]` with a `pending` marker.
+
+4. `GET /api/product-truth` returning a valid `ProductTruthSnapshot` assembled from the resolvers, with
+   `relay_contracts_version` from the package version.
+
+TESTS (required — `validation.md` §2)
+- `contracts/test/facts.test.ts`: every registry key maps to exactly ONE tier; no duplicate keys; templated matchers
+  resolve the expected keys and reject near-misses; `ProductTruthSnapshot` round-trips through Zod.
+- A test that every `FactClaim` returned by `/api/product-truth` has a non-empty, plausibly-resolvable `locator`.
+
+HARD RULES
+- No fact may be authoritative in two tiers. Conflicts in this system must be DATA (two sources disagreeing at runtime),
+  never a schema ambiguity. If you find yourself wanting two tiers for one key, the fact is modelled wrong — split it.
+- Do not create one YAML that holds all product truth. The six-tier split is the whole point (`constraints.md` §AP1).
+  T1 lives in code that actually enforces the limit; T3 lives in declared config; T0 will come from the running
+  container; T2 from the live CLI tree.
+- Do not build any UI, upload, session, or CLI behavior. Do not touch Concord.
+- `packages/contracts` gains no dependency other than `zod`.
+
+DONE WHEN
+`pnpm --filter @relay/contracts test` is green, `GET /api/product-truth` returns real T1 + T3 claims with locators and
+empty-but-marked T0/T2/T4/T5, and the migration applies cleanly to an empty D1.
+
+Report: the final fact-key list you registered, which tier each family landed in, and any key from `contracts.md` §3.1
+you had to reshape and why.

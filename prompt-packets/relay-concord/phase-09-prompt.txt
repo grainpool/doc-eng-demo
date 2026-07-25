@@ -1,0 +1,52 @@
+PHASE 09 — RELAY HARDENING + CONTRACT FREEZE. This phase ends with a gate.
+
+Phase 08 is complete and verified: the copy registry is formal, six release records and three decision records exist,
+and `/api/product-truth` returns all six tiers.
+
+Relay is now feature-complete as a FIXTURE. This phase makes it stable enough that Concord can be built against it
+without the ground moving. Do not add product features.
+
+SCOPE
+
+1. Test completion — every route and every kernel operation has a test. Cover the error paths, not just happy paths:
+   kernel unavailable, model refusal, schema-invalid translation, over-limit upload, unsupported extension, unknown ids,
+   malformed multipart. Add the remaining edge cases from `validation.md` §7 (Relay section) that earlier phases skipped:
+   BOM, CRLF, duplicate column names, unicode column names, a column named like a pandas method, the `filter_rows` row
+   cap.
+
+2. Seed fixtures — `pnpm seed:relay` producing byte-identical state from an EMPTY D1 + R2: 3 projects, 5 files
+   (including one deliberately awkward CSV), 4 analysis sessions covering at least five different operations, and
+   ~12 artifacts including one two-step lineage chain. This is what makes the public demo reproducible and the later
+   eval numbers meaningful.
+
+3. Spend and rate limits on Relay's model paths — per-day model spend cap and a per-IP request rate limit on the NL
+   translation and narration routes, enforced from `model_call` rows BEFORE the call. On cap exhaustion return a clear
+   error, never a silent fallback.
+
+4. Package READMEs for `contracts`, `relay-api`, `relay-web`, `relay-cli`, `relay-kernel`: what it is, how to run it,
+   what it deliberately does not do.
+
+5. FREEZE — write `CONTRACTS-FROZEN.md` at the repo root stating exactly what Concord may rely on:
+   - the two permitted endpoints (`GET /api/product-truth`, `GET /api/copy-registry`) and their response schemas;
+   - the `FACT_REGISTRY` contents and tier assignments;
+   - `fixtures/cli-introspection.json` as the CLI surface;
+   - the `@relay/contracts` version;
+   - the rule that any change from here needs a minor version bump and an entry in this file.
+   Then bump `@relay/contracts` to `1.0.0` and `git tag relay-contracts-v1`.
+
+TESTS (required)
+- `relay-api/test/seed-determinism.test.ts`: seed twice from empty and assert identical `ProductTruthSnapshot` and
+  identical artifact/provenance rows, modulo timestamps and ids.
+- A test asserting the spend cap blocks the call rather than failing after it.
+
+HARD RULES
+- No new product features. If something feels missing, note it in `NOTES.md`; Relay is a fixture, not a product roadmap.
+- The tag and `CONTRACTS-FROZEN.md` are the deliverable. Do not skip them because "the code is the contract".
+- Do not begin any Concord work in this phase, including scaffolding.
+
+DONE WHEN
+`pnpm test` fully green; seeding twice from empty produces identical state; `CONTRACTS-FROZEN.md` exists and is precise;
+`relay-contracts-v1` is tagged; all five package READMEs exist.
+
+Report: the test count and coverage for `relay-api` and the kernel; the exact contents of `CONTRACTS-FROZEN.md`; and
+anything you had to change in `@relay/contracts` at the last moment, since that is the thing being frozen.

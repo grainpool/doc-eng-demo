@@ -1,0 +1,52 @@
+PHASE 07 — CLI + INTROSPECTION.
+
+Phase 06 is complete and verified: artifacts, complete provenance, lineage.
+
+Build Relay's second real product surface. The CLI matters here for two reasons: it is another audience with its own
+documentation, and its introspection output becomes the AUTHORITATIVE source for CLI mechanical facts (tier T2).
+
+SCOPE
+
+1. `packages/relay-cli` — `commander`, program name `relay`, talks to the deployed Relay HTTP API. Commands per
+   `contracts.md` §7:
+   `relay projects list|create|show`, `relay files list|upload|show`, `relay sessions list|create|run`,
+   `relay artifacts list|show|download`, `relay config show|status`, `relay introspect`.
+   Global flags: `--json`, `--api-url`, `--token`, `--no-color`, `--verbose`.
+   Keep it SMALL — do not add commands beyond this list.
+
+2. Real `--help` at every level, with a summary, usage line, flag table, and at least one example per command. Real
+   error behavior against the live API, with the contractual exit codes:
+   `0` ok · `1` unexpected · `2` usage error · `3` auth failure · `4` not found · `5` validation failure ·
+   `6` remote unavailable.
+
+3. `relay introspect [--json]` — the T2 authority source. It MUST be derived by walking the live `commander` command
+   tree at runtime: command paths, summaries, the exact usage string `--help` prints, flags (name, alias, type,
+   required, default, description), exit codes, and examples. Shape per `contracts.md` §7.1.
+   A hand-written manifest is forbidden (`constraints.md` §AP9) — if introspection can drift from `--help`, the claim
+   that the CLI is authoritative becomes false and Concord will generate confidently wrong documentation.
+
+4. Capture the introspection into `fixtures/cli-introspection.json` via a CI step (`pnpm cli:introspect > fixtures/...`)
+   and commit it. Wire the T2_CLI resolver in `relay-api/src/truth/` to read that fixture, producing
+   `cli.command.<path>.flags` and `cli.command.<path>.summary` facts. Fail CI if the committed fixture is stale.
+
+TESTS (required)
+- `relay-cli/test/introspect-parity.test.ts`: for EVERY command, `introspect --json`'s `usage` equals what `--help`
+  prints. This is invariant I3 and it is the point of the phase.
+- `relay-cli/test/exit-codes.test.ts`: each contractual exit code is produced by its triggering condition (bad flag,
+  bad token, unknown id, unreachable API, invalid input).
+- A test asserting `introspect --json` validates against the `CliIntrospection` Zod schema.
+
+HARD RULES
+- No CLI documentation pages in this phase. Generating those is Concord's job in Phase 13; writing them by hand now
+  would create exactly the drift the project exists to demonstrate.
+- Introspection is derived from the live tree, never authored.
+- Keep the command surface small (`constraints.md` §1).
+- Windows: the CLI must work under PowerShell. No POSIX-only assumptions in argument handling or paths.
+
+DONE WHEN
+`relay --help`, `relay projects --help`, and `relay projects list --help` are all real and distinct; the four error
+conditions produce the right exit codes; `relay introspect --json | jq` validates; the parity test passes; T2 facts
+appear in `/api/product-truth`.
+
+Report: the full command tree, the four exit-code cases you verified, and a sample of the introspection JSON for one
+command.

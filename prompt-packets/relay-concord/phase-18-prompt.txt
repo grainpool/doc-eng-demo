@@ -1,0 +1,69 @@
+PHASE 18 — CLOUDFLARE ACCESS + LIVE PRIVILEGED RUNS.
+
+Phase 17 is complete and verified: the Change Lab replays five recorded runs publicly with zero model calls.
+
+Gate mutation on verified identity — at the BACKEND, not in the UI. Read `security.md` §2 and §4 in full before writing
+any code.
+
+I will supply: `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` after I create the Access application. If you do not have them,
+stop and ask.
+
+SCOPE
+
+1. The Access application — I configure it; you document the exact steps in `SECURITY.md`:
+   Self-hosted app on `concord.<domain>` covering `/api/admin` and `/admin`; policy Action `Allow`, rule type `Include`,
+   selector "Emails ending in", value `@anthropic.com`; login method One-time PIN (10-minute expiry).
+   Document the misconfiguration to avoid: "One-time PIN" must NOT appear as an Include rule under Login Methods — that
+   would admit every OTP user. OTP is the authentication method; the email-domain rule is the authorization.
+
+2. `requireAccessIdentity` middleware — `packages/concord-api/src/middleware/access.ts`, implemented as in
+   `security.md` §2 with `jose`:
+   - `DEMO_ADMIN_ENABLED !== "true"` → `notFound()`. Default-off, so a misconfigured Access app cannot expose a live
+     mutation path.
+   - missing `Cf-Access-Jwt-Assertion` → 403. There is NO bypass branch, and no `if (dev) skip` in the production bundle.
+   - `jwtVerify` against `https://${ACCESS_TEAM_DOMAIN}/cdn-cgi/access/certs` with `issuer` AND `audience` both checked.
+     Signature-only verification is insufficient — any Access team's token would pass.
+   - the email claim re-checked for `@anthropic.com` in code, even though the policy enforces it. Two independent gates.
+   - identity stored on the context for the audit log.
+   Local development uses a separate dev-only middleware selected by build target; assert the production bundle does not
+   contain it.
+
+3. Mutation allowlists — implement `packages/contracts/src/change-lab.ts` with the NINE fact keys and their closed value
+   sets exactly as listed in `security.md` §4.1. A key not in the table is rejected with `MUTATION_NOT_ALLOWED` BEFORE
+   value validation. No key patterns, no wildcards, no free-text fact values.
+   Doc-body mutations: only ids in `fixtures/changelab/editable-units.json`, ≤ 8192 bytes, and the content filter from
+   §4.2 — reject `<script>`, `<iframe>`, `<object>`, `<embed>`, `on*=` attributes, `javascript:` URIs, MDX expression
+   braces, `import`/`export` statements, and any JSX component tag outside a small allowlist. MDX is executable; treat a
+   body edit as untrusted code input.
+
+4. Live runs — `POST /api/admin/changelab` with `mode: "live"`: validate the mutation, apply it to a working copy (never
+   to the deployed Relay config directly), enqueue a real run, and stream progress through the SAME renderer as replay.
+   Enforce: one concurrent live run (a D1 lock row; a second request is rejected naming the in-flight run id); ≤ 5 runs
+   per identity per hour; admin request body ≤ 16 KB.
+
+5. `audit_log` — append-only, one row per admin action: timestamp, Access email, mutation, run id, outcome, PR url
+   (null until Phase 19). Public view redacts the email's local part to the domain only.
+
+TESTS (required)
+- `concord-api/test/access.test.ts`: missing header → 403; self-signed token → 403; wrong `aud` → 403; wrong `iss` → 403;
+  expired → 403; valid token with a non-`@anthropic.com` email → 403; `DEMO_ADMIN_ENABLED` unset → 404 (invariant I12).
+  Generate the invalid tokens in the test with `jose` — do not skip the forged-token cases.
+- `concord-core/test/mutation-allowlist.test.ts`: off-allowlist key rejected before value validation; off-enum value
+  rejected; oversized body rejected; each forbidden content pattern rejected individually.
+- A test that a second concurrent run is rejected with the in-flight run id.
+- A grep-based test asserting the production bundle contains no dev-auth bypass.
+
+HARD RULES
+- A hidden route is not authorization. The header's presence is not authorization. Verify the signature, `aud`, `iss`,
+  expiry, and domain (`constraints.md` §AP10).
+- The public demo must remain fully useful with `DEMO_ADMIN_ENABLED` unset. Re-run the Phase 17 manual checklist to
+  confirm you did not break it.
+- No GitHub writes in this phase. A live run produces patches and stores them; publishing is Phase 19.
+- Do not widen the mutation allowlist to make a demo scenario nicer. Nine keys, closed values.
+
+DONE WHEN
+Every 403 case in the test above passes; a privileged user can trigger a live run and watch it; an off-allowlist key and
+a `<script>`-containing body are both rejected; concurrency and rate limits hold; `audit_log` records the identity.
+
+Report: each rejection case with the observed status and error code; the audit log row for a successful live run; and
+confirmation that the public demo still works with admin disabled.

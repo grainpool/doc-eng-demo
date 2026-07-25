@@ -1,0 +1,56 @@
+PHASE 16 — EVALUATION HARNESS. Measure it, including the failures.
+
+Phase 15 is complete and verified: conflicts escalate with owners and information gaps, adversarial falsification
+suppresses findings without deleting them.
+
+Replace every subjective claim about this system with a measurement. Read `validation.md` §6 before starting — it defines
+the metrics and the two hard gates.
+
+SCOPE
+
+1. Complete the defect corpus — `fixtures/eval/defects.json` reaches at least 36 entries covering ALL TWELVE classes
+   from `contracts.md` §16 (`STALE_VALUE`, `WRONG_PLATFORM`, `TERM_DRIFT`, `BROKEN_REF`, `DUP_GUIDANCE`,
+   `MISSING_PREREQ`, `STALE_CLI`, `CONTRADICTION`, `UNSUPPORTED_CLAIM`, `IA_PROBLEM`, `STALE_INPRODUCT_COPY`,
+   `UNDECLARED_FACT_REF`), each with `doc_unit_id`, `fact_key`, `expected_detection`, `expected_action`, and notes.
+   At least FOUR entries have `expected_detection: false`.
+   Note: `BROKEN_REF` validation is REPO-INTERNAL only — resolve links and anchors within the estate. Do not fetch
+   external URLs from any server component (`security.md` §1).
+
+2. `pnpm eval` — a runner that:
+   - loads a pristine copy of the estate plus the defect corpus,
+   - runs the full pipeline,
+   - matches findings to seeded defects by `(doc_unit_id, fact_key, class)` with an explicit, documented matching rule,
+   - scores the metrics from `validation.md` §6,
+   - writes `eval-report.json` and a human-readable `eval-report.md`, both committed.
+
+3. Metrics — detection precision; detection recall overall AND per class; remediation correctness (does the patch diff
+   match the expected fix); false-positive rate against the `expected_detection: false` items; escalation
+   appropriateness; provenance completeness; falsification suppression rate; and **unsafe autofix count**.
+
+4. TWO HARD GATES — the phase fails if either is violated:
+   - `unsafe_autofix_count === 0`: no patch was auto-applied on a defect whose `expected_action` was not
+     `DETERMINISTIC_REGEN` (invariant I14);
+   - `provenance_completeness === 1.0`: every patch offered had at least one resolvable evidence item.
+
+5. Determinism — deterministic classes must score identically across runs. For model-dependent classes, run N=3 and
+   report mean and spread rather than a single number. State the variance in the report; do not hide it.
+
+6. "What the system gets wrong" — a page in `concord-web` generated FROM the report: the actual misses, the actual false
+   positives, and a short analysis of why each happens. Link each entry to the doc unit and the run that demonstrates it.
+
+HARD RULES — read these twice
+- Do NOT tune the fixture to improve a score. Do NOT delete or weaken a defect the system misses. Do NOT relax a
+  matching rule to convert a miss into a hit (`constraints.md` §AP7).
+- The report must show AT LEAST TWO classes with recall below 100%. If everything passes, the harness is measuring the
+  implementation instead of the problem — add harder defects until it isn't. A perfect scorecard is a failing phase.
+- Misses become entries on the failures page, with analysis. That page is a deliverable, not an apology.
+- If you discover a real bug while building the harness, fix the bug and note it — but re-run the eval afterwards and
+  report the before/after honestly.
+
+DONE WHEN
+`pnpm eval` runs reproducibly and writes both reports; both hard gates pass; at least two classes show sub-100% recall
+and appear on the failures page with specific analysis; the false-positive rate is computed against the
+`expected_detection: false` items.
+
+Report: the full metric table; per-class recall; the specific misses and false positives with your explanation of each;
+and the model-call count and cost of one full eval run.

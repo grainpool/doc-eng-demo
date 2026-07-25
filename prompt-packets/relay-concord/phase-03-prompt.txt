@@ -1,0 +1,53 @@
+PHASE 03 — PROJECTS, FILES, LIMITS, UI SHELL.
+
+Phase 02 is complete and verified: contracts, fact registry, D1 schema, and `/api/product-truth` with T1 + T3 tiers.
+
+Build Relay's workspace surface. This is the first phase with a user-visible product.
+
+SCOPE
+
+1. Projects — `POST /api/projects`, `GET /api/projects`, `GET /api/projects/:id`. Fields: id, name, description,
+   `state` (`active` | `archived`), created/updated. There is one demo workspace; a signed cookie
+   (`RELAY_DEMO_COOKIE_SECRET` via `wrangler secret put`) identifies the demo user. That is the entire auth model —
+   do not build signup, sessions, or roles (`constraints.md` §1).
+
+2. File upload — `POST /api/projects/:id/files` (multipart). In order:
+   - validate extension against the supported-type facts, and size against `limit.upload.csv.max_bytes`, using
+     `relay-api/src/limits.ts` as the SINGLE enforcement point created in Phase 02;
+   - on rejection return `{ error: { code, copy_id, field? } }` — never a hand-written sentence;
+   - stream to R2 at `files/{projectId}/{fileId}/{filename}`;
+   - compute sha256, byte size, and (by parsing the header + counting rows with a streaming reader, not by loading the
+     whole file) `column_count` and `row_count`;
+   - insert the `file` row. Also `GET /api/projects/:id/files` and `GET /api/files/:id`.
+
+3. Copy registry, first pass — `packages/relay-web/src/copy/*.json` plus a `t(id, vars?)` helper. Entries needed now:
+   empty states, the uploader's help text, both rejection messages, project labels. Interpolation for the human-readable
+   size limit. The formal `CopyEntry` schema and the `references_facts` field arrive in Phase 08; for now each entry
+   needs at least `id`, `kind`, `text`, `surface_location`. Every user-visible string in `relay-web` must already come
+   from here.
+
+4. UI — React SPA screens: project list, create-project, project detail with file list and uploader. Plain, legible,
+   unstyled beyond basic layout. Include real empty, loading, and error states — they are documentation surfaces later,
+   not polish. Do not invent a brand, logo, or colour system; if I have not given you visual preferences, keep it
+   neutral.
+
+TESTS (required)
+- `relay-api/test/files.test.ts`: over-limit upload rejected with a `copy_id`; unsupported extension rejected with a
+  DIFFERENT code; a valid upload records sha256, byte size, row count, and column count correctly for a fixture CSV.
+- `relay-web/test/no-literal-copy.test.ts`: a source scan over `relay-web` finds no user-visible literal in JSX text
+  nodes. Make it fail first on a deliberately planted literal, then remove the literal.
+- Edge cases from `validation.md` §7 that apply now: empty CSV, single-column CSV, duplicate column names, BOM, CRLF
+  line endings (I am on Windows and will produce these), a quoted value containing a comma.
+
+HARD RULES
+- The size limit is enforced in exactly one place. Later phases depend on there being one enforcement point that is
+  simultaneously the authoritative source of the `limit.upload.csv.max_bytes` fact.
+- No hardcoded user-visible strings anywhere in `relay-web` (`constraints.md` §AP8).
+- No analysis, no artifacts, no CLI, no chat. Not yet.
+- Do not add an ORM. `env.DB.prepare()` with readable SQL (`constraints.md` §1).
+
+DONE WHEN
+Deployed: create a project, upload a valid CSV, see it listed with correct row/column counts. An 11 MB file and a `.pdf`
+are each rejected with distinct codes and registry-sourced messages. `pnpm test` green.
+
+Report: the copy ids you created, and the exact rejection behavior for both failure cases.

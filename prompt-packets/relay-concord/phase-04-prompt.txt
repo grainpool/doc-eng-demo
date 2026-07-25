@@ -1,0 +1,69 @@
+PHASE 04 — ANALYSIS KERNEL: eight bounded operations in the container. No code-execution surface.
+
+Phase 03 is complete and verified: projects, file upload with enforced limits, copy-sourced messages, UI shell.
+
+This is the riskiest product component and it gets its own phase, verified by `curl` before any UI touches it. Read
+`contracts.md` §4 and `security.md` §3 in full before starting.
+
+SCOPE
+
+1. Kernel operations — implement all eight from `contracts.md` §4.1 in `packages/relay-kernel`, each as
+   `POST /op/{operation_id}`:
+   `inspect_schema`, `summary_statistics`, `filter_rows`, `group_aggregate`, `correlation_matrix`,
+   `linear_regression` (statsmodels OLS: coefficients, std errors, p-values, r², adj-r², confidence intervals),
+   `distribution_test` (`shapiro` | `normaltest` | `ttest_ind` | `mannwhitneyu`), `plot`
+   (`histogram` | `scatter` | `line` | `bar` | `box` | `heatmap` → PNG via the `Agg` backend).
+   Operation ids are a CLOSED ENUM. An unknown id is a 404 with no side effect.
+
+2. `filter_rows` is the arbitrary-code firewall. Structured predicates only, per `contracts.md` §4.2. Build the boolean
+   mask with pandas comparison operators. Do NOT call `DataFrame.query()`, `eval()`, `exec()`, `pd.eval`, or any
+   string-to-code path. Put a comment at that code stating it is a security property, not a style choice. Validate
+   `column` against the dataset's actual columns and `op` against the enum; reject anything else with a 400.
+
+3. Dataset handling — the kernel receives a `DatasetRef` (presigned R2 URL with ≤ 60 s TTL, `format`, `sha256`,
+   `max_bytes`). It downloads, VERIFIES the sha256 (mismatch → 400), and enforces `max_bytes` ON READ rather than after
+   parsing. Stateless: no writes outside `/tmp`. No outbound request to any host other than the presigned URL's host.
+
+4. Introspection — `GET /versions` (already exists; keep it authoritative) and `GET /operations` returning the operation
+   catalog: `{ id, summary, params_schema, returns, enabled }`. The `params_schema` must be generated from the same
+   validation models the handlers use, so the catalog cannot drift from behavior. This catalog feeds generated CLI/API
+   docs later.
+
+5. Worker side — `packages/relay-api/src/kernel/`:
+   - `AnalysisKernel` TypeScript interface, and `ContainerKernel` implementing it via
+     `getContainer(env.KERNEL, sessionId).fetch(...)`. The interface exists so the kernel is swappable
+     (`research-findings.md` §2 contingency) — do NOT build a second implementation.
+   - Presigned R2 GET URL generation, ≤ 60 s TTL, single object key, GET only.
+   - Param validation against the operation's Zod schema BEFORE the kernel call. Two independent validations (Worker
+     and kernel); the kernel does not trust the Worker.
+   - `POST /api/internal/kernel/op/:id` — a thin proxy for testing this phase. 8 s hard timeout, one retry, 503 with
+     `error.analysis.kernel_unavailable` on failure.
+
+6. Wire T0_RUNTIME facts for real into `/api/product-truth`: `runtime.python.version`, `runtime.package.*.version`,
+   `analysis.operation.<id>.enabled`, plus the kernel image digest as the locator. These facts come from calling
+   `/versions` and `/operations` at request time — this is the tier that proves runtime state can be authoritative.
+
+TESTS (required)
+- `relay-kernel/tests/test_operations.py`: each of the eight against a committed fixture CSV, compared to committed
+  expected output within a stated numeric tolerance. Include the regression coefficients and p-values explicitly.
+- `relay-kernel/tests/test_no_code_surface.py`: enumerate the FastAPI routes and assert only the documented ones exist;
+  assert no handler parameter accepts a filesystem path, module name, expression, or format string; assert `filter_rows`
+  rejects an operator outside the enum; assert the source contains no `eval`/`exec`/`query(`.
+- `relay-api/test/kernel-proxy.test.ts`: sha256 mismatch → 400; oversized dataset → 400; unknown operation → 404;
+  kernel unavailable → 503 with the right copy id.
+- Manually verify from inside the container that a fetch to an unrelated host FAILS, and record the result in
+  `COMPAT.md`.
+
+HARD RULES
+- No endpoint anywhere accepts a URL to fetch, a file path, or code. Ever. (`security.md` §1, §3.)
+- Pin every Python dependency with `==`. Version drift would silently change a product fact.
+- No UI, no session model, no natural-language layer, no artifact persistence in this phase.
+- Do not implement a second kernel backend.
+
+DONE WHEN
+All eight operations return correct results through the Worker proxy against the fixture CSV; `/operations` matches the
+contract; T0 facts appear in `/api/product-truth` with real versions and the image digest; route-enumeration and
+no-code-surface tests pass.
+
+Report: the eight operations with their measured latency, the exact pinned package versions, and the observed result of
+the container egress test.

@@ -1,0 +1,68 @@
+PHASE 13 — DETERMINISTIC RECONCILIATION AND GENERATORS. Still no AI patching.
+
+Phase 12 is complete and verified: full projection set, normalization, authority arbitration, fact-graph explorer.
+
+Make everything that is mechanically resolvable resolve mechanically — and only that. This ordering is structural: after
+this phase, the AI path in Phase 14 can only ever see impacts that deterministic logic could not handle
+(`constraints.md` §G16).
+
+SCOPE
+
+1. Full classification — implement all six rules from `architecture.md` §6.1 in `concord-core/src/classify.ts`, in
+   order, first match wins. Record `classification_rule` (the rule number) on every impact so a reviewer can audit the
+   decision without reading code. Rules 1, 4, and 5 now become reachable: rule 1 records an
+   `UNRESOLVED_CONFLICT` impact (the conflict machinery itself is Phase 15 — here it is enough to classify and block),
+   rules 4 and 5 mark impacts for the AI paths without invoking them.
+
+2. Impact `explanation` for every class — naming the fact, the authoritative source and locator, the doc unit, and the
+   relationship. Not a restatement of the action.
+
+3. Terminology closure — a term rename must also impact units that use the OLD term, including in headings, link text,
+   and anchors. Occurrences in URLs and anchors must be routed to `EDITORIAL_REVIEW`, never rewritten deterministically:
+   changing an anchor breaks inbound links, which is an editorial decision (`validation.md` §7).
+
+4. Deterministic generators — `concord-core/src/generators/`, each pure and idempotent
+   `generate(facts, inputs) => FileDiff[]`:
+   - feature-availability matrix (platform × feature);
+   - plan-gating table;
+   - the CLI reference pages, from `fixtures/cli-introspection.json` — commands, flags, defaults, usage, exit codes;
+   - structured metadata fragments referenced from `docs.json` via `$ref`;
+   - the frontmatter `description` fields for pages whose description states a fact (these feed Mintlify's generated
+     `llms.txt`);
+   - a changelog entry generator from release records.
+   Every generated file carries the marker header from `contracts.md` §13.
+
+5. Hand-edit detection — when a generated file's content differs from the generator's output, overwrite it and record a
+   `generated_file_hand_edited` warning on the run. This is documented behavior, not a bug.
+
+6. `undocumented_fact` findings — a fact with zero projections is surfaced as a finding with its owner.
+
+7. Run report UI — group impacts by action class; show `classification_rule`, explanation, and diff per impact; show
+   warnings and undocumented facts.
+
+TESTS (required)
+- `concord-core/test/generators.idempotent.test.ts` (invariant I8): every generator produces byte-identical output
+  across two runs.
+- `concord-core/test/classify.test.ts`: all six rules fire on crafted inputs; a `model_extraction` projection can NEVER
+  yield `DETERMINISTIC_REGEN` (invariant I5 — assert the guard, not the convention); no generator ever emits a path
+  matching `llms.txt` or `llms-full.txt` (guardrail G7).
+- A test that a term rename produces an `EDITORIAL_REVIEW` impact for an anchor/URL occurrence and a
+  `DETERMINISTIC_REGEN` or `GROUNDED_PATCH` impact for prose occurrences.
+- A test that hand-editing a generated file yields the warning and an overwrite.
+- Re-run Phase 10 and 12 tests unchanged.
+
+HARD RULES
+- No model call in the classification step. Classification is deterministic rules; the model never decides between
+  auto-apply and escalate (`constraints.md` §AP3).
+- Generated files are never hand-patched. `adapter.patch()` throws on them.
+- Do not generate `llms.txt`.
+- Do not build the `GROUNDED_PATCH` proposal path, Queues, conflicts, or falsification. Impacts classified into those
+  buckets are recorded with `disposition: "unresolved"` for now, and that is correct — nothing is silently dropped
+  (`constraints.md` §AP6).
+
+DONE WHEN
+A change to any single fact produces correct deterministic outcomes across every generated surface, with idempotent
+output; the classification table is fully exercised by tests; hand-edit detection works; rule numbers appear in the UI.
+
+Report: for one fact change, the impact list grouped by action class with rule numbers; the generator output paths; and
+which impacts landed in the two AI buckets awaiting Phase 14.

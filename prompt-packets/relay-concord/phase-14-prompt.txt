@@ -1,0 +1,73 @@
+PHASE 14 — GROUNDED AI PATCH PROPOSALS + QUEUES.
+
+Phase 13 is complete and verified: all six classification rules, idempotent generators, deterministic reconciliation
+across every surface, and impacts correctly parked in the two AI buckets.
+
+Now build the AI paths. The defining property: a proposed patch is worthless without evidence, and no model-authored
+patch is ever applied without review.
+
+SCOPE
+
+1. Cloudflare Queues — introduce them now, for the reason stated in `research-findings.md` §1: a run makes 5–15 model
+   calls and the Worker CPU default is 30 s, while a Queue consumer gets 15 min.
+   - `POST /api/admin/runs` (unauthenticated for now; Phase 18 gates it) validates the request, writes a `queued` run,
+     enqueues, and returns the run id immediately.
+   - A consumer Worker executes the pipeline, writing a `run_step` row per step with inputs, outputs, model usage, and
+     timing. Run state lives in D1 so any past run stays publicly inspectable.
+   - `GET /api/public/runs/:id` for polling; the UI streams progress by polling.
+   - `RunStatus`: `queued → running → completed | failed | partial`. `partial` is a legitimate terminal state.
+
+2. `GROUNDED_PATCH` path — for each rule-4 impact:
+   - one Anthropic call with `output_config.format` derived from `PatchProposal` (`contracts.md` §14);
+   - inputs: the doc unit body, the fact delta, the authoritative evidence, the unit's `editorial_register`, and the
+     surface's audience. Wrap the document body as untrusted DATA (`security.md` §5);
+   - `thinking: {type: "adaptive"}`, `output_config.effort` tuned, no `temperature`/`top_p`/`top_k`/`budget_tokens`;
+   - prompt caching on the stable prefix (the fact graph context and register guidance) with volatile content — run id,
+     timestamps — strictly AFTER the last `cache_control` breakpoint. Verify `cache_read_input_tokens > 0` on a rerun.
+   - `stop_reason === "refusal"` checked before reading content; on refusal the impact becomes `EDITORIAL_REVIEW` with
+     reason `model_refusal`.
+
+3. The four validation gates, ALL mandatory before a patch is offered (`contracts.md` §14):
+   a. `evidence.length >= 1` and every locator resolves in the current snapshot. Unresolvable → DISCARD the patch and
+      reclassify the impact as `UNRESOLVED_CONFLICT`.
+   b. `introduces_no_new_facts` — run the Phase-12 extractors over `diff.after`; if a fact key appears that is not in the
+      evidence set, REJECT. This is the anti-hallucination control and it is mechanical, not model-judged
+      (`constraints.md` §AP5).
+   c. `requires_review === true` for every `model_grounded` and `model_editorial_draft` patch. There must be no code path
+      that applies one automatically.
+   d. `path_allowlisted` — check against `security.md` §4.3 (implement the allowlist/denylist in `concord-core` now,
+      even though GitHub writes arrive in Phase 19).
+   An `editorial_risk` of `structure` or `meaning` forces `EDITORIAL_REVIEW` regardless of the original classification.
+
+4. `EDITORIAL_REVIEW` drafts — for rule-5 impacts, produce a draft plus `needs_human_because`, marked review-required.
+   The draft is a suggestion for a human, never an applied change.
+
+5. Spend attribution and caps — write a `model_call` row for every call (purpose, run id, token counts including cache
+   fields). Enforce BEFORE each call: ≤ 20 calls per run, ≤ $5 per UTC day. On exhaustion end the run `partial` with
+   `reason: "budget_exhausted"`, leaving remaining impacts visible as unresolved. Show per-run estimated cost in the UI.
+
+6. UI — patch diff viewer with an evidence panel: each evidence item shows fact key, tier, locator, and value, and links
+   to its source.
+
+TESTS (required)
+- `concord-core/test/patch-validation.test.ts` (invariant I6): a zero-evidence patch is REJECTED (not warned); an
+  unresolvable locator causes discard + reclassification; a patch whose body asserts an undeclared fact key is rejected;
+  `requires_review` is true for every model-origin patch and no code path applies one.
+- `concord-api/test/run-dispositions.test.ts` (invariant I10): every impact detected in trace reaches a terminal
+  disposition — assert no impact is left without one, including on the budget-exhaustion path.
+- A test that forcing the per-run cap ends the run `partial` with the right reason.
+- A test asserting fan-out never exceeds 5 concurrent model calls.
+
+HARD RULES
+- Evidence is mandatory and mechanically verified. "The prompt says not to invent facts" is not a control.
+- No model output is ever used as a path, URL, shell argument, or SQL fragment. Paths come from the `DocUnit` id, which
+  the model does not author.
+- No conflicts machinery or adversarial falsification yet — that is Phase 15.
+- Nothing is silently dropped.
+
+DONE WHEN
+Async runs work end to end; every proposed patch carries resolvable evidence and requires review; removing an evidence
+item causes rejection; cache reads are non-zero on a rerun; per-run cost is visible; the budget path ends `partial`.
+
+Report: a full proposed patch with its evidence panel verbatim; the observed token usage and cache-read ratio for a run;
+and the behavior you saw when you forced the per-run cap.

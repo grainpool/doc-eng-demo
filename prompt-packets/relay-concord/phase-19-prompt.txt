@@ -1,0 +1,67 @@
+PHASE 19 — GITHUB APP: ephemeral branch and pull request, under four independent restrictions.
+
+Phase 18 is complete and verified: Access-gated live runs, verified JWTs, mutation allowlists, audit log.
+
+Land patches as a real pull request. Read `security.md` §1, §4.3, and §8 before starting. This is the phase where a
+mistake has consequences outside the demo, so the restrictions are layered deliberately — each one must hold on its own.
+
+I will supply: the demo repo name, the GitHub App id, the installation id, and the private key. If you do not have them,
+stop and ask. Do not proceed with a PAT as a substitute.
+
+SCOPE
+
+1. The GitHub App — I create and install it; you document the exact configuration in `SECURITY.md`:
+   - permissions: **Contents: write, Pull requests: write, Metadata: read**. Nothing else. `Pull requests: write` alone
+     cannot create a branch, which is why Contents:write is required — say so in the doc so the scope looks deliberate
+     rather than lazy.
+   - installed on **exactly one** demo repository.
+   - the demo repo contains **no `.github/workflows/` directory at all**. Deploys run from the primary repo, where this
+     App is not installed.
+   - branch protection on `main`: PR required, no force push, no deletion. This forces a Contents:write token through the
+     PR path.
+
+2. Token handling — mint an installation access token PER RUN, scoped with `repositories`/`repository_ids` to that one
+   repo, short-lived. Never return it in a response. Never log it. Never cache it beyond the run.
+
+3. Path enforcement — TWO independent checks, both must pass:
+   - in `concord-core` (pure, unit-tested): the DENYLIST is evaluated FIRST and independently, then the allowlist. A bug
+     in the allowlist must not open a hole. Allowed globs and the denylist are exactly as in `security.md` §4.3.
+   - in `concord-api`, immediately before the Octokit call, re-check every path in the commit.
+   Normalize and reject traversal variants: `..`, URL-encoded `%2e%2e%2f`, absolute paths, backslashes, unicode
+   normalization tricks, and symlink-looking names.
+
+4. Publish step — branch `concord/run-{run_id}` (never visitor-controlled text): create branch → commit the allowlisted
+   diffs → open the PR. PR body lists the fact deltas, the evidence for each patch, which impacts were escalated rather
+   than patched, and a link to the public run inspector. Never interpolate model output into the branch name or PR title.
+   On ANY failure after branch creation, DELETE the branch — no orphan refs.
+
+5. Failure isolation — a GitHub failure must not fail the run. The run still completes; the `publish` step is marked
+   failed and the patch bodies remain in R2. Record the PR url (or the failure) in `audit_log`.
+
+6. Cleanup — a cron-triggered Worker that closes PRs and deletes `concord/run-*` branches older than 48 hours. Make it
+   idempotent and safe to run repeatedly.
+
+TESTS (required)
+- `concord-core/test/path-allowlist.test.ts`: denylist wins over allowlist; each traversal variant rejected individually;
+  `.github/**` rejected; `.ts`/`.py`/`.sql`/`wrangler.jsonc`/`package.json`/lockfiles rejected; only the seven allowed
+  globs pass. Include a case where a path is in BOTH lists and assert the denylist wins.
+- A test that an attempted write outside the allowlist is refused BEFORE any GitHub API call (spy on the client and
+  assert zero invocations).
+- `concord-api/test/github-cleanup.test.ts`: a failure injected after branch creation results in branch deletion.
+- A test that no response body or log line contains the installation token or the private key.
+
+HARD RULES
+- Four independent layers, all required: least-privilege App on one repo; per-run repo-scoped token; branch protection
+  forcing the PR path; path allowlist/denylist checked twice. Do not drop one because another covers it.
+- A visitor-authored branch must not be able to introduce or trigger privileged CI. The absence of a workflows directory
+  plus the `.github/**` denylist plus branch protection is what guarantees that.
+- No GitHub credential ever reaches the client, a log, an error body, or a health check.
+- Do not extend the path allowlist to make a scenario work. If a patch targets a non-allowlisted path, that patch should
+  be refused and reported.
+
+DONE WHEN
+A live privileged run opens a real PR touching only allowlisted paths, with evidence in the body and a link to the run
+inspector; every path-rejection test passes with zero GitHub calls; an injected mid-flow failure leaves no orphan branch;
+the cleanup cron reaps; `main` cannot be pushed to directly.
+
+Report: the PR url and its body verbatim; the path-rejection cases you verified; and the observed cleanup behavior.

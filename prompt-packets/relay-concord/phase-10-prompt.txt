@@ -1,0 +1,69 @@
+PHASE 10 — CONCORD'S TINY MILESTONE: one fact, two surfaces, one deterministic result.
+
+The Relay contract is FROZEN at tag `relay-contracts-v1`. Read `CONTRACTS-FROZEN.md` before starting.
+
+This is the most important gate in the project. You are building the smallest possible version of Concord's central
+mechanism: detect that ONE authoritative product fact changed, find the TWO documentation representations affected,
+EXPLAIN the relationship, and produce the correct DETERMINISTIC result. Nothing else.
+
+Resist every instinct to build more. The reason this phase is tiny is so that if the fact → projection → impact → action
+chain is modelled wrong, you find out with a few hundred lines in front of you instead of a few thousand.
+
+SCOPE — and this list is exhaustive
+
+1. `packages/concord-core` — PURE TypeScript. No Cloudflare imports, no `env`, no network. Pure functions over plain
+   data (`constraints.md` §G2). This rule holds for the rest of the project; establish it now.
+
+2. TWO adapters only: `mintlify` and `inproduct`, implementing `SurfaceAdapter` from `contracts.md` §11.
+   - `mintlify`: parse `.mdx` files with `gray-matter`; produce `DocUnit`s keyed by heading anchors.
+   - `inproduct`: parse the copy registry from `GET /api/copy-registry`; one `DocUnit` per copy entry.
+   Create just enough surface content to exercise this: ONE Mintlify page (`surfaces/docs-mintlify/supported-files.mdx`)
+   that states the upload limit, plus the existing copy entry that states it. Do not author the rest of the docs estate.
+
+3. ONE fact: `limit.upload.csv.max_bytes`. ONE extractor: `declared_reference` — an MDX comment marker
+   `{/* concord:fact key=limit.upload.csv.max_bytes */}` on the Mintlify side, and the copy entry's `references_facts`
+   on the in-product side. Confidence 1.0. Do not build pattern-matching or model extraction.
+
+4. The pipeline, minimally: DETECT (diff the current `ProductTruthSnapshot` against a stored previous snapshot) →
+   NORMALIZE (run the two adapters) → PROJECT → TRACE → CLASSIFY → generate patch. Implement only classification rules
+   2, 3, and 6 from `architecture.md` §6.1 (`DETERMINISTIC_REGEN` for generated, `DETERMINISTIC_REGEN` for an
+   unambiguous mechanical value substitution, `NO_ACTION` when already correct). Rules 1, 4, and 5 exist in the type but
+   are unreachable in this phase — leave them as explicit `TODO(phase-13)` branches, not as silent fallthrough.
+
+5. `normalize-value.ts`, minimal: `"10 MB"` ⇄ `10485760` ⇄ `"10,485,760 bytes"`. Value comparison is on the NORMALIZED
+   value, never on strings (`constraints.md` §AP2).
+
+6. `packages/concord-api` — a Worker with `concord_db` migration `0001` (tables: `snapshot`, `doc_unit`,
+   `fact_projection`, `run`, `run_step`, `impact`, `patch`), `POST /api/runs` executing the pipeline SYNCHRONOUSLY, and
+   `GET /api/public/runs/:id`. Plus `packages/concord-web` with one page: the run report showing each impact with its
+   fact, doc unit, action class, `classification_rule`, explanation, and diff.
+
+7. `explanation` quality matters. It must name the fact, the authoritative source tier and locator, and the relationship
+   ("this page declares fact X via a concord:fact marker; X changed from A to B in T1_SCHEMA at
+   relay-api/src/limits.ts"). It must not merely restate the action.
+
+TESTS (required)
+- `concord-core/test/milestone.test.ts`:
+  * changing the limit produces EXACTLY two impacts, both correctly classified, each with a substantive explanation;
+  * rerunning with no change produces two `NO_ACTION` impacts (not zero impacts — the projections still exist);
+  * the generated patch diffs are correct;
+  * running the deterministic generator twice is byte-identical.
+- `concord-core/test/coupling.test.ts`: no `/api/` string literal appears in `concord-*` source other than
+  `/api/product-truth` and `/api/copy-registry` (invariant I13). Add the matching ESLint `no-restricted-imports` rule
+  forbidding imports from `relay-api`, `relay-web`, `relay-cli`.
+
+HARD RULES
+- `concord-core` stays Cloudflare-free and side-effect-free.
+- Concord may call exactly two Relay endpoints. Nothing else.
+- Do NOT build: other adapters, other facts, other extractors, the fact-graph UI, AI proposals, conflicts, evaluation,
+  the Change Lab, auth, GitHub, or Queues.
+- Do not compare document text to document text. Ever.
+
+DONE WHEN
+I can change `limit.upload.csv.max_bytes` in Relay, run Concord, and see it name both affected doc units, explain WHY
+each is affected in terms a reviewer would accept, and produce the correct deterministic patch for each — with a rerun
+producing `NO_ACTION`.
+
+Report: the run output verbatim for one change, both explanations, and the two patch diffs. If any part of the chain
+felt like it needed a rule I told you not to build, say so explicitly — that is signal about the model, not a reason to
+build it.

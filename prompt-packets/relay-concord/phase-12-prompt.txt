@@ -1,0 +1,67 @@
+PHASE 12 — FACT GRAPH: extractors, normalization, provenance, authority, ownership.
+
+Phase 11 is complete and verified: six adapters with golden files, a real six-surface documentation estate, seeded eval
+defects.
+
+Build the content/fact graph properly, and make "multiple valid representations, one truth" a mechanical property rather
+than a slogan.
+
+SCOPE
+
+1. All projection extractors, per `contracts.md` §12, each with its confidence ceiling:
+   - `declared_reference` (1.0) — `concord:fact` markers and copy `references_facts`. Already exists; keep.
+   - `frontmatter_field` (1.0) — facts asserted in MDX frontmatter.
+   - `generated_marker` (1.0) — content inside a generated block.
+   - `numeric_pattern` (0.85) — a number matching a fact's normalized value, with unit awareness.
+   - `term_occurrence` (0.9) — canonical/non-canonical term usage, including in headings, links, and anchors.
+   - `availability_table` (0.9) — platform/plan matrices parsed structurally.
+   - `model_extraction` (CAPPED AT 0.7) — an Anthropic call with structured output that proposes which facts a prose
+     paragraph asserts. Used ONLY where the deterministic extractors find nothing.
+   Every projection records `mode`, `asserted_value`, `span`, `extractor`, `confidence`, `detected_at`.
+
+2. `normalize-value.ts` — full implementation. Byte sizes (`10 MB` / `10485760` / `10,485,760 bytes` / `10240 KB`),
+   durations (`30 days` / `30` / `a month` → reject the ambiguous one rather than guessing), booleans expressed as
+   availability prose ("available on iOS" / "not yet available on iOS"), plan names, and terms. When normalization is
+   ambiguous, return `unknown` — never a guess. An `unknown` normalized value downgrades the projection to
+   `derived_prose` and can never drive a deterministic action.
+
+3. Authority arbitration — `concord-core/src/authority.ts` per `architecture.md` §4:
+   - the registry names the authoritative tier per fact;
+   - a lower-tier claim that disagrees is a CONFLICT, not an override (record it; Phase 15 acts on it);
+   - a T4_RELEASE claim about a CURRENT value is always ignored (T4 is temporal);
+   - T5_HUMAN wins only where it explicitly claims the key.
+
+4. Ownership resolution — resolve `owner` for every fact (from `FACT_REGISTRY`) and every doc unit (from adapter
+   metadata). Owners appear in escalations later, so get them plumbed now.
+
+5. Persistence + read API + UI — persist `doc_unit` and `fact_projection` for the whole estate;
+   `GET /api/public/facts/:key` returning the fact, its authoritative claim, and every projection;
+   `GET /api/public/facts` listing all facts with projection counts and a flag for facts with ZERO projections.
+   A fact-graph explorer page in `concord-web`: pick a fact, see every representation across surfaces side by side with
+   extractor, confidence, and normalized value.
+
+TESTS (required)
+- `concord-core/test/semantic-consistency.test.ts` (invariant I9): four differently-worded projections of
+  `limit.upload.csv.max_bytes` with equal normalized values produce ZERO findings. Then change one to a different value
+  and assert exactly one finding. This test is the heart of the project — write it carefully.
+- `concord-core/test/authority.test.ts`: T4 never overrides a current value; a lower-tier disagreement yields a recorded
+  conflict rather than an override; T5 claims only what it declares.
+- A test asserting no `model_extraction` projection has confidence above 0.7.
+- A test that an ambiguous normalization yields `unknown` and downgrades the projection mode.
+
+HARD RULES
+- Never compare document text to document text. All consistency checks are on normalized asserted values
+  (`constraints.md` §AP2).
+- `model_extraction` is a candidate generator only. It may never produce a deterministic action (invariant I5, enforced
+  in Phase 13 but the confidence cap starts here).
+- Structured outputs for the model-extraction call, with `stop_reason: "refusal"` checked before reading content.
+  Batch any fan-out at ≤ 5 concurrent (`constraints.md` §G9).
+- Do not add action classes or generators. Do not propose patches. That is Phase 13–14.
+- A fact with zero projections is a FINDING (`undocumented_fact`), recorded now, surfaced properly in Phase 13.
+
+DONE WHEN
+The explorer shows `limit.upload.csv.max_bytes` with ≥ 4 projections across ≥ 4 surfaces, different wording, identical
+normalized values, and zero findings. The consistency and authority tests pass.
+
+Report: the projection count by extractor and by surface; any fact with zero projections; and the normalization cases
+you deliberately refused to resolve.

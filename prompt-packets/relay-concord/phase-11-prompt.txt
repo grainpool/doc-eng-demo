@@ -1,0 +1,67 @@
+PHASE 11 — THE REST OF THE DOCUMENTATION ESTATE: four more adapters, real content.
+
+Phase 10 is complete and verified: one fact, two surfaces, correct deterministic result with a real explanation.
+
+Now build the full heterogeneous estate. The surfaces must genuinely DIFFER — different audiences, formats, publishing
+mechanics, and writing registers. If all six read alike, the project's central claim (semantic consistency without
+textual uniformity) becomes untestable.
+
+SCOPE
+
+1. Four more adapters implementing `SurfaceAdapter`: `helpcenter`, `clidocs`, `release`, `generated`. Each in its own
+   file under `concord-core/src/adapters/`, pure, with `ownedGlobs` declared for the later write allowlist.
+   `adapter.patch()` on a unit with `generated: true` must THROW (`constraints.md` §G8).
+
+2. Author the Mintlify surface — `surfaces/docs-mintlify/` with `docs.json` and ~14 MDX pages:
+   index, getting started, projects & workspaces, analysis sessions, artifacts & provenance, supported files, CLI
+   overview, CLI reference (a stub marked generated — Phase 13 fills it), configuration, security & privacy,
+   platform & feature availability, troubleshooting, terminology, changelog (stub, generated).
+   `docs.json` uses `$ref` to split the navigation and a generated fragment into separate files, so a generated fragment
+   can be patched without rewriting the whole config. Set `markdown.instructions` with agent-facing guidance. Give every
+   page a frontmatter `description` — Mintlify feeds these into the `llms.txt` it generates.
+   Register `{/* concord:fact key=... */}` markers where a page states a fact declaratively.
+
+3. Author the help-center surface — `surfaces/help-center/` with `index.json` (collections + article metadata) and ~10
+   Markdown articles: why an upload failed, how to run an analysis, platform availability, managing the connector,
+   general troubleshooting, plan & permission questions, how long artifacts are kept, what the terms mean, working with
+   artifacts, using the CLI. Register: `friendly_help`. Audience: `end_user`.
+   This is a FIXTURE standing in for Intercom, behind the adapter. Do not build an Intercom integration
+   (`research-findings.md` §5).
+
+4. DELIBERATE REGISTER DIFFERENCES — required, not incidental. The same fact must be expressed differently across
+   surfaces: the reference page says "Maximum file size: 10 MB"; the help-center article says "Files need to be smaller
+   than 10 MB — if yours is bigger, try splitting it"; the tooltip says "Max 10 MB"; the generated matrix cell says
+   `10485760`. All four are correct simultaneously.
+
+5. SEED MORE EVAL DEFECTS while authoring — as you write the content, deliberately plant defects and record each in
+   `fixtures/eval/defects.json`. Cover at minimum: `STALE_VALUE`, `WRONG_PLATFORM`, `TERM_DRIFT`, `BROKEN_REF`,
+   `DUP_GUIDANCE`, `MISSING_PREREQ`, `CONTRADICTION`, `UNSUPPORTED_CLAIM`, `IA_PROBLEM`, `STALE_INPRODUCT_COPY`.
+   Also plant at least FOUR items with `expected_detection: false` — things that look wrong but are legitimately fine
+   (differing wording with identical meaning, an intentional register difference, a deliberately terse tooltip, a
+   correct value stated in an unusual unit). Without those, a recall-only harness would score 100% for a system that
+   flags everything.
+
+6. `concord ingest --dry-run [--surface=X]` — list every doc unit found per surface with its deterministic id.
+
+TESTS (required)
+- `concord-core/test/adapters/*.golden.test.ts` — one per adapter: a fixture directory in, a committed
+  `expected-units.json` out. Doc unit ids must be identical across two runs. An adapter change that alters ids must
+  update the golden file in the same commit; that is how id stability is defended.
+- A test that `patch()` throws on a `generated: true` unit.
+- Re-run the Phase 10 milestone test — it must still pass unchanged.
+
+HARD RULES
+- Do NOT hand-author `llms.txt` or `llms-full.txt`. Mintlify generates and hosts them; Concord's job is to reconcile the
+  INPUTS (frontmatter `description`, `docs.json` `description`, `markdown.instructions`). A hand-written `llms.txt`
+  would be a second artifact that immediately drifts from the served one (`constraints.md` §G7).
+- Do not build the full fact graph, extra extractors, or reconciliation beyond Phase 10's one fact. That is Phase 12–13.
+- Doc unit ids must be deterministic and stable. Stability matters more than prettiness.
+- Do not fix the defects you plant.
+
+DONE WHEN
+Six adapters with passing golden files; `ingest --dry-run` lists every unit with stable ids across two runs; the docs
+estate is real and readable; `fixtures/eval/defects.json` has ≥ 24 entries including ≥ 4 with
+`expected_detection: false`.
+
+Report: the doc-unit count per surface; the register difference you used for `limit.upload.csv.max_bytes` across four
+surfaces; and the full defect list you seeded with classes and expected actions.

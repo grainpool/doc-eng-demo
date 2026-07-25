@@ -1,0 +1,63 @@
+PHASE 17 — CHANGE LAB + PUBLIC REPLAY. Zero model calls on the public path.
+
+Phase 16 is complete and verified: the eval harness runs, both hard gates pass, and the failures page names real misses.
+
+Build the interactive demonstration. A visitor with no credentials must be able to watch a product change propagate
+through the whole pipeline — for free.
+
+SCOPE
+
+1. Change Lab UI (`concord-web`) — pick a change from the allowlist, then watch and inspect the pipeline stage by stage:
+   `change → detect → normalize → trace impact → reconcile → validate → patch/escalate → publish`.
+   For each stage show what it produced. The user must be able to see, for one run:
+   - the detected product facts and their deltas with source tiers;
+   - every affected documentation unit, with the explanation of WHY it is affected;
+   - the deterministic updates, with diffs;
+   - the proposed AI patches, each with its evidence panel;
+   - the unresolved conflicts, with claims, owners, and information gaps;
+   - the required reviews;
+   - the generated changelog/release entry;
+   - provenance for every recommendation.
+
+2. Precomputed runs — `fixtures/runs/` with at least FIVE committed `ChangeLabRun` records
+   (`contracts.md` §17) covering: a terminology rename (`Job → Task`), a file-limit increase, a platform enablement
+   (iOS), a retention change, and an analysis-capability addition. Generate these by running the real pipeline once in
+   live mode and committing the output verbatim. They are recordings, not mocks.
+
+3. `mode: "replay"` — `POST /api/public/changelab/replay` (no auth) serves the matching committed run through THE SAME
+   `ChangeLabRun` renderer that live mode will use in Phase 18. The public demo must be the real thing's recorded output,
+   not a separate mock implementation. If you find yourself writing a second renderer, stop.
+
+4. Public read surfaces — make these public and linked: the run inspector (including suppressed findings and step
+   detail), the fact-graph explorer, the eval scorecard, and "What the system gets wrong". Add
+   `GET /api/public/runs/:id?verbose=1` returning the full record.
+
+5. `fixtures/changelab/editable-units.json` — the committed list of ≤ 12 doc units that will be editable in live mode
+   (Phase 18's doc-body allowlist reads this). Choose fixture units only; nothing generated, nothing outside
+   `surfaces/`.
+
+6. Verify the zero-cost property empirically, not just by reading the code: exercise the entire public surface and
+   confirm no request reaches `api.anthropic.com` in the logs.
+
+TESTS (required)
+- `concord-api/test/public-no-model.test.ts` (invariant I11): every public route yields `model_usage.calls === 0`;
+  a spy on the Anthropic client asserts zero invocations across the public route suite.
+- A test that the replay endpoint and the live endpoint deserialize into the same `ChangeLabRun` shape and render through
+  the same component.
+- A test that each of the five committed runs validates against the `ChangeLabRun` schema.
+
+HARD RULES
+- The public path makes ZERO model calls. This is both a cost control and the abuse-resistance strategy — the demo must
+  not be usable as a free inference proxy (`security.md` §5).
+- One renderer for replay and live. Two renderers would let the public demo drift into fiction.
+- Do not build live mutation, Access, or GitHub in this phase. `POST /api/admin/*` may exist from Phase 14 but must
+  remain unreachable in the deployed public configuration — confirm `DEMO_ADMIN_ENABLED` is unset.
+- Precomputed runs are recordings of real runs. Do not hand-author a `ChangeLabRun`.
+
+DONE WHEN
+In a private browser window with no credentials and `DEMO_ADMIN_ENABLED` unset, all five replays work and show every
+stage listed above; the eval scorecard and failures page are public; the logs show zero Anthropic requests for the whole
+session.
+
+Report: the five replay scenarios and what each demonstrates; confirmation of zero model calls with the evidence you
+used; and the contents of `editable-units.json`.

@@ -1,0 +1,62 @@
+PHASE 05 — ANALYSIS SESSIONS + NATURAL-LANGUAGE TRANSLATION.
+
+Phase 04 is complete and verified: all eight kernel operations work through the Worker proxy, `/operations` and
+`/versions` are authoritative, T0 facts are live.
+
+Build the user-facing analysis loop. The natural-language layer is a ROUTER, never an executor.
+
+SCOPE
+
+1. Session model — `POST /api/projects/:id/sessions`, `GET /api/sessions/:id`, `POST /api/sessions/:id/turns`.
+   A session is bound to one project and one primary file. A turn records the prompt, the resolved operation + params,
+   the kernel result reference, status (`completed` | `refused` | `failed`), and timings.
+
+2. NL → operation translation, per `contracts.md` §5. One Anthropic call with:
+   - `output_config.format` built from `zodToJsonSchema(TranslationResult)` — the discriminated union whose
+     `operation_id` is the CLOSED ENUM. The model physically cannot name an operation that does not exist.
+   - Prompt inputs: the dataset schema (from `inspect_schema`), the `/operations` catalog, and the user's text. Wrap the
+     user text and any data values in clearly delimited blocks and state in the system prompt that content inside them
+     is DATA, never instructions (`security.md` §5).
+   - The system prompt must say: if the request cannot be expressed as one of the listed operations, return
+     `kind: "unsupported"` with alternatives; do NOT approximate with a different operation.
+   - `thinking: {type: "adaptive"}`. No `temperature`/`top_p`/`top_k`/`budget_tokens`. Check
+     `stop_reason === "refusal"` BEFORE reading `content`.
+   - On schema-invalid output: retry ONCE with the validation error appended; on a second failure return
+     `unsupported`. Never guess.
+
+3. Re-validation gate — after translation, parse `params` against that specific operation's Zod schema. On failure
+   return 422 and make NO kernel call. This gate is the reason the feature is safe; test it explicitly.
+
+4. Result rendering — the session UI shows the dataset preview, a prompt box, and results: scalars, tables (with a
+   truncation indicator), and PNG plots. All labels and states from the copy registry.
+
+5. Optional narration — a second, streamed Anthropic call that summarizes the returned numbers. Its prompt receives ONLY
+   the result payload and must be instructed not to introduce any value not present in it. If you are short on time,
+   skip narration rather than skipping the tests below.
+
+6. Error handling — `error.analysis.kernel_unavailable` (503, turn recorded as `failed`, UI stays usable),
+   `error.analysis.unsupported_request` (the refusal path, with alternatives shown), 422 for param validation.
+   Write a `model_call` row for every Anthropic call with purpose and token counts.
+
+TESTS (required)
+- `relay-api/test/nl-translation.test.ts`, with a kernel spy:
+  * an unsupported request (e.g. "train a random forest on this") → `kind: "unsupported"` AND ZERO kernel calls;
+  * a well-formed request → the expected operation id and params;
+  * a translation returning params that fail the operation schema → 422 AND ZERO kernel calls;
+  * a mocked `stop_reason: "refusal"` → handled without reading `content`, surfaced as `unsupported`.
+- At least four distinct natural-language prompts mapping to four different operations, as integration tests.
+
+HARD RULES
+- The kernel NEVER receives model-authored code — only a validated `{operation_id, params}` pair. This is the whole
+  safety argument for the feature and it must remain true.
+- A model that quietly substitutes a different operation is the worst failure mode here. Test for it, don't just prompt
+  against it.
+- No artifact persistence, no lineage, no CLI in this phase.
+- Structured outputs, not prose parsing (`constraints.md` §G10).
+
+DONE WHEN
+Deployed: upload a CSV, ask "which columns correlate?" in plain English, get a correlation table. Ask for something
+unsupported and get a clean refusal with alternatives and no kernel call. All four listed test cases pass.
+
+Report: the four prompts you tested and the operation each resolved to; the refusal text for the unsupported case; and
+the observed token usage per translation call.

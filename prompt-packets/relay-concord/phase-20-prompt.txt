@@ -1,0 +1,73 @@
+PHASE 20 — HARDENING, OBSERVABILITY, COST CONTROLS, PUBLIC POLISH.
+
+Phase 19 is complete and verified: ephemeral branches and PRs under four layers of restriction, with cleanup.
+
+Final phase. Two goals: prove the security properties rather than assume them, and make the repository something a
+stranger can understand and run. Read `validation.md` §8 — it is the gate for this phase and every line must pass.
+
+SCOPE
+
+1. SECURITY VERIFICATION — work `validation.md` §8 line by line and record the result of each. Where a line asks you to
+   "confirm X is rejected", actually attempt it and paste the observed response. Specifically:
+   - grep the repo and every built bundle for secret-shaped strings;
+   - confirm no endpoint returns an environment value, stack trace, file path, or config value;
+   - re-run all six Access rejection cases;
+   - confirm no dev-auth bypass exists in the production bundle;
+   - confirm no `eval`/`new Function`/`child_process`/`exec` anywhere, and no `DataFrame.query()` in the kernel;
+   - confirm no endpoint accepts a URL to fetch;
+   - confirm the kernel cannot reach a non-R2 host;
+   - re-verify every path denylist case;
+   - force each spend cap and confirm the `partial` outcome;
+   - confirm no `Cf-Access-*` header value, prompt text, or presigned URL appears in any log line.
+
+2. Observability completion — verify the structured logger's redaction list is complete and enforced by a test
+   (`concord-api/test/redaction.test.ts`). Confirm `model_call` rows exist for every model call across both apps, and
+   that `/api/health` on both Workers reports per-dependency status with versions and no secrets.
+
+3. Cost controls — confirm and document: zero model calls on public paths; ≤ 20 calls per run; ≤ $5 per UTC day;
+   ≤ 5 live runs per identity per hour; one concurrent live run. Test each by forcing it, not by reading the code.
+
+4. Agent-readable documentation — finalize the INPUTS that produce Mintlify's generated machine-readable output:
+   a `description` in the frontmatter of every page, the site `description` in `docs.json`, and `markdown.instructions`
+   with genuinely useful agent guidance (what the product is, canonical terminology, where authoritative facts live,
+   what NOT to infer). Then fetch the served `/llms.txt` and confirm it reflects the reconciled descriptions.
+   Do NOT author `llms.txt` or `llms-full.txt` yourself — Mintlify generates and hosts them (`constraints.md` §G7).
+   Make product facts, provenance, prerequisites, terminology, and relationships explicit enough in the prose that both
+   a human and an agent can use the pages. Do not invent an agent-specific format for novelty.
+
+5. Repository documentation — this is how the project proves itself:
+   - root `README.md`: what this is, why documentation is treated as an engineered information system, the architecture
+     diagram, how to run it locally, how the two workstreams relate, what the evaluation shows (with real numbers), and
+     an explicit "what this deliberately does not do" section listing the non-goals from `constraints.md` §1 — including
+     that the help center is a fixture and Intercom integration is a deliberate non-goal, not a gap.
+   - `ARCHITECTURE.md`: the reconciliation model, the six source tiers, the action classes, why escalation is a success.
+   - `EVALUATION.md`: the methodology, the metrics, the real numbers, and the failures — link the failures page.
+   - `SECURITY.md`: the threat model, the controls, the Access and GitHub App configuration steps, and the security
+     properties you verified in step 1.
+   - per-package READMEs for the `concord-*` packages (Relay's were written in Phase 09).
+
+6. UI completion — empty, loading, and error states on every screen of both apps; a responsive pass; keyboard
+   accessibility and sensible focus order; readable contrast. Plain and legible beats decorated. Do not introduce a
+   design system now.
+
+7. Final eval — run `pnpm eval` and commit the fresh `eval-report.md` / `.json`. Update the failures page from it. If a
+   number moved since Phase 16, say so and explain why.
+
+8. Reproducibility — `git clone` into a FRESH directory, follow your own README, and reach a working local instance.
+   Fix whatever that exercise reveals. This is the acceptance test for the documentation, and it will find gaps.
+
+HARD RULES
+- Do not add features. If something is missing, it goes in the README's non-goals section or `NOTES.md`.
+- Do not soften a security check to make a test pass.
+- Do not report a verification as passing without having actually run it. If something cannot be verified, say so
+  explicitly and say why.
+- Keep `eval-report.md` honest. The failures page must name specific real misses with analysis, not generic caveats.
+
+DONE WHEN
+Every line of `validation.md` §8 passes with a recorded observation; the public demo works with `DEMO_ADMIN_ENABLED`
+unset; the served `/llms.txt` reflects the reconciled descriptions; a fresh clone reaches a working local instance by
+following the README alone; the eval report and failures page are committed and honest.
+
+Report: the completed `validation.md` §8 checklist with your observation per line; the final eval numbers with any change
+since Phase 16 explained; what the fresh-clone exercise revealed; and an honest list of what you would fix next if this
+continued.

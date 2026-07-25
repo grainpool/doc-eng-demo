@@ -1,0 +1,112 @@
+PHASE 01 — WALKING SKELETON: prove every external dependency, deployed, with no product logic.
+
+You are building a public, inspectable software project consisting of two separately buildable systems in one monorepo:
+
+  RELAY   — a small, deliberately modest AI workspace application. It is a product FIXTURE. Its job is not to be
+            novel; its job is to be a coherent, real product whose behavior creates nontrivial documentation
+            requirements: a workspace of projects and files, an AI-assisted chat, one capability-dense
+            "analysis session" feature (bounded data analysis over uploaded CSVs producing plots/tables/artifacts
+            with full provenance), a small real CLI, and structured in-product copy.
+
+  CONCORD — the primary technical focus, built LATER. A documentation reconciliation / control-plane system that
+            ingests Relay's product truth and a heterogeneous documentation estate (Mintlify developer docs, a
+            help-center surface, in-product copy, CLI docs, release records, generated reference), models them as a
+            fact graph, and decides — per surface — whether a product change should be deterministically regenerated,
+            AI-patched with mandatory evidence, escalated for editorial review, or refused as an unresolved conflict.
+            Its thesis: one product fact may have multiple valid representations without having multiple truths.
+            Semantic consistency across surfaces, not textual uniformity.
+
+The full architecture, contracts, constraints, security model, and 20-phase plan are in the attached documents. Read
+`supporting-spec-index.md` first; it tells you which document answers which question and which one wins in a conflict.
+Read `constraints.md` before you write code — it lists non-goals you must not build and anti-patterns that would break
+the project. Then read `architecture.md` in full and `research-findings.md` §1–§2 and §7–§8.
+
+=== YOUR TASK IN THIS PHASE — AND ONLY THIS ===
+
+Build a walking skeleton: a deployed application containing NO product features, whose only purpose is to prove that
+every external dependency this project needs actually works, on the real domain, together. This phase exists because
+the five dependencies below are where a project like this dies, and I want to know within one session rather than after
+three weeks of product code.
+
+The five links to prove:
+  1. A Cloudflare Worker serving a Vite + React page as static assets, with an API on the same Worker.
+  2. Cloudflare D1 — a write followed by a read.
+  3. Cloudflare R2 — a put followed by a get.
+  4. A Cloudflare Container running Python — round-trip returning the REAL installed `pandas.__version__`.
+  5. The Anthropic API — one successful live call.
+
+Deliverables:
+
+A. MONOREPO SKELETON — pnpm workspaces, TypeScript strict, per `architecture.md` §2. Create these packages now, even
+   where they are near-empty stubs with a README: `packages/contracts`, `packages/relay-api`, `packages/relay-web`,
+   `packages/relay-cli`, `packages/relay-kernel`. Do NOT create the `concord-*` packages or the `surfaces/` tree yet.
+   Root scripts: `typecheck`, `lint`, `test`, `build`, `dev`, `deploy:relay`, `deploy:kernel`. Node 22+, pnpm 9+.
+   The developer is on WINDOWS: no POSIX-only shell in package scripts, no `rm -rf`, use `path.join` in code
+   (`constraints.md` §G19).
+
+B. RELAY WORKER — `packages/relay-api` using Hono, built and deployed together with `packages/relay-web` via
+   `@cloudflare/vite-plugin`. Configure `wrangler.jsonc` with `assets: { directory, binding: "ASSETS",
+   not_found_handling: "single-page-application", run_worker_first: ["/api/*"] }`, a D1 binding (`relay_db`), an R2
+   binding (`relay-artifacts`), the container binding + Durable Object + `new_sqlite_classes` migration, and a raised
+   `limits.cpu_ms` (the 30 s default is not enough for AI routes later). The React page is one screen showing the
+   health results — nothing more. No router, no design system, no branding.
+
+C. ANALYSIS KERNEL CONTAINER — `packages/relay-kernel`: a Dockerfile pinning EXACT versions in `requirements.txt`
+   (`pandas`, `numpy`, `scipy`, `statsmodels`, `matplotlib`, `fastapi`, `uvicorn` — pinned as `==`, never `>=`, because
+   these versions are product truth later), running a FastAPI app that in this phase exposes ONLY `GET /health` and
+   `GET /versions`. `/versions` returns `{python, pandas, numpy, scipy, statsmodels, matplotlib, image_digest}` read
+   from the actually-imported modules. Non-root user, read-only filesystem except `/tmp`, `matplotlib` on the `Agg`
+   backend. Invoke it from the Worker via `getContainer(env.KERNEL, sessionId).fetch(...)` with `sleepAfter` set.
+   No other route. Absolutely no code-execution surface — see `security.md` §3.
+
+D. `GET /api/health` — returns each of the five checks with a boolean and a real observed value (D1 round-trip value,
+   R2 round-trip value, the pandas version string, the Anthropic response's model id). It must return NO environment
+   value, NO secret, and no stack trace on failure. Anthropic call: use `@anthropic-ai/sdk`, model from
+   `MODEL_ID = "claude-opus-5"` in `packages/contracts/src/model.ts` (the ONLY place a model id appears), `max_tokens`
+   small, `thinking: {type: "adaptive"}`. Do NOT send `temperature`, `top_p`, `top_k`, or `budget_tokens` — all are
+   rejected with a 400 on this model. Check `stop_reason === "refusal"` BEFORE reading `content`.
+
+E. CROSS-CUTTING PRIMITIVES — establish these now, because retrofitting them is expensive (`constraints.md` §AP12):
+   - `log(event, fields)` structured-JSON logger with the redaction rules in `security.md` §6. One object per line.
+     Always includes `request_id`.
+   - The single error shape from `contracts.md` §1: `{ error: { code, copy_id, detail?, field? } }`, with `ErrorCode`
+     as a closed enum in `packages/contracts`.
+   - `.gitignore` covering `.dev.vars`, `.wrangler`, `dist`, `node_modules`, and a pre-commit secret scan that greps
+     for `sk-ant-`, `-----BEGIN`, `ghp_`, `github_pat_`.
+   - CI (GitHub Actions on the primary repo): install, typecheck, lint, test, build. No deploy step, no secrets.
+
+F. `COMPAT.md` — the most valuable artifact of this phase. Record the OBSERVED reality: wrangler version, workerd
+   version, the exact installed Python package versions, the container cold-start time you measured, whether
+   `run_worker_first` behaved as documented, the actual CPU time your health route consumed, and ANY point where the
+   platform disagreed with `research-findings.md`. Also create an empty `NOTES.md` for ideas you defer.
+
+=== HARD RULES FOR THIS PHASE ===
+
+- Build NOTHING product-shaped. No project model, no file upload, no session, no chat UI, no auth, no analysis
+  operation, no Concord package. If you are tempted, write it in `NOTES.md` and move on.
+- The API key goes in via `wrangler secret put` only. Never in `wrangler.jsonc` `vars`, never in a committed file,
+  never echoed by any endpoint including the health check.
+- I will supply: the Cloudflare account id, the literal hostname for Relay, and the Anthropic API key. If you do not
+  have one of them, STOP and ask for that specific item. Do not invent a domain or commit a placeholder that could be
+  mistaken for working configuration.
+- Add only dependencies from the approved list in `constraints.md` §G18. Anything else needs a stated justification.
+- Write the Phase 01 test from `validation.md` §2: `relay-api/test/health.test.ts` using
+  `@cloudflare/vitest-pool-workers`, asserting all five checks pass and that the response body contains no
+  secret-shaped string.
+
+=== IF THE PLATFORM DISAGREES WITH THE PLAN ===
+
+If Cloudflare Containers, the Vite plugin, or any binding does not behave as `research-findings.md` describes: preserve
+the OBJECTIVE, choose the simplest currently-supported alternative, record the deviation and the evidence in
+`COMPAT.md`, and state it prominently in your response. Do not silently substitute an unsupported architecture, and do
+not spend the phase fighting a dead end — if the container path fails, say so clearly; there is a documented
+contingency (`research-findings.md` §2) that I will decide on.
+
+=== DEFINITION OF DONE ===
+
+I can visit the deployed URL, see the health page, and `GET /api/health` returns five green checks with real values
+including a real `pandas` version from inside the container. `pnpm typecheck && pnpm lint && pnpm test && pnpm build`
+all pass. Grepping the built client bundle finds no secret. `COMPAT.md` is written and non-trivial.
+
+Report at the end: what you built, the observed values from `/api/health`, any deviation you recorded in `COMPAT.md`,
+and anything you deferred to `NOTES.md`.

@@ -1,0 +1,58 @@
+PHASE 08 — IN-PRODUCT COPY REGISTRY, RELEASES, PRODUCT-TRUTH COMPLETION.
+
+Phase 07 is complete and verified: the CLI works, `introspect --json` matches `--help`, T2 facts are live.
+
+Turn Relay's UI copy into a first-class documentation surface, and give Concord temporal data about product change.
+After this phase, `/api/product-truth` returns all six tiers.
+
+SCOPE
+
+1. Formal copy registry — implement the `CopyEntry` schema from `contracts.md` §8 and migrate every entry created in
+   Phase 03/05/06 to it. Required fields: `id`, `kind`, `text`, `surface_location`, `references_facts`, `owner`,
+   `editorial_register`, `interpolations`.
+   Expand coverage to a realistic estate: tooltips, empty states, onboarding copy, validation messages, error messages,
+   settings descriptions, feature-availability explanations, and labels. Aim for 45–70 entries.
+   `references_facts` is the mechanism that makes a UI string reconcilable — an entry stating a number MUST declare the
+   fact key it asserts.
+
+2. `GET /api/copy-registry` returning `{ entries: CopyEntry[] }`. This is the second (and last) endpoint Concord is
+   allowed to call.
+
+3. Lint rule — fail the build on any user-visible literal in `relay-web` JSX. Verify it fires on a planted literal.
+
+4. DELIBERATE EVAL SEEDS — leave exactly 3 or 4 copy entries that state a number WITHOUT declaring the corresponding
+   `references_facts` key, and record each one in `fixtures/eval/defects.json` as class `UNDECLARED_FACT_REF` with
+   `expected_detection: true`. These are the beginning of the evaluation corpus. Do not fix them; do not hide them.
+
+5. Releases — `surfaces/releases/*.yaml`, at least SIX historical records per `contracts.md` §9, covering a limit
+   increase, a platform enablement, a terminology rename, a capability addition, a CLI change, and a retention change.
+   Each `changes[]` entry names a `fact_key`, `from`, `to`, and `kind`. Wire the T4_RELEASE resolver.
+   REMEMBER: T4 is temporal, not factual. It is authoritative for WHEN something changed and never for the current
+   value.
+
+6. Decisions — `surfaces/decisions/*.yaml`, at least THREE T5_HUMAN records: a deliberate exception, an editorial
+   ownership assignment, and a tie-break. Wire the T5_HUMAN resolver. T5 claims a key only where it explicitly says so.
+
+7. Optional, only if the above is finished and tested — the mock `connector_drive` feature: availability facts, a
+   settings panel with descriptions, a permission/setup explanation, and one plausible failure state worth
+   troubleshooting. It connects to NOTHING. Skip it rather than rushing the rest.
+
+TESTS (required)
+- `relay-api/test/copy-registry.test.ts`: every copy entry stating a numeric fact declares `references_facts`, EXCEPT
+  the ids listed as `UNDECLARED_FACT_REF` seeds in `fixtures/eval/defects.json`. The test reads the defect file, so
+  adding a seed requires declaring it.
+- `relay-api/test/product-truth.test.ts`: all six tiers return non-empty; every claim's `locator` resolves.
+- A test that a T4 record contradicting a T3 value does NOT change `/api/product-truth`'s reported current value.
+
+HARD RULES
+- After this phase, no user-visible string exists outside the registry (invariant I1).
+- Do not reconcile anything. Detecting and fixing inconsistency is Block B. This phase only makes the surfaces exist and
+  be machine-readable.
+- Do not add a real connector integration.
+
+DONE WHEN
+All six tiers return real claims; the lint rule fires on a planted literal; the copy-registry test passes with the
+declared seeds excluded; six releases and three decisions exist and resolve.
+
+Report: the entry count by `kind`, the fact keys most referenced by copy, the ids of the deliberate
+`UNDECLARED_FACT_REF` seeds, and whether you built `connector_drive`.
