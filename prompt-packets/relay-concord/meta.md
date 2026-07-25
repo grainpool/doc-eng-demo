@@ -21,6 +21,7 @@ These are stated so you can correct them before Phase 01. Each is also recorded 
 | A7 | Model calls use **`claude-opus-5`** via a single config constant. Cost is controlled by caps + replay mode, not by silently downgrading models. | Your spend requirements are about *budget enforcement*, and model choice should stay yours. `claude-sonnet-5` is a one-line config swap. |
 | A8 | Public demo browses **precomputed run fixtures**; zero model calls on the public path. | Your public/privileged split. |
 | A9 | The estate repo contains **no `.github/` directory at all**, and the Concord GitHub App is installed on it and nothing else. | Required to make visitor-triggered branches safe. See "Repo decision". |
+| A10 | Provisional names `Relay` / `Concord` are placeholders; the agent must read them from one constants file so renaming is trivial. | You said the names don't matter. |
 
 ## Confirmed environment (verified 2026-07-25 — not assumptions)
 
@@ -33,12 +34,13 @@ These are stated so you can correct them before Phase 01. Each is also recorded 
 | Cloudflare plan | Workers Paid ($5/mo) + R2 Paid. Containers, D1, and Queues all licensed and **unprovisioned** — clean slate. |
 | Zone | `otonieltrejo.com`, Free plan, active. **No plan upgrade is needed for this project** — Workers custom domains work on Free, Access is account-level Zero Trust rather than zone-gated, and our rate limiting is application-level rather than WAF. Do not spend $25 on Pro. |
 | Zero Trust | Teams Free, **50 seats included** — see the seat cliff in `constraints.md` §4 and `security.md` §5. Access log retention is 24 h, which is why the D1 `audit_log` is the durable record. |
+| Anthropic Console | Org-level spend limit **already configured**. This is the floor beneath the in-app $5/day cap, not a duplicate of it: the app cap is a product behaviour that a bug could defeat, and this is the account boundary under it. |
 | Existing resources to avoid colliding with | R2 buckets `gp-prod-uploads`, `numi-backups-prod`; Pages projects `wysee-markdown`, `numitura`. Our names (`relay-artifacts`, `concord-runs`, `relay_db`, `concord_db`) don't collide. |
 
 Two operator to-dos surfaced by that snapshot, neither blocking: enable 2FA on the Cloudflare account (it holds the
 Anthropic key and will hold the GitHub App private key — `enforce_twofactor` is currently `false`), and expect to
-re-authenticate for R2 bucket creation (see `master-prompt-phase-01.txt`, R2 note).
-| A10 | Provisional names `Relay` / `Concord` are placeholders; the agent must read them from one constants file so renaming is trivial. | You said the names don't matter. |
+re-authenticate for R2 bucket creation (see `master-prompt-phase-01.txt`, R2 note). Both are in `operator-runbook.md`
+OG-0 and OG-2.
 
 **Deviations from your spec, and why** — see `research-findings.md` §"Deviations". The two that matter:
 1. **Python analysis does NOT run in Python Workers (Pyodide).** It runs in a **Cloudflare Container** with real
@@ -136,9 +138,11 @@ product logic, then build Relay to a frozen contract, then build Concord against
 
 ### Full phase table
 
+Phases marked **⛔** have an operator gate — see `operator-runbook.md` before starting them.
+
 | Phase | Prompt file | Deliverable | You verify before continuing |
 |---|---|---|---|
-| 01 | `master-prompt-phase-01.txt` | **Walking skeleton.** One Worker on your domain serving a React page; `/api/health` proves D1 write+read, R2 put+get, Container round-trip returning real `pandas.__version__`, and one live Anthropic call. Both repos created, estate wired as a submodule, CI. | Visit the URL. `GET /api/health` returns all five checks green with real version strings. `pnpm test` and `pnpm typecheck` pass. A fresh `git clone --recurse-submodules` gives you a populated `estate/`. `COMPAT.md` records actual observed versions/limits. |
+| 01 **⛔ OG-1, OG-2** | `master-prompt-phase-01.txt` | **Walking skeleton.** One Worker on your domain serving a React page; `/api/health` proves D1 write+read, R2 put+get, Container round-trip returning real `pandas.__version__`, and one live Anthropic call. Both repos created, estate wired as a submodule, CI. | Visit the URL. `GET /api/health` returns all five checks green with real version strings. `pnpm test` and `pnpm typecheck` pass. A fresh `git clone --recurse-submodules` gives you a populated `estate/`. `COMPAT.md` records actual observed versions/limits. |
 | 02 | `phase-02-prompt.txt` | `@relay/contracts` + D1 schema + fact-key registry. Six product-truth source tiers wired as stubs. | `pnpm --filter @relay/contracts test` passes. Every fact key in `contracts.md` §3 resolves to exactly one authoritative tier. No fact is claimed by two tiers *by construction* (conflicts must be data, not schema). |
 | 03 | `phase-03-prompt.txt` | Projects, files, R2 upload with enforced limits, project state, UI shell. | Create project → upload CSV → see it listed. Upload an over-limit file → the rejection message text comes from the copy registry, not a hardcoded string. |
 | 04 | `phase-04-prompt.txt` | **Analysis kernel.** Container with 8 bounded operations, no arbitrary code path. `/kernel/versions` + `/kernel/operations` introspection. | `curl` each of the 8 ops directly against the kernel via the Worker proxy. Confirm no endpoint accepts code. `/kernel/operations` matches the contract. |
@@ -148,15 +152,15 @@ product logic, then build Relay to a frozen contract, then build Concord against
 | 08 | `phase-08-prompt.txt` | In-product copy registry (structured), release/change records, `/api/product-truth`. | Every user-visible string in the UI traces to a copy-registry id. `/api/product-truth` returns all fact keys with their source tier and provenance. |
 | 09 | `phase-09-prompt.txt` | **Relay hardening + CONTRACT FREEZE.** Tests, seed fixtures, spend + rate limits, `git tag relay-contracts-v1`. | `pnpm test` green. Seed script reproduces identical state from clean D1. Tag exists. `CONTRACTS-FROZEN.md` lists what Concord may rely on. |
 | 10 | `phase-10-prompt.txt` | **Concord's tiny milestone.** ONE fact (`limit.upload.csv.max_bytes`), TWO surfaces, deterministic result + explained relationship. | Change the limit in Relay config → run Concord → it names both affected doc units, explains *why* each is affected, and produces the correct deterministic update. Nothing else exists yet. **Do not proceed until this is clean.** |
-| 11 | `phase-11-prompt.txt` | Remaining five adapters (Mintlify MDX, help center, in-product copy, CLI introspection, releases). | Each adapter has a golden-file test. `concord ingest --dry-run` lists every doc unit found per surface with a stable id. |
+| 11 **⛔ OG-3** | `phase-11-prompt.txt` | Remaining five adapters (Mintlify MDX, help center, in-product copy, CLI introspection, releases). | Each adapter has a golden-file test. `concord ingest --dry-run` lists every doc unit found per surface with a stable id. **And: `docs.<domain>` serves the Mintlify site and `/llms.txt` returns content** — this is the phase where you connect Mintlify, and nothing else will fail if you don't. |
 | 12 | `phase-12-prompt.txt` | Fact graph: normalization, provenance, confidence, authority resolution, ownership. | The graph renders. Query one fact → see every projection across surfaces with differing wording but identical value. |
 | 13 | `phase-13-prompt.txt` | Deterministic reconciliation + generators (feature matrix, CLI reference, structured metadata). | Regenerate twice → byte-identical output. Hand-edit a generated file → next run overwrites it and says so. |
 | 14 | `phase-14-prompt.txt` | Grounded AI patch proposals with mandatory evidence. Queues introduced here. | Every proposed patch carries citations to source facts. Strip the evidence → the proposal is rejected by validation, not merely unflagged. |
 | 15 | `phase-15-prompt.txt` | Conflict detection, escalation, adversarial verification (propose → falsify → surface). | Plant two contradicting authoritative sources → the system refuses to edit, names the owner, and states what evidence is missing. |
 | 16 | `phase-16-prompt.txt` | Evaluation harness, defect corpus applied as in-memory injections, scorecard, "What the system gets wrong". | `pnpm eval` prints precision/recall/FP/escalation metrics and writes a report. Unsafe-autofix count is **0** or the phase fails. The live estate is unchanged by an eval run — `git status` in `estate/` is clean afterwards. |
 | 17 | `phase-17-prompt.txt` | Change Lab + public replay of precomputed runs. | In a private window (no auth), replay a full change end-to-end. Confirm zero model calls in logs. |
-| 18 | `phase-18-prompt.txt` | Cloudflare Access (`@anthropic.com` + OTP) + backend JWT validation + allowlisted live mutation. | Hit the privileged API with no JWT → 403. With a forged JWT → 403. With a real one → live run. Try a fact key outside the allowlist → rejected. |
-| 19 | `phase-19-prompt.txt` | GitHub App ephemeral branch/PR, least privilege, auto-cleanup. | A run opens a real PR touching only allowlisted paths. Attempt a path outside the allowlist → refused before any API call. Branch is reaped. |
+| 18 **⛔ OG-4** | `phase-18-prompt.txt` | Cloudflare Access (`@anthropic.com` + OTP) + backend JWT validation + allowlisted live mutation. | Hit the privileged API with no JWT → 403. With a forged JWT → 403. With a real one → live run. Try a fact key outside the allowlist → rejected. |
+| 19 **⛔ OG-5, OG-6** | `phase-19-prompt.txt` | GitHub App ephemeral branch/PR, least privilege, auto-cleanup. | A run opens a real PR touching only allowlisted paths. Attempt a path outside the allowlist → refused before any API call. Branch is reaped. **`main` cannot be pushed to directly** — that line verifies *your* branch protection, not the agent's code. |
 | 20 | `phase-20-prompt.txt` | Security/observability/cost hardening + public polish + agent-readable docs + README/architecture. | Work `validation.md` §8 (the full security checklist) line by line. Then `git clone` into a fresh directory and follow your own README. |
 
 ### Why this de-risks
@@ -182,6 +186,10 @@ product logic, then build Relay to a frozen contract, then build Concord against
 
 Attach **only** the listed files. Over-attaching is the main cause of an agent drifting outside its phase.
 
+**Never attach `meta.md` or `operator-runbook.md`.** Both are yours. Every operator gate is already restated in the phase
+prompt that depends on it, so the agent stops correctly without having read either — and attaching the runbook invites it
+to attempt work that is not its to do.
+
 | Phase | Attach |
 |---|---|
 | 01 | `architecture.md`, `constraints.md`, `research-findings.md`, `validation.md`, `supporting-spec-index.md` |
@@ -205,23 +213,40 @@ Attach **only** the listed files. Over-attaching is the main cause of an agent d
 | 19 | `security.md` (all), `research-findings.md` (§6 GitHub App) |
 | 20 | `validation.md` (all), `security.md` (all), `constraints.md` |
 
-## What YOU must supply (not in this packet)
+## What YOU must supply — see `operator-runbook.md`
 
-The packet is otherwise self-contained. These four things only you have:
+**`operator-runbook.md` is the authoritative list of every action only a human can perform**, in phase order, with what
+you do, what you hand back, how long it takes, and what breaks if you skip it. Read it before Phase 01 and keep it open.
+It is operator-facing: **do not attach it to a phase prompt.** Each gate is duplicated into the prompt that needs it, so
+the agent stops on its own without having read the runbook.
 
-1. **`ANTHROPIC_API_KEY`** — set via `wrangler secret put`, never in a file. Phase 01 needs it.
-2. **Your domain + chosen subdomains.** Give the agent the literal hostnames in Phase 01.
-3. **Both GitHub repos created and the estate repo's clone URL** — Phase 01 needs the estate repo to exist (it can be
-   empty) so the submodule can be wired. Create it with **no `.github/` directory**, and do not add one later.
-4. **The GitHub App id, installation id, and private key**, after you create the App and install it on the estate repo
-   only — Phase 19.
-5. **Cloudflare account id, and the Access team domain + AUD tag** after you create the Access app — Phase 18.
+Summary, so you can plan your time:
+
+| Gate | Phase | What you do | Time |
+|---|---|---|---|
+| OG-0 | before 01 | Prerequisites — already satisfied on this account; verify only | — |
+| OG-1 | 01 | Provide the Anthropic API key for `wrangler secret put` | 1 min |
+| OG-2 | 01 | *Conditional* — create the R2 bucket in the dashboard if the CLI scope fails | 2 min |
+| OG-3 | 11 | **Mintlify: account, connect repo 2, custom domain + `docs` CNAME** | 20–30 min |
+| OG-4 | 18 | Zero Trust team domain, **seat notification**, Access application | 20 min |
+| OG-5 | 19 | GitHub App — create, install on repo 2 only, private key | 15 min |
+| OG-6 | 19 | Branch protection on `main` of the estate repo | 3 min |
+
+Roughly **75 minutes of human work total**, unevenly distributed. Phases 02–10 and 12–17 need nothing from you but
+verification. OG-3 is the one with no loud failure if you forget it — nothing breaks at Phase 11, and then Phase 20
+cannot verify the served `/llms.txt`.
 
 If you have brand/visual preferences, hand them to the agent at Phase 03 (Relay UI) and Phase 17 (Concord UI). Absent
 that, the agent is instructed to keep both UIs plain and legible and not invent a brand.
 
+**The standing rule the agent follows:** at any gate whose input is missing, it stops and asks you for that one item. It
+does not invent a placeholder, comment out the dependent code, mark the step "skipped for now", or attempt the dashboard
+configuration itself. A fabricated credential that typechecks is worse than a halt.
+
 ## How to run a phase
 
+0. **Check `operator-runbook.md` for a gate on this phase.** Phases 01, 11, 18, and 19 need something from you. For 11,
+   18, and 19, do your part *before* handing over the prompt — the agent will otherwise get partway in and stop.
 1. Paste the phase prompt + attach only its listed docs.
 2. Let the agent finish. Do not answer mid-phase scope questions with "yes, also do X" — that is what the next phase is for.
 3. Run the phase's verification row above and the matching section of `validation.md`.

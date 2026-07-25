@@ -163,6 +163,27 @@ would break the moment the mount moved and would not match the paths sent to Git
 serve known-wrong content, and the answer key must not live in the repo being evaluated. An eval run leaves `estate/`
 git-clean.
 
+**G24 — At an operator gate, stop. Never simulate the operator.** Some work belongs to the human: third-party account
+creation, dashboard and console configuration, interactive consent screens, and any action that accepts a cost on their
+account. The gates are Phase 01 (Anthropic API key; R2 bucket if the CLI scope fails), Phase 11 (Mintlify account,
+GitHub app connection, `docs` DNS record), Phase 18 (Zero Trust team domain, seat notification, Access application),
+and Phase 19 (GitHub App creation and installation, branch protection on the estate repo's `main`).
+
+At a gate whose input is missing, name the specific item and stop. Forbidden without exception:
+- inventing, guessing, or generating a credential, team domain, AUD tag, or App id;
+- writing code against placeholder constants "to fill in later" on a path that touches auth, GitHub, or spend;
+- weakening a control so it runs without its real input (signature-only `jwtVerify`, a PAT instead of the App);
+- commenting out the dependent code path, or marking the step "skipped for now";
+- attempting the dashboard configuration;
+- **reporting a check as passing when its gate is unsatisfied.** "Unverifiable, blocked on X" is a correct and complete
+  answer. A fabricated confirmation is a defect that outlives the phase, and for the GitHub and Access paths it is a
+  defect with consequences outside the demo.
+
+The corollary for documentation: controls that live in a dashboard rather than in code must be **labelled as
+operator-configured** in `SECURITY.md`. They are real controls, but they can be changed or lost without a failing test,
+and a reader auditing the project needs to know which guarantees are structural and which depend on a setting staying
+where someone put it.
+
 ---
 
 ## 4. Performance and reliability constraints
@@ -211,6 +232,8 @@ git-clean.
 8. The mutation and path allowlists (`security.md` §4).
 9. The two-repository boundary and the one-way write direction (§G21).
 10. The invariant list (`contracts.md` §18).
+11. The operator gates (§G24). A gate is not a blocker to engineer around; it is the human staying in the loop where the
+    loop matters.
 
 If a phase genuinely requires changing one of these, say so explicitly, explain the forcing constraint, and propose the
 minimal change. Do not change one quietly to make a test pass.

@@ -6,6 +6,12 @@ later" list. The "wait" lists are the most important part — they are what keep
 
 Blocks: **0** walking skeleton (01) · **A** Relay (02–09) · **FREEZE** (gate) · **B** Concord (10–20).
 
+**Operator gates** appear in the Dependencies line of Phases **01, 11, 18, and 19**. Those phases need something only a
+human can do — a credential, a third-party account, a dashboard setting, or acceptance of a cost. At a gate, name the
+missing item and stop; do not invent a value, do not attempt the configuration, and do not report a dependent check as
+passing (`constraints.md` §G24). Phase 11's gate is the one with no loud failure if it is skipped, so it is written into
+that phase's acceptance criteria rather than left to be discovered at Phase 20.
+
 ---
 
 # Block 0 — Walking skeleton
@@ -17,8 +23,11 @@ Blocks: **0** walking skeleton (01) · **A** Relay (02–09) · **FREEZE** (gate
   `pnpm setup`; `relay-api` Worker with Vite/React page; `relay_db` + `relay-artifacts`; `relay-kernel` container with
   only `/health` and `/versions`; one `/api/health` route exercising all five; the structured log helper; the error
   shape; `.gitignore` + secret scan; CI (typecheck, lint, test, build) with `submodules: recursive`.
-- **Dependencies** Cloudflare account, Workers Paid, domain, `ANTHROPIC_API_KEY`, **the estate repo existing (may be
-  empty, must have no `.github/`)**.
+- **Dependencies** Cloudflare account, Workers Paid, domain, **the estate repo existing (may be empty, must have no
+  `.github/`)**. **OPERATOR GATE:** the operator supplies `ANTHROPIC_API_KEY` for `wrangler secret put` — stop and ask if
+  it is missing rather than stubbing the Anthropic check. Conditionally: if `wrangler r2 bucket create` fails on
+  permissions (this account's token lists no R2 scope), stop and hand it back rather than substituting KV or a stub
+  (`constraints.md` §G24).
 - **Outputs** Live URL. `GET /api/health` → five checks with real values (including `pandas.__version__` from the
   container). `COMPAT.md` recording observed versions, limits, and any deviation. Green CI.
 - **Acceptance** Every check green from the public URL, not just locally. `pnpm typecheck && pnpm lint && pnpm test`
@@ -169,11 +178,18 @@ version bump and a `CONTRACTS-FROZEN.md` entry.
   articles (upload failed, how to run an analysis, platform availability, managing the connector, troubleshooting,
   plan/permission questions, retention, terminology, artifacts, CLI basics). `docs.json` with `$ref` splitting and
   `markdown.instructions`. Golden-file tests per adapter. `concord ingest --dry-run`.
-- **Dependencies** 10.
-- **Outputs** Six adapters; a real, readable documentation estate; stable doc unit ids.
+- **Dependencies** 10. **OPERATOR GATE:** the operator creates the Mintlify account, installs Mintlify's GitHub app on
+  repo 2 pointed at `docs-mintlify/`, and adds the `docs` DNS record. Commit `docs-mintlify/` FIRST so there is
+  something to connect to, then hand off explicitly and ask for the resulting live docs hostname. The agent cannot do
+  any of this and must not attempt it (`constraints.md` §G24).
+- **Outputs** Six adapters; a real, readable documentation estate; stable doc unit ids; a published docs site and the
+  canonical docs host recorded in `COMPAT.md`.
 - **Acceptance** Golden files committed and passing. `--dry-run` lists every unit per surface with a deterministic id;
   running twice gives identical ids. `adapter.patch()` on a `generated: true` unit throws. Deliberate register
   differences exist between surfaces (help center is friendlier than the reference) — this is required, not incidental.
+  **Plus `validation.md` §3b** — the docs site publishes, `/llms.txt` serves, and a merged PR rebuilds it. This is the
+  only surface with no automated test, and nothing else in the build fails if it was never connected, which is why it is
+  acceptance criteria here and not a Phase 20 discovery.
 - **Wait until later** The fact graph proper. Reconciliation beyond the one fact.
 
 ## Phase 12 — Fact graph, provenance, authority
@@ -259,7 +275,10 @@ version bump and a `CONTRACTS-FROZEN.md` entry.
 - **Scope** `requireAccessIdentity` middleware (JWKS, `aud`, `iss`, expiry, domain); `DEMO_ADMIN_ENABLED` default-off;
   `/api/admin/*` routes; the fact-mutation allowlist and the doc-body allowlist with MDX content filtering; the
   one-concurrent-run lock; per-identity rate limit; `audit_log`; live-mode Change Lab.
-- **Dependencies** 17. You must create the Access app and supply `ACCESS_AUD` + `ACCESS_TEAM_DOMAIN`.
+- **Dependencies** 17. **OPERATOR GATE:** the operator chooses the Zero Trust team domain (one time), configures a
+  Cloudflare seat/billing notification **before** the app is enabled, creates the Access application, and supplies
+  `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD`. The agent documents the configuration; it does not perform it, and it does not
+  write the middleware against placeholder constants while waiting (`constraints.md` §G24).
 - **Outputs** A privileged user can make an allowlisted change and watch a real run.
 - **Acceptance** No JWT → 403. Forged/expired/wrong-`aud` JWT → 403 (test with a self-signed token). Wrong email domain
   → 403. `DEMO_ADMIN_ENABLED` unset → admin routes 404 (I12). Off-allowlist fact key → rejected before validation.
@@ -274,7 +293,11 @@ version bump and a `CONTRACTS-FROZEN.md` entry.
   estate-relative path allowlist and denylist checked in `concord-core` and again immediately before the Octokit call;
   PR body with fact deltas, evidence, the estate SHA the run was built against, and a link to the run inspector;
   failure cleanup; a cron cleanup Worker reaping branches/PRs older than 48 h; branch protection on `main`.
-- **Dependencies** 18. You must create the App, install it, and supply credentials.
+- **Dependencies** 18. **TWO OPERATOR GATES, easily conflated:** (a) the operator creates the App with exactly three
+  permissions, installs it on the estate repo only, and supplies the app id, installation id, and private key — no PAT
+  substitution; (b) the operator sets **branch protection on the estate repo's `main`** in GitHub's UI, which is a
+  repository setting the App does not grant and the agent cannot configure. The agent verifies (b) by attempting a direct
+  push and observing the rejection (`constraints.md` §G24).
 - **Outputs** A live run opens a real PR touching only allowlisted paths.
 - **Acceptance** PR created and correct. An attempted write to `.github/**`, a `.ts` file, or a `..` traversal path is
   refused **before** any GitHub API call (unit tests for each). Failure mid-flow leaves no orphan branch. Cleanup cron

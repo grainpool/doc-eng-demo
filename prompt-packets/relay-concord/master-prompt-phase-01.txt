@@ -111,11 +111,20 @@ F. `COMPAT.md` — the most valuable artifact of this phase. Record the OBSERVED
   Workers Paid and R2 Paid are active. Containers, D1, and Queues are licensed and unprovisioned. Existing account
   resources you must NOT collide with: R2 buckets `gp-prod-uploads` and `numi-backups-prod`; Pages projects
   `wysee-markdown` and `numitura`. Create `relay_db` and `relay-artifacts`; those names are free.
-- I will supply the Anthropic API key separately, for `wrangler secret put`. If you are missing it, STOP and ask.
-- R2 NOTE — verify this early, it is the most likely thing to stall you: `wrangler whoami` on this account lists no R2
-  scope even though `r2 bucket list` succeeds. If `wrangler r2 bucket create` fails on permissions, say so immediately
-  rather than working around it — the fix is a re-`wrangler login` or creating the bucket in the dashboard, and it takes
-  under a minute. Record whichever happened in `COMPAT.md`.
+- OPERATOR GATE — I will supply the Anthropic API key separately, for `wrangler secret put`. If you are missing it,
+  STOP and ask me for it. Do not use a placeholder, do not skip the Anthropic health check, do not mark it "pending".
+  Four of five checks green is a failed phase, not a partial pass.
+- OPERATOR GATE (conditional) — R2. Verify this early; it is the most likely thing to stall you. `wrangler whoami` on
+  this account lists no R2 scope even though `r2 bucket list` succeeds. If `wrangler r2 bucket create` fails on
+  permissions, STOP and tell me immediately rather than working around it: the fix is mine — a re-`wrangler login` or
+  creating the bucket in the dashboard — and it takes under a minute. Do not substitute KV, the filesystem, or a stub
+  for R2. Record whichever path resolved it in `COMPAT.md`.
+- THE GENERAL RULE for the whole build, established here: some work in this project is mine, not yours — account
+  creation, dashboard and console configuration, and anything requiring an interactive consent screen or accepting a
+  cost on my account. When you reach one of those, name the specific item you need and stop. Never invent a credential,
+  never attempt the dashboard work yourself, and never report a check as passing when its input was missing
+  (`supporting-spec-index.md`, "Operator gates"). Later phases have their own gates: Phase 11 (Mintlify), Phase 18
+  (Cloudflare Access), Phase 19 (GitHub App and branch protection). Each says so in its own prompt.
 - Add only dependencies from the approved list in `constraints.md` §G18. Anything else needs a stated justification.
 - Write the Phase 01 test from `validation.md` §2: `relay-api/test/health.test.ts` using
   `@cloudflare/vitest-pool-workers`, asserting all five checks pass and that the response body contains no

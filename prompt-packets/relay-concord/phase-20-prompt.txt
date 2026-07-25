@@ -26,15 +26,23 @@ SCOPE
 
 3. Cost controls — confirm and document: zero model calls on public paths; ≤ 20 calls per run; ≤ $5 per UTC day;
    ≤ 5 live runs per identity per hour; one concurrent live run. Test each by forcing it, not by reading the code.
-   Separately, document the ONE cost boundary that is not code-enforceable: the Zero Trust 50-seat cliff
-   (`security.md` §5). Record the current seat count, confirm the billing notification exists, and state plainly in
-   `SECURITY.md` that seat 51 costs ~$357/mo. A reader should not have to discover that from a bill.
+   Document the two layers ABOVE the code as well, and label them as operator-configured: an Anthropic Console
+   org-level spend limit (already set — it is the backstop under the in-app daily cap, and the honest framing is that
+   the app-level cap is a product behaviour while the console limit is the floor beneath it), and the ONE cost boundary
+   that is not code-enforceable at all: the Zero Trust 50-seat cliff (`security.md` §5). Record the current seat count,
+   ask me to confirm the billing notification exists rather than assuming it, and state plainly in `SECURITY.md` that
+   seat 51 costs ~$357/mo. A reader should not have to discover that from a bill.
 
 4. Agent-readable documentation — finalize the INPUTS that produce Mintlify's generated machine-readable output:
    a `description` in the frontmatter of every page, the site `description` in `docs.json`, and `markdown.instructions`
    with genuinely useful agent guidance (what the product is, canonical terminology, where authoritative facts live,
-   what NOT to infer). Then fetch the served `/llms.txt` and confirm it reflects the reconciled descriptions.
+   what NOT to infer). Then fetch the served `/llms.txt` at the canonical docs URL recorded in `COMPAT.md` and confirm
+   it reflects the reconciled descriptions.
    Do NOT author `llms.txt` or `llms-full.txt` yourself — Mintlify generates and hosts them (`constraints.md` §G7).
+   DEPENDS ON AN OPERATOR GATE: this check requires the Mintlify connection I set up in Phase 11. If the site is not
+   publishing, this line CANNOT be verified. Say so plainly and tell me what I need to do — do not hand-author the file
+   to close the gap, do not assert the check passed from reading the inputs, and do not quietly drop the item. An
+   honest "unverifiable, blocked on the Mintlify connection" is a passing report; a fabricated confirmation is not.
    Make product facts, provenance, prerequisites, terminology, and relationships explicit enough in the prose that both
    a human and an agent can use the pages. Do not invent an agent-specific format for novelty.
 
@@ -49,7 +57,11 @@ SCOPE
    - `ARCHITECTURE.md`: the reconciliation model, the six source tiers, the action classes, why escalation is a success.
    - `EVALUATION.md`: the methodology, the metrics, the real numbers, and the failures — link the failures page.
    - `SECURITY.md`: the threat model, the controls, the Access and GitHub App configuration steps, and the security
-     properties you verified in step 1.
+     properties you verified in step 1. Mark clearly which controls are **operator-configured rather than enforced by
+     code** — the Access application and its email-domain policy, branch protection on the estate repo's `main`, the
+     Zero Trust seat notification, and the Anthropic Console org spend limit. These are real controls, but they live in
+     dashboards, which means they can be changed or lost without a failing test. A reader auditing this project needs to
+     know which guarantees are structural and which depend on a setting staying where someone put it.
    - per-package READMEs for the `concord-*` packages (Relay's were written in Phase 09).
 
 6. UI completion — empty, loading, and error states on every screen of both apps; a responsive pass; keyboard
@@ -72,9 +84,10 @@ HARD RULES
 - Keep `eval-report.md` honest. The failures page must name specific real misses with analysis, not generic caveats.
 
 DONE WHEN
-Every line of `validation.md` §8 passes with a recorded observation; the public demo works with `DEMO_ADMIN_ENABLED`
-unset; the served `/llms.txt` reflects the reconciled descriptions; a fresh clone reaches a working local instance by
-following the README alone; the eval report and failures page are committed and honest.
+Every line of `validation.md` §8 passes with a recorded observation, or is explicitly reported as unverifiable with the
+reason; the public demo works with `DEMO_ADMIN_ENABLED` unset; the served `/llms.txt` reflects the reconciled
+descriptions; the operator-configured controls are named as such in `SECURITY.md`; a fresh clone reaches a working local
+instance by following the README alone; the eval report and failures page are committed and honest.
 
 Report: the completed `validation.md` §8 checklist with your observation per line; the final eval numbers with any change
 since Phase 16 explained; what the fresh-clone exercise revealed; and an honest list of what you would fix next if this

@@ -15,7 +15,8 @@ document wins when two seem to conflict.
 7. **`validation.md`** — the tests and checklists a phase must satisfy.
 8. **The phase prompt** — narrows all of the above to this phase's slice.
 
-`meta.md` is for the human operator. You do not need it.
+`meta.md` and `operator-runbook.md` are for the human operator. You will not be given either. Everything you need to
+know about a human-action gate is restated in the phase prompt that depends on it — see "Operator gates" below.
 
 ## Document guide
 
@@ -67,9 +68,13 @@ Treat these as living inputs, not outputs. Later phases read them.
 | `estate/` (submodule pin) | 01 | every phase from 11 onward |
 | `eval-report.md` / `.json` | 16, refreshed 20 | 20 README + failures page |
 
-## What the human operator must supply (not in this packet)
+## Operator gates — human work you must wait for, never simulate
 
-Ask for these rather than inventing them:
+Some work in this project is **not yours to do**, either because it requires an account you do not have, an interactive
+consent screen, or acceptance of a cost on the operator's account. The operator has a full runbook
+(`operator-runbook.md`) covering these; you will not be given it. What matters to you is the behaviour at each gate.
+
+**Data the operator supplies — ask, do not invent:**
 
 | Needed | Phase | Note |
 |---|---|---|
@@ -78,11 +83,28 @@ Ask for these rather than inventing them:
 | Cloudflare account id | 01 | For `wrangler.jsonc`. |
 | The **estate repo** clone URL | 01 | Repo 2 must exist (may be empty) so the submodule can be wired. It must have **no `.github/` directory**, then or ever. |
 | Brand / visual preferences | 03 (Relay UI), 17 (Concord UI) | If not supplied, keep both UIs plain, legible, and unbranded. Do not invent a brand, logo, or colour system. |
-| Access team domain + AUD tag | 18 | After the operator creates the Access application. |
+| The live docs hostname, once Mintlify is publishing | 11 | Either `docs.<domain>` or an assigned `*.mintlify.app` subdomain. Phase 20 fetches `/llms.txt` from it by name. |
+| `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` | 18 | After the operator creates the Access application. |
 | GitHub App id, installation id, private key | 19 | After the operator creates the App and installs it on the estate repo **only**. |
 
-If you reach a phase without its required input, stop and ask for that one item. Do not stub it with a placeholder that
-could be mistaken for working code, and do not commit a fake value.
+**Configuration the operator performs — verify, do not attempt:**
+
+| Action | Phase | Your job |
+|---|---|---|
+| Mintlify account + GitHub app connected to repo 2 + `docs` CNAME | 11 | Author `docs.json` and the pages. Then confirm the site is live and `/llms.txt` serves. If it is not, say so plainly — do not hand-author `llms.txt` to compensate (§G7). |
+| Zero Trust team domain + seat/billing notification | 18 | Document the seat cliff and how to check the count. Tell the operator to configure the notification *before* enabling the app. |
+| The Cloudflare Access application | 18 | Document the exact configuration in `SECURITY.md`, including the OTP-as-Include-rule misconfiguration to avoid. |
+| GitHub App creation + installation scope | 19 | Document the three permissions and the single-repo installation. Never substitute a PAT. |
+| **Branch protection on `main` of the estate repo** | 19 | Operator-configured in GitHub's UI. You cannot set it and the App does not grant it. Verify a direct push to `main` is rejected, and document why this layer is required. |
+
+**The rule, in all cases:** if a gate's input or configuration is missing when you reach it, **stop and ask for that one
+item.** Do not stub it with a placeholder that could be mistaken for working code, do not commit a fake value, do not
+comment out the dependent code path, do not mark the step "skipped for now", and do not attempt the dashboard
+configuration yourself. A missing credential is a two-minute interruption; a fabricated one that typechecks is a defect
+that survives to production.
+
+Equally: **never report a verification as passing when its operator gate is unsatisfied.** If Mintlify is not connected,
+"the served `/llms.txt` reflects the reconciled descriptions" is unverifiable, and saying so is the correct output.
 
 ## No user-supplied reference documents are required
 

@@ -239,3 +239,35 @@ redacts the local part of the email to the domain.
 - A cron-triggered cleanup Worker closes PRs and deletes `concord/run-*` branches older than 48 h.
 - PR body states: opened by an automated demo, lists the fact deltas and evidence, and links the public run inspector.
 - PR bodies and branch names never interpolate model output.
+
+## 9. Operator-configured controls — real, but not enforced by code
+
+Most controls in this document are structural: they hold because of what the code does or because of what a repository
+contains, and a test can prove them. Five do not. They live in a dashboard, they were configured by a human, and they
+can be changed or lost without a single test failing.
+
+`SECURITY.md` must label these explicitly (Phase 20). A reader auditing this project is entitled to know which
+guarantees are structural and which depend on a setting staying where someone put it — and the honest answer is more
+persuasive than a flat list that implies everything is equally enforced.
+
+| Control | Where it lives | What it protects | If it silently changed |
+|---|---|---|---|
+| The Access application and its `@anthropic.com` Include rule | Cloudflare Zero Trust | The only authorization boundary in front of live mutation | Anyone with an OTP could reach the privileged surface — **except** that the backend re-checks the email domain independently (§2), which is exactly why that second gate exists |
+| Branch protection on the estate repo's `main` | GitHub repo settings | Forces the App's `Contents: write` down the PR path | An AI-proposed patch, visitor-triggered, could land on the published docs site with no human review |
+| The GitHub App's three-permission scope and single-repo installation | GitHub App settings | Makes repo 1 unreachable rather than merely disallowed | The one-way write direction (§G21) would become a policy again instead of a topology |
+| Zero Trust seat/billing notification | Cloudflare billing | Visibility on the one uncapped cost in the design | ~$357/mo at seat 51, discovered from a bill (§5) |
+| Anthropic Console org spend limit | Anthropic Console | The floor beneath the in-app $5/day cap | A bug in the app-level cap would have nothing under it |
+
+Two design consequences follow, and both are already in the build:
+
+1. **Every dashboard control has a code-side counterpart wherever one is possible.** The Access policy is backed by an
+   independent domain re-check in the middleware. The App's installation scope is backed by a path allowlist and denylist
+   checked twice. The console spend limit is backed by the per-run and per-day caps. Defence in depth here is not
+   decoration — it is specifically the answer to "what if the dashboard setting is wrong?"
+2. **The seat cliff is the one control with no code-side counterpart at all,** because Access consumes seats at the edge
+   before any of our code runs. That is why it gets a monitored ceiling and a human notification rather than a cap
+   (`constraints.md` §4), and why it is stated in plain numbers rather than described as a risk.
+
+The operator's full setup sequence for these is in `operator-runbook.md` (gates OG-3 through OG-6), which is not part of
+the agent's document set — the agent gets each gate restated in the phase prompt that depends on it (`constraints.md`
+§G24).

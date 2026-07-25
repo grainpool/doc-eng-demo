@@ -5,24 +5,42 @@ Phase 17 is complete and verified: the Change Lab replays five recorded runs pub
 Gate mutation on verified identity — at the BACKEND, not in the UI. Read `security.md` §2 and §4 in full before writing
 any code.
 
-I will supply: `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` after I create the Access application. If you do not have them,
-stop and ask.
+OPERATOR GATE — CLOUDFLARE ZERO TRUST. Three things here are MINE, in the Cloudflare dashboard. You cannot do any of
+them and must not try. Two of them must happen BEFORE you write code that depends on them:
+
+  (a) The Zero Trust team domain. If I have never used Zero Trust on this account, I choose a team name first, which
+      becomes `<team>.cloudflareaccess.com` — the value your middleware verifies `iss` against.
+  (b) A Cloudflare billing/seat notification. See item 0 below. This one has money attached and I must do it before
+      the app is enabled, not after.
+  (c) The Access application itself, which produces the AUD tag.
+
+I will supply `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` once (a) and (c) are done. If you do not have them, STOP and ask me
+for those two values by name. Do not invent a team domain, do not use an example AUD, do not write the middleware
+against placeholder constants "to be filled in later", and do not weaken `jwtVerify` to signature-only so it will run
+without them. Note that the middleware is default-off, so an unconfigured Access app leaves the privileged surface
+unreachable rather than open — but unreachable is not verified, and this phase's job is verification.
 
 SCOPE
 
 0. BEFORE the app is enabled — the Zero Trust seat cliff (`security.md` §5). This account is on Teams Free: 50 seats
-   included, and the 51st distinct authenticator moves the entire count to $7/user/month with no partial billing.
-   Access consumes seats at the edge, so this CANNOT be capped in code. Your job here is to make it visible:
-   document the current seat count in `SECURITY.md`, document how to check it, and tell me to configure a Cloudflare
-   billing/seat notification before I enable the app. Do not narrow the `@anthropic.com` policy to an email list on
-   your own initiative — that departs from the requirement; raise it if the count gets close.
+   included, and the 51st distinct authenticator moves the entire count to $7/user/month with no partial billing —
+   roughly $357/mo at seat 51. Access consumes seats AT THE EDGE, before any of our code runs, so this CANNOT be capped
+   in code. It is the only cost in the whole design with no application-level control, which is why it is a human step
+   rather than a config value. Your job here is to make it visible:
+   document the current seat count in `SECURITY.md`, document how to check it, and tell me — explicitly, in your
+   response, not buried in a file — to configure a Cloudflare billing/seat notification before I enable the app. Do not
+   narrow the `@anthropic.com` policy to an email list on your own initiative; that departs from the requirement. Raise
+   it if the count gets close and let me decide.
    Also record that Teams Free retains Access logs for only 24 h, which is why the D1 `audit_log` is the durable record.
 
-1. The Access application — I configure it; you document the exact steps in `SECURITY.md`:
+1. The Access application — I CONFIGURE IT IN THE DASHBOARD; your deliverable is the documentation of it, not the thing
+   itself. Write the exact steps in `SECURITY.md` so a reader could reproduce the setup:
    Self-hosted app on `concord.<domain>` covering `/api/admin` and `/admin`; policy Action `Allow`, rule type `Include`,
    selector "Emails ending in", value `@anthropic.com`; login method One-time PIN (10-minute expiry).
    Document the misconfiguration to avoid: "One-time PIN" must NOT appear as an Include rule under Login Methods — that
-   would admit every OTP user. OTP is the authentication method; the email-domain rule is the authorization.
+   would admit every OTP user. OTP is the authentication method; the email-domain rule is the authorization. A policy
+   configured that way reads as restrictive while being wide open, which is exactly the kind of error a security doc
+   exists to prevent.
 
 2. `requireAccessIdentity` middleware — `packages/concord-api/src/middleware/access.ts`, implemented as in
    `security.md` §2 with `jose`:
@@ -73,5 +91,6 @@ DONE WHEN
 Every 403 case in the test above passes; a privileged user can trigger a live run and watch it; an off-allowlist key and
 a `<script>`-containing body are both rejected; concurrency and rate limits hold; `audit_log` records the identity.
 
-Report: each rejection case with the observed status and error code; the audit log row for a successful live run; and
-confirmation that the public demo still works with admin disabled.
+Report: each rejection case with the observed status and error code; the audit log row for a successful live run;
+confirmation that the public demo still works with admin disabled; and the reminder to me about the seat notification,
+stated as an action item rather than a footnote.

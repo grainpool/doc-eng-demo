@@ -5,8 +5,28 @@ Phase 18 is complete and verified: Access-gated live runs, verified JWTs, mutati
 Land patches as a real pull request. Read `security.md` §1, §4.3, and §8 before starting. This is the phase where a
 mistake has consequences outside the demo, so the restrictions are layered deliberately — each one must hold on its own.
 
-I will supply: the GitHub App id, the installation id, and the private key. If you do not have them, stop and ask. Do
-not proceed with a PAT as a substitute.
+OPERATOR GATE — GITHUB. Two separate things here are MINE, and they are easy to conflate. Both must be done before this
+phase can be verified, and you can do neither:
+
+  (a) CREATING AND INSTALLING THE APP. I create it under `grainpool` with exactly three permissions (Contents: write,
+      Pull requests: write, Metadata: read), install it on the estate repo and nowhere else, and download the private
+      key. I then supply you the App id, the installation id, and the key.
+      If you do not have all three, STOP and ask me for them by name. Do NOT proceed with a personal access token as a
+      substitute — a PAT is account-scoped and long-lived, and it defeats three of the four layers below at once. Do not
+      write the publish path against placeholder credentials to "wire it up now and fill them in later"; an untested
+      GitHub write path is the one thing in this project that can do damage outside the demo.
+
+  (b) BRANCH PROTECTION ON `main` OF THE ESTATE REPO — require a PR before merging, block force pushes, block branch
+      deletion. This is a REPOSITORY SETTING I configure in GitHub's UI. The App does not grant it, installing the App
+      does not create it, and your credentials cannot set it. It is a distinct step from (a) and I will tell you when it
+      is in place.
+      Why it is load-bearing: the App holds `Contents: write`. Without branch protection that permission can commit
+      straight to `main` — an AI-proposed patch, triggered by a visitor, landing on the published docs site with no
+      human in the loop. Branch protection is what forces the token down the PR path.
+      Your job is to VERIFY it, not assume it: attempt a direct push to `main` with the installation token and confirm
+      it is rejected. If it succeeds, that is a finding — stop and tell me, because the layer is missing. Report the
+      observed rejection, and document in `SECURITY.md` that this layer is operator-configured and therefore worth
+      re-checking rather than assumed.
 
 LAYER ZERO, before anything else: the App is installed on the **estate repo (repo 2)** and nowhere else. Repo 1 — all
 code, all CI, all product truth — has no installation and is therefore unreachable, not merely disallowed. Everything
@@ -16,7 +36,8 @@ owner (`constraints.md` §G21).
 
 SCOPE
 
-1. The GitHub App — I create and install it; you document the exact configuration in `SECURITY.md`:
+1. The GitHub App — I CREATE AND INSTALL IT (gate (a) above); your deliverable is the documentation of it in
+   `SECURITY.md`, written so a reader could reproduce the configuration and see why each choice is deliberate:
    - permissions: **Contents: write, Pull requests: write, Metadata: read**. Nothing else. `Pull requests: write` alone
      cannot create a branch, which is why Contents:write is required — say so in the doc so the scope looks deliberate
      rather than lazy.
@@ -24,8 +45,12 @@ SCOPE
    - the estate repo contains **no `.github/` directory at all**. All CI lives in repo 1, where this App is not
      installed — so there is no privileged workflow within reach of a visitor-authored branch. State this as the
      structural argument it is, rather than relying on GitHub's workflow-trigger semantics.
-   - branch protection on `main` of the estate repo: PR required, no force push, no deletion. This forces a
-     Contents:write token through the PR path.
+     Note that Mintlify's GitHub app is also installed on repo 2 (Phase 11). Address that directly rather than leaving
+     a reader to wonder: the argument is a property of the repo's *contents*, not of how many apps are installed, and
+     Concord's App remains the only installation on repo 2 with `Contents: write`.
+   - branch protection on `main`: PR required, no force push, no deletion. **Operator-configured** — gate (b) above.
+     Mark it as such in the doc, and record the observed result of your direct-push attempt next to it. A control
+     nobody can verify is a control nobody should trust.
 
 2. Token handling — mint an installation access token PER RUN, scoped with `repositories`/`repository_ids` to that one
    repo, short-lived. Never return it in a response. Never log it. Never cache it beyond the run.
@@ -75,4 +100,5 @@ A live privileged run opens a real PR touching only allowlisted paths, with evid
 inspector; every path-rejection test passes with zero GitHub calls; an injected mid-flow failure leaves no orphan branch;
 the cleanup cron reaps; `main` cannot be pushed to directly.
 
-Report: the PR url and its body verbatim; the path-rejection cases you verified; and the observed cleanup behavior.
+Report: the PR url and its body verbatim; the path-rejection cases you verified; the observed cleanup behavior; and the
+observed result of the direct-push-to-`main` attempt, naming branch protection as the operator-configured layer it is.

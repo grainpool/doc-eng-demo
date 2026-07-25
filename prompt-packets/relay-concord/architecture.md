@@ -54,12 +54,23 @@ Nothing else.
 | Contains | all code, product truth (`product-truth/`), fixtures, CI | the six documentation surfaces |
 | `.github/` | yes — CI lives here and only here | **none, ever** |
 | Concord GitHub App | **not installed** | installed, and nowhere else |
-| Mintlify GitHub app | not connected | connected |
+| Mintlify GitHub app | not connected | connected — **operator-configured at Phase 11** |
+| Branch protection on `main` | — | required — **operator-configured at Phase 19** |
 | Concord writes | **never** | via PR only |
 | Relationship | mounts repo 2 at `estate/` as a git submodule pinned to a SHA | standalone |
 
 The estate is consumed from disk through the submodule, so no build step needs the network. `pnpm setup` runs
 `git submodule update --init`; CI checks out with `submodules: recursive`.
+
+Two properties of repo 2 are established by a human in a dashboard rather than by code, and the build cannot create
+either: the **Mintlify connection** that makes the docs surface publish at all, and **branch protection on `main`** that
+forces the App's `Contents: write` down the PR path. Both are gates the agent must stop for rather than work around
+(`constraints.md` §G24), and both are labelled as operator-configured in `security.md` §9 because a dashboard setting can
+be lost without a failing test.
+
+Note that Mintlify's app being installed on repo 2 does not weaken the security argument. That argument is *repo 2
+contains no CI, so a visitor-authored branch cannot reach a privileged workflow* — a property of the repo's contents, not
+of how many apps are installed. Concord's App remains the only installation on repo 2 holding `Contents: write`.
 
 `concord-api` bundles the estate at build time and records the estate commit SHA on every run (`run.estate_sha`), which
 appears in the run record and the PR body. If the estate has moved ahead of the bundle, the PR conflicts visibly — that

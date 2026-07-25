@@ -6,6 +6,44 @@ Now build the full heterogeneous estate. The surfaces must genuinely DIFFER — 
 mechanics, and writing registers. If all six read alike, the project's central claim (semantic consistency without
 textual uniformity) becomes untestable.
 
+OPERATOR GATE — MINTLIFY. Read this before you start; it changes the order of your work.
+
+Mintlify is a third-party service with an account, a GitHub app installation, and a DNS record. All three are MINE to
+set up — you cannot do any of them, and you must not try. But this phase is where the Mintlify surface comes into
+existence, so this is where the handoff happens.
+
+What you do, in this order:
+  1. Author `docs-mintlify/` — `docs.json` and the MDX pages (item 2 below) — and COMMIT them to repo 2 first, before
+     the other surfaces. Mintlify cannot be connected to an empty directory.
+  2. Then TELL ME, explicitly and in your response, that `docs-mintlify/` is committed and I should now connect
+     Mintlify. Give me the exact repo path you used and the subdirectory Mintlify must be pointed at. Do not bury this
+     in a summary — it is a blocking handoff, and if I miss it here nothing fails until Phase 20.
+  3. ASK ME for the resulting live docs hostname (either `docs.<domain>` or the `*.mintlify.app` subdomain Mintlify
+     assigns). Record whichever I give you as the canonical docs URL in `COMPAT.md`, and use it everywhere the packet
+     says `docs.<domain>`.
+  4. Once I confirm, verify yourself: fetch the live site and fetch `/llms.txt`. Report both observations.
+
+Unlike the Phase 18 and 19 gates, this one does not require you to HALT — the other five surfaces, the adapters, and the
+golden tests are all independent of whether Mintlify is connected, so keep working while you wait on me. What it requires
+is that you cannot CLOSE the phase on the code alone. Finish everything else, then hold the phase open on this one item
+and say so.
+
+What you must NOT do:
+  - Do not hand-author `llms.txt` or `llms-full.txt` to make the surface look complete. Mintlify generates them; a
+    hand-written one is a second artifact that drifts immediately (`constraints.md` §G7). This prohibition holds even
+    if Mintlify is not yet connected — an absent generated file is the honest state.
+  - Do not create a Mintlify account, add a DNS record, or install a GitHub app. You do not have the access and you
+    should not ask for it.
+  - Do not treat this phase as done on the code alone. If I have not confirmed the site is live, say so in your report
+    as an open item rather than closing the phase silently. The adapters and golden tests can all pass with nothing
+    published, which is exactly why this needs saying out loud.
+
+Note for `SECURITY.md` later: Mintlify's GitHub app also gets installed on repo 2. That does not weaken the Phase 19
+argument — that argument is "repo 2 contains no CI, so a visitor-authored branch cannot reach a privileged workflow,"
+which is a property of the repo's contents rather than of how many apps are installed. Concord's App remains the only
+installation on repo 2 with `Contents: write`. Say this explicitly when you write the security doc, because a reader
+will notice the second app and wonder.
+
 SCOPE
 
 1. Four more adapters implementing `SurfaceAdapter`: `helpcenter`, `clidocs`, `release`, `generated`. Each in its own
@@ -72,7 +110,10 @@ HARD RULES
 DONE WHEN
 Six adapters with passing golden files; `ingest --dry-run` lists every unit with stable, estate-relative ids across two
 runs; the docs estate is real, readable, and CORRECT; `fixtures/eval/defects.json` has ≥ 24 entries including ≥ 4 with
-`expected_detection: false`, and every `find` string matches exactly once.
+`expected_detection: false`, and every `find` string matches exactly once. AND the Mintlify handoff is closed: I have
+confirmed the site is publishing, you have fetched it and `/llms.txt`, and the canonical docs URL is recorded in
+`COMPAT.md`. If that last part is still open, the phase is not done — report it as the one outstanding item.
 
 Report: the doc-unit count per surface; the register difference you used for `limit.upload.csv.max_bytes` across four
-surfaces; and the full defect list you seeded with classes and expected actions.
+surfaces; the full defect list you seeded with classes and expected actions; and the state of the Mintlify gate —
+either the live URL with your two observations, or an explicit statement that you are waiting on me.

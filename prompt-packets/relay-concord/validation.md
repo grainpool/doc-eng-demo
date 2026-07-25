@@ -83,6 +83,29 @@ Each row is a test file the phase must add. The phase is incomplete without it.
 11. Kill the container (or block it) → analysis returns 503 with `error.analysis.kernel_unavailable`, the turn is
     recorded as failed, and the UI is not broken.
 
+## 3b. Manual QA — the published docs site (run at Phase 11, not Phase 20)
+
+This is the one surface with no automated test, because it lives on a third-party service the operator connects
+(`operator-runbook.md` OG-3, `constraints.md` §G24). Nothing in the test suite fails if it was never set up, and the
+dependent check does not appear until Phase 20 step 4 — nine phases later. Run this list the moment the operator says
+Mintlify is connected.
+
+1. `https://<docs host>` serves the site, and the navigation matches `docs.json`.
+2. Mintlify is building from the `docs-mintlify/` subdirectory, not the estate repo root. If it indexed `help-center/`
+   or `in-product-copy/`, the project is misconfigured — the surfaces are meant to be separate.
+3. `https://<docs host>/llms.txt` returns generated content, and page links carry the `.md` extension.
+4. `https://<docs host>/llms-full.txt` returns content.
+5. Spot-check three page frontmatter `description` values against what `/llms.txt` shows — this is the whole reason
+   Concord reconciles descriptions rather than authoring `llms.txt` (§G7).
+6. Response headers include `Link: </llms.txt>; rel="llms-txt"` or `X-Llms-Txt`.
+7. The canonical docs host is recorded in `COMPAT.md`, and it is the value used everywhere the packet says
+   `docs.<domain>`. If the operator used the assigned `*.mintlify.app` subdomain instead of a custom domain, that is
+   fine and nothing depends on the hostname — but it must be written down, because Phase 20 fetches it by name.
+8. Merge a trivial PR against `docs-mintlify/` and confirm the site rebuilds. This is the publishing mechanic Phase 19
+   depends on, and it is worth proving before an automated system starts opening those PRs.
+
+If any line fails, that is an operator-gate issue, not a code issue. Report it as such.
+
 ## 4. Manual QA — Concord public (run after Phase 17)
 
 Do this in a **private browser window** with `DEMO_ADMIN_ENABLED` unset.
@@ -162,6 +185,11 @@ implementation rather than the problem — treat it as a failing phase and add h
 
 ## 8. Security verification checklist (Phase 20 — every line must pass)
 
+Six of these lines verify **operator-configured** controls rather than code (`security.md` §9). They are marked **⛔**.
+Verify them by observation against the real account or repository — never by inference from the code, and never by
+assuming the operator did it. If a **⛔** line cannot be verified because its gate is unsatisfied, record it as
+unverifiable with the reason. That is a passing report; a fabricated confirmation is not (`constraints.md` §G24).
+
 **Secrets**
 - [ ] `grep -r "sk-ant-" .` finds nothing outside `.gitignore`d files.
 - [ ] Built client bundles contain no secret, no `ANTHROPIC`, no GitHub key material.
@@ -175,7 +203,9 @@ implementation rather than the problem — treat it as a failing phase and add h
 - [ ] Non-`@anthropic.com` email in a valid JWT → 403.
 - [ ] `DEMO_ADMIN_ENABLED` unset → admin routes 404.
 - [ ] No `if (dev) skipAuth` branch exists in the production bundle (grep the built output).
-- [ ] Access policy uses "Emails ending in", and "One-time PIN" is **not** an Include rule under Login Methods.
+- [ ] **⛔** Access policy uses "Emails ending in", and "One-time PIN" is **not** an Include rule under Login Methods.
+      Operator-configured. Read the actual policy in the dashboard; the middleware passing does not prove this, because
+      the middleware's independent domain re-check would mask a wide-open policy.
 
 **Code execution / SSRF**
 - [ ] No `eval`, `new Function`, `child_process`, or `exec` in any Worker or the kernel.
@@ -188,10 +218,14 @@ implementation rather than the problem — treat it as a failing phase and add h
 - [ ] Every path in the denylist is rejected, with the denylist checked before the allowlist.
 - [ ] Traversal variants rejected (`..`, `%2e%2e%2f`, absolute, backslash, unicode).
 - [ ] The estate repo contains no `.github/` directory at all.
-- [ ] Repo 1 (code + CI) has **no** GitHub App installation — confirm in the App's installation list, not by inference.
-- [ ] Branch protection on `main`: PR required, no force push, no deletion.
-- [ ] GitHub App has exactly Contents:write, Pull requests:write, Metadata:read — nothing more.
-- [ ] The App is installed on the estate repo only.
+- [ ] **⛔** Repo 1 (code + CI) has **no** GitHub App installation — confirm in the App's installation list, not by
+      inference.
+- [ ] **⛔** Branch protection on `main`: PR required, no force push, no deletion. Operator-configured. Verify by
+      attempting a direct push with the installation token and observing the rejection. If it succeeds, the layer is
+      missing — stop and report it.
+- [ ] **⛔** GitHub App has exactly Contents:write, Pull requests:write, Metadata:read — nothing more.
+- [ ] **⛔** Concord's App is installed on the estate repo only. Mintlify's app is also installed there and is expected;
+      confirm it is the *only* other one and that it does not hold `Contents: write`.
 - [ ] No patch, diff, or PR in any recorded run targets a path outside the estate repo.
 - [ ] An eval run leaves `estate/` git-clean — defects are injected in memory only.
 - [ ] Installation tokens are repo-scoped and never returned in a response.
@@ -203,8 +237,11 @@ implementation rather than the problem — treat it as a failing phase and add h
 - [ ] Per-identity hourly run limit enforced.
 - [ ] One concurrent run enforced.
 - [ ] Admin request body size capped.
-- [ ] Zero Trust seat count recorded in `SECURITY.md`, currently under 50, with a Cloudflare seat/billing notification
-      configured. This is a monitored ceiling, not a code-enforced one — confirm the alert exists, not just the number.
+- [ ] **⛔** Zero Trust seat count recorded in `SECURITY.md`, currently under 50, with a Cloudflare seat/billing
+      notification configured. Operator-configured, and the only cost in the design with no code-side counterpart at all
+      — confirm the alert exists, not just the number.
+- [ ] **⛔** An Anthropic Console org-level spend limit is set. Operator-configured; it is the floor beneath the in-app
+      $5/day cap. Ask the operator to confirm rather than inferring it from the app's behaviour.
 
 **Logging**
 - [ ] No `Cf-Access-*` header value appears in any log line.
