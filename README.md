@@ -27,7 +27,9 @@ on the estate repo only, so the repo holding CI and code is structurally out of 
 git clone --recurse-submodules https://github.com/grainpool/doc-eng-demo.git
 cd doc-eng-demo
 pnpm install
-pnpm setup        # submodule init + git hooks (pre-commit secret scan)
+pnpm run setup    # submodule init + git hooks (pre-commit secret scan).
+                  # NOTE: "run" is required — bare `pnpm setup` invokes pnpm's
+                  # own built-in setup command, not this script (see COMPAT.md).
 pnpm typecheck && pnpm lint && pnpm test && pnpm build
 ```
 

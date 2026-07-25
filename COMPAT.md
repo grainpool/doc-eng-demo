@@ -90,6 +90,11 @@ wheels — no compilation during the image build.
 
 ## Development environment notes (Windows)
 
+- **`pnpm setup` is shadowed by pnpm's built-in `setup` command** (which configures `PNPM_HOME`
+  and prints "Setup complete. Open a new terminal…"). The project script must be invoked as
+  `pnpm run setup`. The phase prompt's literal "`pnpm setup`" cannot be bound to a script under
+  pnpm 9; `pnpm run setup` is the working equivalent and the README says so.
+
 - corepack cannot write its pnpm shim to `C:\Program Files\nodejs` without elevation (EPERM);
   pnpm was installed via `npm install -g pnpm@9.15.9` instead.
 - The vitest pool leaves `EBUSY` warnings deleting miniflare temp dirs on Windows at shutdown;
@@ -97,3 +102,8 @@ wheels — no compilation during the image build.
 - Git for Windows 2.40 shipped with no configured credential helper on this machine;
   `credential.helper=manager` was set globally and GitHub auth completed interactively via GCM's
   browser flow (needed once; cached thereafter).
+- **This LAN's DNS resolver negative-cached the brand-new `relay.otonieltrejo.com` record** for
+  well over 30 minutes after deploy (NXDOMAIN locally while 1.1.1.1 answered). Consequence: the
+  deployed-URL test in `health.test.ts` failed on this machine immediately after the first deploy
+  while the same suite passed in GitHub CI (clean resolvers) — see CI run 30178033001, green.
+  Not a platform issue; it clears when the local resolver's negative TTL expires.
