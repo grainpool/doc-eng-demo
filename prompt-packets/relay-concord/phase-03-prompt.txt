@@ -31,10 +31,23 @@ SCOPE
    needs at least `id`, `kind`, `text`, `surface_location`. Every user-visible string in `relay-web` must already come
    from here.
 
-4. UI — React SPA screens: project list, create-project, project detail with file list and uploader. Plain, legible,
-   unstyled beyond basic layout. Include real empty, loading, and error states — they are documentation surfaces later,
-   not polish. Do not invent a brand, logo, or colour system; if I have not given you visual preferences, keep it
-   neutral.
+4. UI — React SPA screens: project list, create-project, project detail with file list and uploader. Include real
+   empty, loading, and error states — they are documentation surfaces later, not polish.
+
+   VISUAL STYLE — check for `design/theme.json` at the repo root before writing any styling. It was placed there
+   ahead of this phase.
+   - If it exists: read `design/README.md` alongside it first — it tells you which parts of the file are the
+     operator's literal spec (`elementStyles`, verbatim, do not alter) versus derived extensions built to cover UI
+     chrome the content-only spec didn't address (`palette`, `componentStyles`). Apply `elementStyles` to rendered
+     content (empty-state copy, help text, any markdown-like text) and `componentStyles`/`palette` to the project
+     list, uploader, buttons, and inputs you're building now. The README also lists the exact contrast ratios already
+     verified for the derived colors — if you combine tokens into a pairing not listed there (a new hover state, a
+     new tint), verify contrast the same way before shipping rather than assuming it inherits safety from its
+     neighbors.
+   - If it does NOT exist: do not invent a brand, logo, or colour system — keep the UI plain, legible, and neutral,
+     exactly as before.
+   Either way: this phase does not need a design system built beyond what the theme file or the neutral default
+   already gives you. Don't add component variants, spacing scales, or tokens the theme file doesn't call for.
 
 TESTS (required)
 - `relay-api/test/files.test.ts`: over-limit upload rejected with a `copy_id`; unsupported extension rejected with a
@@ -55,4 +68,5 @@ DONE WHEN
 Deployed: create a project, upload a valid CSV, see it listed with correct row/column counts. An 11 MB file and a `.pdf`
 are each rejected with distinct codes and registry-sourced messages. `pnpm test` green.
 
-Report: the copy ids you created, and the exact rejection behavior for both failure cases.
+Report: the copy ids you created; the exact rejection behavior for both failure cases; and whether `design/theme.json`
+was present and applied, or absent and the UI stayed neutral.
