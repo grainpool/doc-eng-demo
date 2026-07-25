@@ -10,9 +10,23 @@ export const ERROR_CODES = [
   "VALIDATION_FAILED",
   "UPSTREAM_UNAVAILABLE",
   "KERNEL_UNAVAILABLE",
+  // File-intake codes: distinct so rejections are distinguishable (Phase 03
+  // wires the behavior; the enum is part of the freeze surface).
+  "FILE_TOO_LARGE",
+  "UNSUPPORTED_FILE_TYPE",
+  "TOO_MANY_ROWS",
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
+
+/**
+ * A copy id points into the copy registry (contracts.md §8), e.g.
+ * "error.upload.too_large". Lowercase dotted segments.
+ */
+export const CopyIdSchema = z
+  .string()
+  .regex(/^[a-z0-9_]+(\.[a-z0-9_]+)+$/, "expected a dotted lowercase copy id");
+export type CopyId = z.infer<typeof CopyIdSchema>;
 
 export const ApiErrorSchema = z.object({
   error: z.object({

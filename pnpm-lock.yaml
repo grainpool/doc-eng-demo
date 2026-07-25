@@ -30,6 +30,9 @@ importers:
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
+      vitest:
+        specifier: ^4.1.0
+        version: 4.1.10(vite@7.3.6)
 
   packages/relay-api:
     dependencies:

@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { apiError } from "@relay/contracts";
 import { log } from "./log.js";
 import { runHealthChecks } from "./health.js";
+import { buildProductTruth } from "./truth/index.js";
 import type { Env } from "./env.js";
 
 export { RelayKernelContainer } from "./kernel.js";
@@ -22,6 +23,11 @@ app.use("*", async (c, next) => {
     status: c.res.status,
     duration_ms: Date.now() - start,
   });
+});
+
+app.get("/api/product-truth", async (c) => {
+  const snapshot = await buildProductTruth(c.env);
+  return c.json(snapshot);
 });
 
 app.get("/api/health", async (c) => {

@@ -88,6 +88,17 @@ wheels — no compilation during the image build.
 - **`run_worker_first: ["/api/*"]` behaved as documented**: `/api/health` reaches the Worker,
   everything else serves the SPA (`/` returned `index.html` 200 through the ASSETS binding).
 
+## Phase 02 additions (2026-07-25)
+
+- `wrangler d1 migrations apply relay_db` worked with the default `migrations/` directory next to
+  `wrangler.jsonc`; 14 statements applied cleanly to both a fresh local DB and the remote one. The
+  Durable Object `migrations` block and D1 migrations are separate mechanisms and did not interact.
+- zod v4's native `z.toJSONSchema()` exists as documented; `z.string().url()` is deprecated in favor
+  of the top-level `z.url()`. The `zodToJsonSchema` wrapper in `@relay/contracts` is the single
+  derivation point for structured-output schemas.
+- Contracts' ULIDs are implemented in-package on the `crypto` global (workerd + Node 22 both have
+  it): G3 (zod-only dependency) beats G18's approved `ulid` package inside `@relay/contracts`.
+
 ## Development environment notes (Windows)
 
 - **`pnpm setup` is shadowed by pnpm's built-in `setup` command** (which configures `PNPM_HOME`
