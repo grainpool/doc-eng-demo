@@ -1,0 +1,9 @@
+# Pinned EXACTLY (== never >=): these versions are product truth (T0_RUNTIME).
+# Bumping one is a documentation-relevant product change, not routine maintenance.
+pandas==3.0.5
+numpy==2.5.1
+scipy==1.18.0
+statsmodels==0.14.6
+matplotlib==3.11.1
+fastapi==0.140.0
+uvicorn==0.51.0

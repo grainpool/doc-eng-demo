@@ -1,0 +1,28 @@
+{
+  // Test-only variant of wrangler.jsonc for @cloudflare/vitest-pool-workers.
+  // Differences from the deploy config (see COMPAT.md):
+  //  - no containers / Durable Object binding (not supported in the test pool;
+  //    src/env.ts types KERNEL as optional and the health check degrades),
+  //  - no routes / account_id (not meaningful in tests).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "relay-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "../relay-web/dist/client",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "relay_db",
+      "database_name": "relay_db",
+      "database_id": "test"
+    }
+  ],
+  "r2_buckets": [
+    { "binding": "relay_artifacts", "bucket_name": "relay-artifacts" }
+  ]
+}

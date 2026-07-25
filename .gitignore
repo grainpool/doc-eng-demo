@@ -4,12 +4,16 @@
 # Redundant packaging of prompt-packets/relay-concord/ — regenerate on demand
 prompt-packets/*.zip
 
-# Node / build (for when the monorepo lands in phase 01)
+# Node / build
 node_modules/
 dist/
 .wrangler/
 .dev.vars
 *.log
+
+# Python
+__pycache__/
+.venv/
 
 # Local environmental context (Cloudflare account inventory, etc.) — not for version control
 environmental-context/

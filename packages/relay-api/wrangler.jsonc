@@ -1,0 +1,48 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "relay-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "589e5ae8d530ba18eb7066f3c8f55478",
+
+  // Served together with the Worker; the Vite plugin populates the client build.
+  "assets": {
+    "directory": "../relay-web/dist/client",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // AI routes later need far more than the 30 s default CPU budget.
+  "limits": { "cpu_ms": 300000 },
+
+  "observability": { "enabled": true },
+
+  "routes": [{ "pattern": "relay.otonieltrejo.com", "custom_domain": true }],
+
+  "d1_databases": [
+    {
+      "binding": "relay_db",
+      "database_name": "relay_db",
+      "database_id": "671f9e9a-8dab-46dd-ad5d-e743dbdf8053"
+    }
+  ],
+
+  "r2_buckets": [
+    { "binding": "relay_artifacts", "bucket_name": "relay-artifacts" }
+  ],
+
+  "containers": [
+    {
+      "class_name": "RelayKernelContainer",
+      "image": "../relay-kernel/Dockerfile",
+      "max_instances": 1,
+      "instance_type": "basic"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "KERNEL", "class_name": "RelayKernelContainer" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RelayKernelContainer"] }]
+}

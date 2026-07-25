@@ -1,0 +1,3 @@
+#!/bin/sh
+# Installed via `pnpm setup` (git config core.hooksPath .githooks).
+node scripts/secret-scan.mjs
