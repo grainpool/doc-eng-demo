@@ -203,6 +203,8 @@ implementation rather than the problem — treat it as a failing phase and add h
 - [ ] Per-identity hourly run limit enforced.
 - [ ] One concurrent run enforced.
 - [ ] Admin request body size capped.
+- [ ] Zero Trust seat count recorded in `SECURITY.md`, currently under 50, with a Cloudflare seat/billing notification
+      configured. This is a monitored ceiling, not a code-enforced one — confirm the alert exists, not just the number.
 
 **Logging**
 - [ ] No `Cf-Access-*` header value appears in any log line.

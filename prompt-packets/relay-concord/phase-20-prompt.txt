@@ -26,6 +26,9 @@ SCOPE
 
 3. Cost controls — confirm and document: zero model calls on public paths; ≤ 20 calls per run; ≤ $5 per UTC day;
    ≤ 5 live runs per identity per hour; one concurrent live run. Test each by forcing it, not by reading the code.
+   Separately, document the ONE cost boundary that is not code-enforceable: the Zero Trust 50-seat cliff
+   (`security.md` §5). Record the current seat count, confirm the billing notification exists, and state plainly in
+   `SECURITY.md` that seat 51 costs ~$357/mo. A reader should not have to discover that from a bill.
 
 4. Agent-readable documentation — finalize the INPUTS that produce Mintlify's generated machine-readable output:
    a `description` in the frontmatter of every page, the site `description` in `docs.json`, and `markdown.instructions`

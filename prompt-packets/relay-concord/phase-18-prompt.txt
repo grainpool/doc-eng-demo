@@ -10,6 +10,14 @@ stop and ask.
 
 SCOPE
 
+0. BEFORE the app is enabled — the Zero Trust seat cliff (`security.md` §5). This account is on Teams Free: 50 seats
+   included, and the 51st distinct authenticator moves the entire count to $7/user/month with no partial billing.
+   Access consumes seats at the edge, so this CANNOT be capped in code. Your job here is to make it visible:
+   document the current seat count in `SECURITY.md`, document how to check it, and tell me to configure a Cloudflare
+   billing/seat notification before I enable the app. Do not narrow the `@anthropic.com` policy to an email list on
+   your own initiative — that departs from the requirement; raise it if the count gets close.
+   Also record that Teams Free retains Access logs for only 24 h, which is why the D1 `audit_log` is the durable record.
+
 1. The Access application — I configure it; you document the exact steps in `SECURITY.md`:
    Self-hosted app on `concord.<domain>` covering `/api/admin` and `/admin`; policy Action `Allow`, rule type `Include`,
    selector "Emails ending in", value `@anthropic.com`; login method One-time PIN (10-minute expiry).

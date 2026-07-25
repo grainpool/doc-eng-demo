@@ -176,6 +176,7 @@ git-clean.
 | Reconciliation run (with AI) | < 3 min | Queue consumer; 15 min ceiling gives headroom. |
 | Model calls per live run | **≤ 20 hard cap** | Enforced in code; run ends `partial` on exhaustion. |
 | Model spend per day | **≤ $5 hard cap** | Enforced from `model_call` rows before each call. |
+| **Zero Trust seats** | **≤ 50 — monitored, not enforceable in code** | Teams Free includes 50 seats. Access consumes one per authenticating user, and the policy admits any `@anthropic.com` address. Seat 51 moves the *entire* count to $7/user/month with no partial billing: $0 → ~$357/mo in one step. There is no application-side control for this — it is a Cloudflare billing boundary, so it must be watched rather than capped. See `security.md` §5. |
 | Live runs per Access identity per hour | ≤ 5 | Rate limit; replay is unlimited. |
 | Upload size | 10 MB | Matches `limit.upload.csv.max_bytes`; the enforcement point *is* the fact. |
 | D1 queries | indexed; no full scans on fact/projection tables | D1 bills `rows_read`. |

@@ -21,6 +21,23 @@ These are stated so you can correct them before Phase 01. Each is also recorded 
 | A7 | Model calls use **`claude-opus-5`** via a single config constant. Cost is controlled by caps + replay mode, not by silently downgrading models. | Your spend requirements are about *budget enforcement*, and model choice should stay yours. `claude-sonnet-5` is a one-line config swap. |
 | A8 | Public demo browses **precomputed run fixtures**; zero model calls on the public path. | Your public/privileged split. |
 | A9 | The estate repo contains **no `.github/` directory at all**, and the Concord GitHub App is installed on it and nothing else. | Required to make visitor-triggered branches safe. See "Repo decision". |
+
+## Confirmed environment (verified 2026-07-25 — not assumptions)
+
+| | Value |
+|---|---|
+| GitHub org | **`grainpool`** — intentional, and the same operational identity as the Cloudflare account. Both repos exist, are public, are empty, and have no `.github/` directory. |
+| Repo 1 (code) | `https://github.com/grainpool/doc-eng-demo.git` |
+| Repo 2 (estate) | `https://github.com/grainpool/doc-eng-demo-estate.git` |
+| Cloudflare account id | `589e5ae8d530ba18eb7066f3c8f55478` |
+| Cloudflare plan | Workers Paid ($5/mo) + R2 Paid. Containers, D1, and Queues all licensed and **unprovisioned** — clean slate. |
+| Zone | `otonieltrejo.com`, Free plan, active. **No plan upgrade is needed for this project** — Workers custom domains work on Free, Access is account-level Zero Trust rather than zone-gated, and our rate limiting is application-level rather than WAF. Do not spend $25 on Pro. |
+| Zero Trust | Teams Free, **50 seats included** — see the seat cliff in `constraints.md` §4 and `security.md` §5. Access log retention is 24 h, which is why the D1 `audit_log` is the durable record. |
+| Existing resources to avoid colliding with | R2 buckets `gp-prod-uploads`, `numi-backups-prod`; Pages projects `wysee-markdown`, `numitura`. Our names (`relay-artifacts`, `concord-runs`, `relay_db`, `concord_db`) don't collide. |
+
+Two operator to-dos surfaced by that snapshot, neither blocking: enable 2FA on the Cloudflare account (it holds the
+Anthropic key and will hold the GitHub App private key — `enforce_twofactor` is currently `false`), and expect to
+re-authenticate for R2 bucket creation (see `master-prompt-phase-01.txt`, R2 note).
 | A10 | Provisional names `Relay` / `Concord` are placeholders; the agent must read them from one constants file so renaming is trivial. | You said the names don't matter. |
 
 **Deviations from your spec, and why** — see `research-findings.md` §"Deviations". The two that matter:

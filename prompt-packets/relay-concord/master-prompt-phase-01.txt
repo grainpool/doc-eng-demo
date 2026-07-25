@@ -48,8 +48,11 @@ A2. TWO REPOSITORIES — read `architecture.md` §1.1 before doing anything here
    - repo 1 `doc-eng-demo` (this one): all code, `product-truth/`, `fixtures/`, and `.github/workflows/`. CI lives here
      and only here.
    - repo 2, the documentation estate: the six documentation surfaces. It has **no `.github/` directory, ever**.
-   I will give you repo 2's clone URL; it may be empty. Wire it as a git submodule mounted at `estate/`:
-     `git submodule add <url> estate`
+   The two repos already exist, are public, and are empty, with no `.github/` directory in either:
+     repo 1  https://github.com/grainpool/doc-eng-demo.git         (this one — CI lands here in this phase)
+     repo 2  https://github.com/grainpool/doc-eng-demo-estate.git  (the estate — must NEVER get a .github/)
+   Wire repo 2 as a git submodule mounted at `estate/`:
+     `git submodule add https://github.com/grainpool/doc-eng-demo-estate.git estate`
    Add `pnpm setup` running `git submodule update --init --recursive`, make CI check out with `submodules: recursive`,
    and put `git clone --recurse-submodules` in the README. Create placeholder directories in repo 2 with a `.gitkeep`
    and a short README explaining that an automated system opens PRs against it: `docs-mintlify/`, `help-center/`,
@@ -101,9 +104,18 @@ F. `COMPAT.md` — the most valuable artifact of this phase. Record the OBSERVED
   operation, no Concord package. If you are tempted, write it in `NOTES.md` and move on.
 - The API key goes in via `wrangler secret put` only. Never in `wrangler.jsonc` `vars`, never in a committed file,
   never echoed by any endpoint including the health check.
-- I will supply: the Cloudflare account id, the literal hostname for Relay, the Anthropic API key, and the estate repo's
-  clone URL. If you do not have one of them, STOP and ask for that specific item. Do not invent a domain or a repo URL,
-  and do not commit a placeholder that could be mistaken for working configuration.
+- ENVIRONMENT, already verified — use these, do not guess or substitute:
+    Cloudflare account id : 589e5ae8d530ba18eb7066f3c8f55478
+    Relay hostname        : relay.otonieltrejo.com   (zone `otonieltrejo.com`, Free plan — sufficient, no upgrade)
+    Repos                 : as listed in A2 above
+  Workers Paid and R2 Paid are active. Containers, D1, and Queues are licensed and unprovisioned. Existing account
+  resources you must NOT collide with: R2 buckets `gp-prod-uploads` and `numi-backups-prod`; Pages projects
+  `wysee-markdown` and `numitura`. Create `relay_db` and `relay-artifacts`; those names are free.
+- I will supply the Anthropic API key separately, for `wrangler secret put`. If you are missing it, STOP and ask.
+- R2 NOTE — verify this early, it is the most likely thing to stall you: `wrangler whoami` on this account lists no R2
+  scope even though `r2 bucket list` succeeds. If `wrangler r2 bucket create` fails on permissions, say so immediately
+  rather than working around it — the fix is a re-`wrangler login` or creating the bucket in the dashboard, and it takes
+  under a minute. Record whichever happened in `COMPAT.md`.
 - Add only dependencies from the approved list in `constraints.md` §G18. Anything else needs a stated justification.
 - Write the Phase 01 test from `validation.md` §2: `relay-api/test/health.test.ts` using
   `@cloudflare/vitest-pool-workers`, asserting all five checks pass and that the response body contains no

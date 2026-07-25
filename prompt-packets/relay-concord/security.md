@@ -188,6 +188,23 @@ Octokit call. A path present in both lists is denied — assert that in a test.
 On cap exhaustion the run ends `partial` with `reason: "budget_exhausted"` and unresolved impacts stay visible. It never
 silently truncates or fails open.
 
+**Platform spend has its own cliff, and it is not model spend.** Cloudflare Zero Trust Teams Free includes **50 seats**;
+Access consumes one per authenticating user, and the Phase-18 policy admits any `@anthropic.com` address. The 51st
+distinct authenticator moves the *entire* seat count to $7/user/month with no partial billing — roughly $0 → $357/mo in
+a single step. A demo circulating inside Anthropic can cross that without anyone misusing anything.
+
+There is no application-side control for this: seats are consumed at the edge, before any request reaches our code, so
+it cannot be capped the way model calls are. Treat it as a **monitored ceiling**:
+- Configure a Cloudflare notification / billing alert on Zero Trust seat count before enabling the Access app.
+- Record the current seat count in `SECURITY.md` when the app goes live, and re-check it whenever the demo is shared
+  more widely.
+- Crossing 50 should be a decision, not a discovery. If it approaches the limit, the options are: accept $7/seat, or
+  narrow the Access policy from the whole domain to an explicit `Include` email list (which departs from the stated
+  requirement, so raise it rather than doing it unilaterally).
+
+Related: Teams Free retains Access logs for only **24 hours**. That is why the append-only `audit_log` table in D1 (§6)
+is the durable record of who changed what — do not treat Cloudflare's own logs as the audit trail.
+
 **Replay mode is the abuse-resistance strategy for the public demo:** the interesting output is precomputed and
 committed, so the public experience costs nothing and cannot be used as a free inference proxy.
 
