@@ -48,6 +48,9 @@ importers:
       hono:
         specifier: ^4.7.0
         version: 4.12.32
+      zod:
+        specifier: ^4.0.0
+        version: 4.4.3
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.18.8
@@ -99,6 +102,9 @@ importers:
       vite:
         specifier: ^7.0.0
         version: 7.3.6
+      vitest:
+        specifier: ^4.1.0
+        version: 4.1.10(vite@7.3.6)
       wrangler:
         specifier: ^4.0.0
         version: 4.114.0

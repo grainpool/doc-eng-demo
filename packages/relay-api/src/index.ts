@@ -3,6 +3,9 @@ import { apiError } from "@relay/contracts";
 import { log } from "./log.js";
 import { runHealthChecks } from "./health.js";
 import { buildProductTruth } from "./truth/index.js";
+import { demoUser } from "./demo-auth.js";
+import { projects } from "./routes/projects.js";
+import { files } from "./routes/files.js";
 import type { Env } from "./env.js";
 
 export { RelayKernelContainer } from "./kernel.js";
@@ -24,6 +27,10 @@ app.use("*", async (c, next) => {
     duration_ms: Date.now() - start,
   });
 });
+
+app.use("/api/*", demoUser);
+app.route("/api/projects", projects);
+app.route("/api", files);
 
 app.get("/api/product-truth", async (c) => {
   const snapshot = await buildProductTruth(c.env);

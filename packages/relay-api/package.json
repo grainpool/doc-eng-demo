@@ -12,7 +12,8 @@
     "@anthropic-ai/sdk": "^0.115.0",
     "@cloudflare/containers": "^0.0.28",
     "@relay/contracts": "workspace:*",
-    "hono": "^4.7.0"
+    "hono": "^4.7.0",
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.18.8",

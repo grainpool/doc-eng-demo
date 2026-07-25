@@ -99,6 +99,18 @@ wheels — no compilation during the image build.
 - Contracts' ULIDs are implemented in-package on the `crypto` global (workerd + Node 22 both have
   it): G3 (zod-only dependency) beats G18's approved `ulid` package inside `@relay/contracts`.
 
+## Phase 03 additions (2026-07-25)
+
+- Workers' non-standard `crypto.DigestStream` works as documented and is what makes single-pass
+  streaming sha256 possible; WebCrypto alone has no incremental digest.
+- In the vitest pool, D1 migrations are applied per-worker via `readD1Migrations` (vitest.config) +
+  `applyD1Migrations` (test/setup.ts). The pool's `env` is typed as the wrangler-generated `Env`,
+  so the harness-only `TEST_MIGRATIONS` binding needs a local cast in setup.
+- `design/theme.json` existed and was applied: `elementStyles` verbatim under a `.content` scope,
+  derived `componentStyles`/`palette` as chrome classes, all emitted into one generated stylesheet
+  (`relay-web/src/theme.ts`). No token was altered; no new color pairings were introduced beyond
+  the README's verified list.
+
 ## Development environment notes (Windows)
 
 - **`pnpm setup` is shadowed by pnpm's built-in `setup` command** (which configures `PNPM_HOME`

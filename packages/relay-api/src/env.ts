@@ -8,4 +8,6 @@ export interface Env {
   KERNEL?: DurableObjectNamespace<RelayKernelContainer>;
   /** Set via `wrangler secret put` only — never in vars, never committed. */
   ANTHROPIC_API_KEY?: string;
+  /** Signs the demo-user cookie (the entire Relay auth model). Secret store only. */
+  RELAY_DEMO_COOKIE_SECRET?: string;
 }
