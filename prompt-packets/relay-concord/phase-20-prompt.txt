@@ -37,7 +37,10 @@ SCOPE
 
 5. Repository documentation — this is how the project proves itself:
    - root `README.md`: what this is, why documentation is treated as an engineered information system, the architecture
-     diagram, how to run it locally, how the two workstreams relate, what the evaluation shows (with real numbers), and
+     diagram, **the two-repository layout and why it is two repositories** (the security argument — the App is installed
+     on the estate repo, which contains no CI, so no privileged workflow is reachable from a visitor-authored branch),
+     how to clone with `--recurse-submodules` and run it locally, how the two workstreams relate,
+     what the evaluation shows (with real numbers), and
      an explicit "what this deliberately does not do" section listing the non-goals from `constraints.md` §1 — including
      that the help center is a fixture and Intercom integration is a deliberate non-goal, not a gap.
    - `ARCHITECTURE.md`: the reconciliation model, the six source tiers, the action classes, why escalation is a success.
@@ -53,7 +56,9 @@ SCOPE
 7. Final eval — run `pnpm eval` and commit the fresh `eval-report.md` / `.json`. Update the failures page from it. If a
    number moved since Phase 16, say so and explain why.
 
-8. Reproducibility — `git clone` into a FRESH directory, follow your own README, and reach a working local instance.
+8. Reproducibility — `git clone --recurse-submodules` into a FRESH directory, follow your own README, and reach a
+   working local instance. Also verify the estate repo stands alone: clone repo 2 by itself and confirm its README
+   explains what it is and that an automated system opens PRs against it.
    Fix whatever that exercise reveals. This is the acceptance test for the documentation, and it will find gaps.
 
 HARD RULES

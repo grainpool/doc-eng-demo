@@ -13,14 +13,17 @@ Blocks: **0** walking skeleton (01) · **A** Relay (02–09) · **FREEZE** (gate
 ## Phase 01 — Prove every dependency, deployed, with no product logic
 - **Objective** Confirm that Workers + static assets + D1 + R2 + Container + Anthropic all work together on the real
   domain, before a single feature exists.
-- **Scope** pnpm monorepo skeleton; `relay-api` Worker with Vite/React page; `relay_db` + `relay-artifacts`;
-  `relay-kernel` container with only `/health` and `/versions`; one `/api/health` route exercising all five; the
-  structured log helper; the error shape; `.gitignore` + secret scan; CI (typecheck, lint, test, build).
-- **Dependencies** Cloudflare account, Workers Paid, domain, `ANTHROPIC_API_KEY`.
+- **Scope** pnpm monorepo skeleton; the **estate repo wired as a submodule at `estate/`** with a placeholder file and
+  `pnpm setup`; `relay-api` Worker with Vite/React page; `relay_db` + `relay-artifacts`; `relay-kernel` container with
+  only `/health` and `/versions`; one `/api/health` route exercising all five; the structured log helper; the error
+  shape; `.gitignore` + secret scan; CI (typecheck, lint, test, build) with `submodules: recursive`.
+- **Dependencies** Cloudflare account, Workers Paid, domain, `ANTHROPIC_API_KEY`, **the estate repo existing (may be
+  empty, must have no `.github/`)**.
 - **Outputs** Live URL. `GET /api/health` → five checks with real values (including `pandas.__version__` from the
   container). `COMPAT.md` recording observed versions, limits, and any deviation. Green CI.
 - **Acceptance** Every check green from the public URL, not just locally. `pnpm typecheck && pnpm lint && pnpm test`
-  passes. No secret appears in the built client bundle (grep it). `COMPAT.md` exists and is non-trivial.
+  passes. No secret appears in the built client bundle (grep it). A fresh `git clone --recurse-submodules` into a new
+  directory yields a populated `estate/`. `COMPAT.md` exists and is non-trivial.
 - **Wait until later** Any product model, any UI beyond one page, any Concord package, any auth, any real analysis op.
 - **Risk** Highest of any phase, deliberately. If Containers or the Vite plugin misbehave, you learn now with nothing
   invested.
@@ -45,7 +48,8 @@ Blocks: **0** walking skeleton (01) · **A** Relay (02–09) · **FREEZE** (gate
 - **Objective** The workspace surface, with limits enforced in exactly one place and rejection text sourced from copy.
 - **Scope** Projects CRUD (create/list/show, `state` field), file upload to R2 with sha256 + row/column counting,
   supported-type and size validation in `relay-api/src/limits.ts`, demo-user signed cookie, React shell with project
-  list / project detail / file list / uploader. First copy entries (informal JSON, formalized in Phase 08).
+  list / project detail / file list / uploader. First copy entries land in **`estate/in-product-copy/`** (repo 2),
+  imported through the submodule path (informal JSON, formalized in Phase 08).
 - **Dependencies** 02.
 - **Outputs** Working create-project → upload-CSV → see-file flow, deployed.
 - **Acceptance** Over-limit upload returns `{error:{code, copy_id}}` and the UI renders the message from the registry —
@@ -112,7 +116,7 @@ Blocks: **0** walking skeleton (01) · **A** Relay (02–09) · **FREEZE** (gate
 - **Objective** Make UI copy a first-class documentation surface, and give Concord temporal data.
 - **Scope** Formal copy registry (`CopyEntry` with `references_facts`, `kind`, `editorial_register`, `owner`); migrate
   every string in `relay-web` to `t("id")`; lint rule against literal JSX text; `GET /api/copy-registry`.
-  `surfaces/releases/*.yaml` with ≥ 6 historical records; `surfaces/decisions/*.yaml` with ≥ 3 T5 records. T4 + T5
+  `product-truth/releases/*.yaml` (repo 1) with ≥ 6 historical records; `product-truth/decisions/*.yaml` with ≥ 3 T5 records. T4 + T5
   wired into `/api/product-truth`. Optional (only if time remains): the mock `connector_drive` feature — availability
   facts, settings copy, a troubleshooting-worthy failure state. No real integration.
 - **Dependencies** 07.
@@ -265,11 +269,11 @@ version bump and a `CONTRACTS-FROZEN.md` entry.
 
 ## Phase 19 — GitHub App ephemeral branch/PR
 - **Objective** Land patches as a real PR, under four independent layers of restriction.
-- **Scope** GitHub App (Contents: write, Pull requests: write, Metadata: read) installed on **one** demo repo with no
-  `.github/workflows/`; per-run installation tokens scoped by repo id; branch `concord/run-{run_id}`; path allowlist
-  and denylist checked in `concord-core` and again immediately before the Octokit call; PR body with fact deltas,
-  evidence, and a link to the run inspector; failure cleanup; a cron cleanup Worker reaping branches/PRs older than 48 h;
-  branch protection on `main`.
+- **Scope** GitHub App (Contents: write, Pull requests: write, Metadata: read) installed on **the estate repo only**,
+  which has no `.github/` directory; per-run installation tokens scoped by repo id; branch `concord/run-{run_id}`;
+  estate-relative path allowlist and denylist checked in `concord-core` and again immediately before the Octokit call;
+  PR body with fact deltas, evidence, the estate SHA the run was built against, and a link to the run inspector;
+  failure cleanup; a cron cleanup Worker reaping branches/PRs older than 48 h; branch protection on `main`.
 - **Dependencies** 18. You must create the App, install it, and supply credentials.
 - **Outputs** A live run opens a real PR touching only allowlisted paths.
 - **Acceptance** PR created and correct. An attempted write to `.github/**`, a `.ts` file, or a `..` traversal path is

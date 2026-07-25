@@ -33,8 +33,8 @@ SCOPE
    `GET /api/public/runs/:id?verbose=1` returning the full record.
 
 5. `fixtures/changelab/editable-units.json` — the committed list of ≤ 12 doc units that will be editable in live mode
-   (Phase 18's doc-body allowlist reads this). Choose fixture units only; nothing generated, nothing outside
-   `surfaces/`.
+   (Phase 18's doc-body allowlist reads this). It lives in REPO 1, so a write to the estate can never widen the set of
+   things writable in the estate. Choose fixture units only; nothing generated, nothing outside the estate repo.
 
 6. Verify the zero-cost property empirically, not just by reading the code: exercise the entire public surface and
    confirm no request reaches `api.anthropic.com` in the logs.

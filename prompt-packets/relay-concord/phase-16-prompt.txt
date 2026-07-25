@@ -8,7 +8,7 @@ the metrics and the two hard gates.
 
 SCOPE
 
-1. Complete the defect corpus — `fixtures/eval/defects.json` reaches at least 36 entries covering ALL TWELVE classes
+1. Complete the defect corpus — `fixtures/eval/defects.json` (repo 1) reaches at least 36 entries covering ALL TWELVE classes
    from `contracts.md` §16 (`STALE_VALUE`, `WRONG_PLATFORM`, `TERM_DRIFT`, `BROKEN_REF`, `DUP_GUIDANCE`,
    `MISSING_PREREQ`, `STALE_CLI`, `CONTRADICTION`, `UNSUPPORTED_CLAIM`, `IA_PROBLEM`, `STALE_INPRODUCT_COPY`,
    `UNDECLARED_FACT_REF`), each with `doc_unit_id`, `fact_key`, `expected_detection`, `expected_action`, and notes.
@@ -17,7 +17,9 @@ SCOPE
    external URLs from any server component (`security.md` §1).
 
 2. `pnpm eval` — a runner that:
-   - loads a pristine copy of the estate plus the defect corpus,
+   - loads the real estate from `estate/` and applies each defect's `injection` to an IN-MEMORY copy. It must never
+     write to `estate/`; `git status` there is clean after a run (invariant I17). Items with
+     `expected_detection: false` have `injection: null` and assert something about the clean estate.
    - runs the full pipeline,
    - matches findings to seeded defects by `(doc_unit_id, fact_key, class)` with an explicit, documented matching rule,
    - scores the metrics from `validation.md` §6,

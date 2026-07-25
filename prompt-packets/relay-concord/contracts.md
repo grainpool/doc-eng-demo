@@ -48,9 +48,15 @@ Prefixed, sortable, URL-safe. `{prefix}_{ulid}` lowercase.
 | conflict | `cfl` |
 
 **Doc-unit ids are NOT random.** They are deterministic and stable across runs:
-`{surface}:{path}#{anchor}` — e.g. `mintlify:analysis-sessions/supported-files.mdx#file-size-limits`,
-`inproduct:copy/errors.json#error.upload.too_large`, `clidocs:cli/projects.mdx#relay-projects-list`.
+`{surface}:{path}#{anchor}` — e.g. `mintlify:docs-mintlify/supported-files.mdx#file-size-limits`,
+`inproduct:in-product-copy/errors.json#error.upload.too_large`,
+`clidocs:docs-mintlify/generated/cli/projects.mdx#relay-projects-list`.
 Stability matters more than prettiness: a run must be able to say "this same unit changed" across weeks.
+
+**`path` is relative to the ESTATE REPO ROOT, never to the checkout location.** The estate is mounted at `estate/` in
+repo 1 via submodule, but that prefix must never appear in an id — otherwise ids would break if the mount point moved,
+and they would not match the paths Concord sends to the GitHub API (which are also estate-relative). Strip the mount
+prefix at the adapter boundary and assert it in the golden-file tests.
 
 ---
 
@@ -280,7 +286,9 @@ can drift from `--help`, the entire "CLI is authoritative for mechanical facts" 
 
 ## §8 Copy registry (in-product information surface)
 
-`packages/relay-web/src/copy/*.json`, typed and validated at build.
+`estate/in-product-copy/*.json` (i.e. `in-product-copy/*.json` in repo 2), typed and validated at build. `relay-web`
+imports it through the submodule path — build-time, no network. This is also why a merged copy patch does not reach the
+running app until the submodule pin is bumped (`architecture.md` §11).
 ```ts
 const CopyEntry = z.object({
   id: z.string(),                    // "error.upload.too_large"
@@ -305,7 +313,8 @@ Rule enforced by lint: no JSX text node in `relay-web` contains a user-visible l
 
 ## §9 Release / change records
 
-`surfaces/releases/YYYY-MM-DD-slug.yaml`:
+`product-truth/releases/YYYY-MM-DD-slug.yaml` — **repo 1, not the estate.** These are product truth, and Concord cannot
+write them.
 ```yaml
 id: rel_01j...
 version: "1.4.0"
@@ -321,7 +330,9 @@ changes:
     to: 10485760
     kind: limit_increased
 notes_md: |
-  Free-form editorial notes. Concord may propose changes here; never regenerates the file wholesale.
+  Free-form editorial notes. Human-authored. Concord CANNOT patch this file — it lives in repo 1, outside the
+  GitHub App's reach. If a run concludes these notes should change, it escalates to the owner (EDITORIAL_REVIEW).
+  What Concord does generate is the changelog PAGE in repo 2, derived from these records.
 ```
 `kind` enum: `limit_increased | limit_decreased | availability_added | availability_removed | term_renamed |
 capability_added | capability_removed | cli_changed | plan_changed | retention_changed`.
@@ -369,7 +380,7 @@ interface SurfaceAdapter {
   parse(files: ReadonlyArray<{ path: string; content: string }>): DocUnit[];
   /** Pure: produce a file diff. Throws if unit.generated is true. */
   patch(unit: DocUnit, newBody: string): FileDiff;
-  /** Which repo paths this adapter owns. Used for the write allowlist. */
+  /** Which ESTATE-relative paths this adapter owns. Used for the write allowlist. */
   readonly ownedGlobs: readonly string[];
 }
 const FileDiff = z.object({ path: z.string(), before: z.string(), after: z.string(), unified: z.string() });
@@ -547,15 +558,28 @@ const SeededDefect = z.object({
   doc_unit_id: z.string(),
   fact_key: z.string().nullable(),
   description: z.string(),
+  /** How to introduce the defect, applied IN MEMORY at eval time. Null for expected_detection:false
+   *  items, which assert something about the CLEAN estate and must not modify it. */
+  injection: z.object({ find: z.string(), replace: z.string() }).nullable(),
   expected_detection: z.boolean(),          // false ⇒ deliberately out of scope; a hit here is a false positive
   expected_action: ActionClass,
   notes: z.string(),
 });
 ```
-`fixtures/eval/defects.json` holds ≥ 36 defects covering all 12 classes, including **at least 4 with
+**Defects are injected in memory, never committed into the estate.** The harness loads the real estate, applies each
+`injection` to an in-memory copy, runs the pipeline, and scores. Three reasons this matters and it is not merely tidy:
+the published documentation site never serves known-wrong information; there is no duplicate copy of the estate to
+drift out of sync; and the answer key lives in repo 1 while the content lives in repo 2, so the system being evaluated
+does not contain its own marking scheme. An eval run must leave `git status` clean inside `estate/` — assert it.
+
+`fixtures/eval/defects.json` (repo 1) holds ≥ 36 defects covering all 12 classes, including **at least 4 with
 `expected_detection: false`** (things that look wrong but are legitimately fine — differing wording with identical
 meaning, an intentional register difference, a deliberately terse tooltip). Without those, a recall-only harness scores
 100% for a system that flags everything.
+
+The one exception is the 3–4 `UNDECLARED_FACT_REF` seeds from Phase 08: those are copy entries that omit a
+`references_facts` declaration, which is invisible to a reader and harmless in production, so they live in the real
+estate with `injection: null` and are excluded from the Phase-08 lint by id.
 
 ---
 
@@ -613,3 +637,6 @@ demo is not a mock of the real thing — it is the real thing's recorded output.
 | I12 | Admin routes 404 when `DEMO_ADMIN_ENABLED !== "true"`. | Phase 18 test |
 | I13 | Concord source references no Relay endpoint other than the two in §10. | lint + Phase 11 test |
 | I14 | `unsafe_autofix_count === 0` in the eval report. | Phase 16 gate |
+| I15 | Every doc-unit id path is estate-relative — no `estate/` prefix ever appears in an id. | Phase 11 golden tests |
+| I16 | No patch, diff, or PR ever targets a path outside the estate repo. | Phase 14 + Phase 19 tests |
+| I17 | An eval run leaves `estate/` git-clean — defects are in-memory only. | Phase 16 test |

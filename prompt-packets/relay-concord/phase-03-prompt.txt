@@ -20,7 +20,12 @@ SCOPE
      whole file) `column_count` and `row_count`;
    - insert the `file` row. Also `GET /api/projects/:id/files` and `GET /api/files/:id`.
 
-3. Copy registry, first pass — `packages/relay-web/src/copy/*.json` plus a `t(id, vars?)` helper. Entries needed now:
+3. Copy registry, first pass — lives in the ESTATE repo at `estate/in-product-copy/*.json` (repo-2-relative:
+   `in-product-copy/*.json`), imported by `relay-web` through the submodule path at build time. Plus a
+   `t(id, vars?)` helper.
+   It lives in repo 2 because in-product copy is part of the documentation estate that Concord reconciles, and Concord
+   may only write to repo 2. A merged copy patch will not reach the running app until the submodule pin is bumped —
+   that lag is intentional and documentable, not a bug to design around. Entries needed now:
    empty states, the uploader's help text, both rejection messages, project labels. Interpolation for the human-readable
    size limit. The formal `CopyEntry` schema and the `references_facts` field arrive in Phase 08; for now each entry
    needs at least `id`, `kind`, `text`, `surface_location`. Every user-visible string in `relay-web` must already come

@@ -125,6 +125,10 @@ Verified:
 - Agent-facing instructions are configured via **`markdown.instructions`** in `docs.json`, and are appended to every
   page's generated Markdown *and* to `llms.txt` / `llms-full.txt`.
 
+**Where it lives:** the Mintlify project is `docs-mintlify/` in the **estate repo (repo 2)**, connected to Mintlify's
+GitHub app directly. Mintlify builds from repo 2 on merge; repo 1 mounts repo 2 at `estate/` as a submodule only so
+that builds and ingestion can read it from disk.
+
 **Consequences — these are hard rules for Concord (`constraints.md` §G7):**
 - Concord **must not** hand-author `llms.txt`. It is generated. Instead, Concord treats **page frontmatter
   `description`** and **`docs.json` `description` / `markdown.instructions`** as the doc units that *control* agent-facing
@@ -140,8 +144,8 @@ Verified:
 Verified: Intercom's Help Center REST API supports creating/updating articles and collections; creating an article
 requires an `author_id` (fetched from `GET /me`); **developer workspaces are free and available to non-customers**.
 
-**Decision: build `HelpCenterAdapter` against a local fixture (`surfaces/help-center/`) and do not build the Intercom
-integration.** Rationale: a real Intercom instance introduces OAuth setup, external mutable state, and an article model
+**Decision: build `HelpCenterAdapter` against a local fixture (`help-center/` in the estate repo) and do not build the
+Intercom integration.** Rationale: a real Intercom instance introduces OAuth setup, external mutable state, and an article model
 the demo must then mirror — against your explicit requirement that the project be reproducible from a public repo and
 not blocked on external SaaS. The adapter interface (`contracts.md` §11) is shaped so an `IntercomHelpCenterAdapter` is
 a drop-in later; note that as an explicit non-goal in the README rather than a gap.
@@ -150,7 +154,7 @@ a drop-in later; note that as an explicit non-goal in the README rather than a g
 
 ## 6. GitHub App — least-privilege ephemeral PRs — DECIDED
 
-**Objective:** a privileged visitor-triggered run can open a PR on one demo repo and nothing more.
+**Objective:** a privileged visitor-triggered run can open a PR on the documentation estate repo and nothing more.
 
 Verified:
 - Opening a PR requires the app to reference commits and branches, so the minimum useful permission set is
@@ -161,12 +165,15 @@ Verified:
   branch directly.
 
 **Decision, all four layers required:**
-1. A **GitHub App installed on exactly one demo repo**, permissions above and nothing else. No PAT.
+1. A **GitHub App installed on the estate repo only** (repo 2), permissions above and nothing else. No PAT. Repo 1 —
+   code, CI, product truth — has no installation, so it is outside the App's reach entirely.
 2. Every installation token minted **per-run**, scoped to that one repo id, short-lived.
-3. **Branch protection on `main`**: require PR, no force push, no deletions.
-4. **The demo repo contains no `.github/workflows/` directory at all.** Combined with layer 3 and the path allowlist
-   (`security.md` §4), a visitor-authored branch cannot introduce or trigger privileged CI. Deploys run from the
-   *primary* repo, which the App is not installed on.
+3. **Branch protection on `main`** of repo 2: require PR, no force push, no deletions.
+4. **Repo 2 contains no `.github/` directory at all**, and `.github/**` is denied by the path filter. Since all CI lives
+   in repo 1 where the App is not installed, there is no privileged workflow a visitor-authored branch can introduce or
+   trigger. This is a structural property, not a reliance on GitHub's workflow-trigger semantics — which do protect
+   `pull_request` runs by using the base branch's workflow definition, but with enough nuance around `pull_request_target`
+   and `push` that it is the wrong thing to rest an argument on.
 
 ---
 
@@ -207,6 +214,7 @@ D1 for the demo's inspectability, for no gain at this scale.
 | "queues or workflows only if genuinely useful" | Queues, introduced at Phase 14 | Worker CPU default is 30 s; a run makes 5–15 model calls. Queue consumers get 15 min. Workflows rejected as redundant with D1 run records. §1, §8. |
 | "`llms.txt` … agent-readable documentation" | Do **not** author `llms.txt`; reconcile the frontmatter and `docs.json` fields that generate it | Mintlify generates and hosts it automatically. Hand-writing it would create a fake artifact that drifts from the real one. §4. |
 | Cloudflare Free tier implied nowhere but worth stating | **Workers Paid required** | Containers need it; Free caps CPU at 10 ms, which cannot host an AI call. §1. |
+| "public, inspectable source code" (repo count unspecified) | **Two public repos**: a code monorepo and a separate documentation estate, joined by a submodule | The GitHub App needs `Contents: write` and a visitor can trigger a run. Installing it where CI lives would make safety depend on GitHub's workflow-trigger semantics. Splitting makes it structural. §6. |
 
 ## Sources
 

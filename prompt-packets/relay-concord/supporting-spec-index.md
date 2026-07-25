@@ -48,7 +48,8 @@ document wins when two seem to conflict.
 | Spend caps and where they're checked | `security.md` §5 · `constraints.md` §4 |
 | Workers limits that shaped the design | `research-findings.md` §1 |
 | Anthropic API rules (no `temperature`, refusal handling, structured outputs) | `research-findings.md` §7 · `constraints.md` §G10–G13 |
-| The 18 invariants to assert | `contracts.md` §18 |
+| The invariant list to assert | `contracts.md` §18 |
+| The two-repo boundary and one-way write direction | `architecture.md` §1.1 · `constraints.md` §G21 · `security.md` §4.3 |
 
 ## Files the build creates that later phases depend on
 
@@ -60,9 +61,10 @@ Treat these as living inputs, not outputs. Later phases read them.
 | `NOTES.md` | 01, appended | you, for ideas deferred out of the current phase |
 | `fixtures/cli-introspection.json` | 07 | 08 (T2 facts), 13 (CLI doc generation) |
 | `CONTRACTS-FROZEN.md` | 09 | 10–20 — what Concord may rely on |
-| `fixtures/eval/defects.json` | 16, but seeded earlier (08, 11) | 16 |
+| `fixtures/eval/defects.json` | 16, but seeded earlier (08, 11) | 16 — in-memory injections, never committed into the estate |
 | `fixtures/runs/*.json` | 17 | 17 public replay |
 | `fixtures/changelab/editable-units.json` | 17 | 18 doc-body allowlist |
+| `estate/` (submodule pin) | 01 | every phase from 11 onward |
 | `eval-report.md` / `.json` | 16, refreshed 20 | 20 README + failures page |
 
 ## What the human operator must supply (not in this packet)
@@ -74,9 +76,10 @@ Ask for these rather than inventing them:
 | `ANTHROPIC_API_KEY` | 01 | Via `wrangler secret put`. Never write it to a file. |
 | The literal hostnames for Relay, Concord, and docs | 01 | Do not guess a domain. |
 | Cloudflare account id | 01 | For `wrangler.jsonc`. |
+| The **estate repo** clone URL | 01 | Repo 2 must exist (may be empty) so the submodule can be wired. It must have **no `.github/` directory**, then or ever. |
 | Brand / visual preferences | 03 (Relay UI), 17 (Concord UI) | If not supplied, keep both UIs plain, legible, and unbranded. Do not invent a brand, logo, or colour system. |
 | Access team domain + AUD tag | 18 | After the operator creates the Access application. |
-| GitHub demo repo name, App id, installation id, private key | 19 | After the operator creates and installs the App. |
+| GitHub App id, installation id, private key | 19 | After the operator creates the App and installs it on the estate repo **only**. |
 
 If you reach a phase without its required input, stop and ask for that one item. Do not stub it with a placeholder that
 could be mistaken for working code, and do not commit a fake value.

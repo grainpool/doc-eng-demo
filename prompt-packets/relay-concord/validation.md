@@ -47,7 +47,7 @@ Each row is a test file the phase must add. The phase is incomplete without it.
 | 08 | `relay-api/test/product-truth.test.ts` | All six tiers return non-empty; every claim has a resolvable locator. |
 | 09 | `relay-api/test/seed-determinism.test.ts` | Seeding twice from empty yields identical snapshots modulo timestamps. |
 | 10 | `concord-core/test/milestone.test.ts` | One fact change → exactly two impacts, correct classes, explanations naming fact + tier + relationship; rerun → two `NO_ACTION`. |
-| 11 | `concord-core/test/adapters/*.golden.test.ts` | Each adapter's parsed units match its committed golden file; ids stable across two runs; `patch()` on a generated unit throws. |
+| 11 | `concord-core/test/adapters/*.golden.test.ts` | Each adapter's parsed units match its committed golden file; ids stable across two runs; `patch()` on a generated unit throws; **no doc-unit id contains the `estate/` mount prefix** (I15). |
 | 11 | `concord-core/test/coupling.test.ts` | No `/api/` string literal in `concord-*` other than the two allowed endpoints (I13). |
 | 12 | `concord-core/test/semantic-consistency.test.ts` | Four differently-worded projections with equal normalized values → zero findings (I9); `model_extraction` confidence ≤ 0.7. |
 | 12 | `concord-core/test/authority.test.ts` | T4 never overrides a current value; lower-tier disagreement produces a conflict, not an override; T5 wins only where it claims the key. |
@@ -57,11 +57,11 @@ Each row is a test file the phase must add. The phase is incomplete without it.
 | 14 | `concord-api/test/run-dispositions.test.ts` | Every detected impact has a terminal disposition (I10). |
 | 15 | `concord-core/test/conflicts.test.ts` | T3-vs-T4 contradiction → `UNRESOLVED_CONFLICT`, no patch, named owner, non-empty `missing_information`; `resolution === null` (I7). |
 | 15 | `concord-core/test/falsification.test.ts` | A refuted finding is retained as `suppressed` with refutation text; concurrency never exceeds 5. |
-| 16 | `concord-core/test/eval-harness.test.ts` | Harness scores a synthetic corpus correctly; `unsafe_autofix_count === 0` (I14). |
+| 16 | `concord-core/test/eval-harness.test.ts` | Harness scores a synthetic corpus correctly; `unsafe_autofix_count === 0` (I14); injections apply in memory and the on-disk estate is byte-unchanged after a run (I17). |
 | 17 | `concord-api/test/public-no-model.test.ts` | Every public route yields `model_usage.calls === 0` (I11). |
 | 18 | `concord-api/test/access.test.ts` | Missing header → 403; self-signed token → 403; wrong `aud` → 403; wrong `iss` → 403; expired → 403; wrong domain → 403; `DEMO_ADMIN_ENABLED` unset → 404 (I12). |
 | 18 | `concord-core/test/mutation-allowlist.test.ts` | Off-allowlist key rejected before value validation; off-enum value rejected; oversized body rejected; `<script>`/`import`/`{expr}` in a doc body rejected. |
-| 19 | `concord-core/test/path-allowlist.test.ts` | Denylist wins over allowlist; traversal variants rejected (`..`, `%2e%2e%2f`, absolute, backslash, unicode); `.github/**` rejected; only the seven allowed globs pass. |
+| 19 | `concord-core/test/path-allowlist.test.ts` | Denylist wins over allowlist; traversal variants rejected (`..`, `%2e%2e%2f`, absolute, backslash, unicode); `.github/**` rejected; only `.md`/`.mdx`/`.json` under the six allowed globs pass; **any path resolving outside the estate repo is rejected** (I16). |
 | 19 | `concord-api/test/github-cleanup.test.ts` | A failure after branch creation deletes the branch. |
 | 20 | `concord-api/test/redaction.test.ts` | The log helper drops every field on the redaction list; no `Cf-Access-*` header value is ever serialized. |
 
@@ -187,10 +187,13 @@ implementation rather than the problem — treat it as a failing phase and add h
 **Repository writes**
 - [ ] Every path in the denylist is rejected, with the denylist checked before the allowlist.
 - [ ] Traversal variants rejected (`..`, `%2e%2e%2f`, absolute, backslash, unicode).
-- [ ] The demo repo contains no `.github/workflows/`.
+- [ ] The estate repo contains no `.github/` directory at all.
+- [ ] Repo 1 (code + CI) has **no** GitHub App installation — confirm in the App's installation list, not by inference.
 - [ ] Branch protection on `main`: PR required, no force push, no deletion.
 - [ ] GitHub App has exactly Contents:write, Pull requests:write, Metadata:read — nothing more.
-- [ ] The App is installed on the demo repo only.
+- [ ] The App is installed on the estate repo only.
+- [ ] No patch, diff, or PR in any recorded run targets a path outside the estate repo.
+- [ ] An eval run leaves `estate/` git-clean — defects are injected in memory only.
 - [ ] Installation tokens are repo-scoped and never returned in a response.
 
 **Spend / abuse**

@@ -30,7 +30,7 @@ what is written here.
                                  │ pandas  │ │       │                │
                                  │ scipy   │ │  ┌────▼─────┐   ┌──────┴────────┐
                                  │statsmod.│ │  │ QUEUE    │   │ GitHub App    │
-                                 │matplotlib│ │  │ recon-   │──▶│ 1 demo repo  │
+                                 │matplotlib│ │  │ recon-   │──▶│ ESTATE repo   │
                                  └─────────┘ │  │ ciliation│   │ ephemeral PR  │
                                              │  │ consumer │   └───────────────┘
                                              │  └────┬─────┘
@@ -39,9 +39,31 @@ what is written here.
                                        │  Anthropic API     │
                                        │  claude-opus-5     │
                                        └────────────────────┘
+
+  GitHub App box above == the ESTATE repo (repo 2). It is the only repo the App
+  is installed on, and the only repo Concord ever writes to.
 ```
 
-**Two Workers. One Container. Two D1 databases. Two R2 buckets. One Queue. One external docs host.** Nothing else.
+**Two Workers. One Container. Two D1 databases. Two R2 buckets. One Queue. Two repos. One external docs host.**
+Nothing else.
+
+### 1.1 Repository boundary
+
+| | Repo 1 `doc-eng-demo` | Repo 2 `doc-eng-demo-estate` |
+|---|---|---|
+| Contains | all code, product truth (`product-truth/`), fixtures, CI | the six documentation surfaces |
+| `.github/` | yes — CI lives here and only here | **none, ever** |
+| Concord GitHub App | **not installed** | installed, and nowhere else |
+| Mintlify GitHub app | not connected | connected |
+| Concord writes | **never** | via PR only |
+| Relationship | mounts repo 2 at `estate/` as a git submodule pinned to a SHA | standalone |
+
+The estate is consumed from disk through the submodule, so no build step needs the network. `pnpm setup` runs
+`git submodule update --init`; CI checks out with `submodules: recursive`.
+
+`concord-api` bundles the estate at build time and records the estate commit SHA on every run (`run.estate_sha`), which
+appears in the run record and the PR body. If the estate has moved ahead of the bundle, the PR conflicts visibly — that
+is ordinary git behavior and the honest outcome; do not build a merge strategy for it.
 
 **The Concord Worker never calls the Relay Worker's internal endpoints.** It calls exactly two Relay surfaces —
 `GET /api/product-truth` and `GET /api/copy-registry` — plus it reads repo files and runs the CLI's introspection
@@ -55,7 +77,7 @@ output. This is the coupling boundary and it is enforced by lint (`constraints.m
 |---|---|---|---|
 | `@relay/contracts` | isomorphic | Zod schemas, fact-key registry, enums, error codes, model constant. **The freeze surface.** Zero dependencies beyond `zod`. | nothing internal |
 | `packages/relay-api` | Workers | Hono app: projects, files, sessions, artifacts, chat, product-truth, copy-registry. Owns `relay_db` + `relay-artifacts`. Proxies to kernel. | `@relay/contracts` |
-| `packages/relay-web` | browser | Vite + React SPA. Built into `relay-api`'s `assets.directory`. Every user-visible string comes from the copy registry. | `@relay/contracts` |
+| `packages/relay-web` | browser | Vite + React SPA. Built into `relay-api`'s `assets.directory`. Every user-visible string comes from the copy registry, imported at build time from `estate/in-product-copy/`. | `@relay/contracts` |
 | `packages/relay-cli` | Node | `commander` CLI over the Relay HTTP API. Emits `introspect --json`. | `@relay/contracts` |
 | `packages/relay-kernel` | Container (Python) | Eight bounded analysis operations + `/versions` + `/operations`. Stateless. No filesystem writes outside `/tmp`. | — |
 | `packages/concord-core` | **pure TS, no Cloudflare imports** | Ingest normalization, fact graph, projection resolution, authority arbitration, action classification, deterministic generators, patch validation, eval scoring. Fully unit-testable in plain Vitest. | `@relay/contracts` |
@@ -133,8 +155,8 @@ Deliberately **not** one YAML file. Authority is per-fact-family, declared in th
 | `T1_SCHEMA` | Zod schemas + enforcement constants | file support, size limits, validation behavior | `relay-api/src/limits.ts`, `contracts/` |
 | `T2_CLI` | `relay introspect --json` | CLI commands, flags, defaults, usage, error codes | derived from `commander` at runtime |
 | `T3_CONFIG` | declared product config | platform availability, plan/role gating, retention policy, canonical terminology, feature flags | `contracts/src/product-config.ts` |
-| `T4_RELEASE` | release records | **when** a fact changed — never its current value | `surfaces/releases/*.yaml` |
-| `T5_HUMAN` | recorded product decisions | tie-breaking, editorial ownership, deliberate exceptions | `surfaces/decisions/*.yaml` |
+| `T4_RELEASE` | release records | **when** a fact changed — never its current value | `product-truth/releases/*.yaml` (repo 1) |
+| `T5_HUMAN` | recorded product decisions | tie-breaking, editorial ownership, deliberate exceptions | `product-truth/decisions/*.yaml` (repo 1) |
 
 **Arbitration rule (implemented in `concord-core/src/authority.ts`):** for a given fact key, the registry names the
 authoritative tier. A claim from a *lower* tier that disagrees is a **conflict**, not an override. A claim from T4 about
@@ -146,17 +168,24 @@ demo.
 
 ## 5. Documentation estate (six surfaces)
 
-| Surface id | Format | Audience | Publishing | Concord write mode |
-|---|---|---|---|---|
-| `mintlify` | MDX + frontmatter + `docs.json` | developers | Mintlify GitHub app on merge | file patch via PR |
-| `helpcenter` | Markdown + `index.json` fixture | end users | static, served by Concord Worker | file patch via PR |
-| `inproduct` | copy registry (JSON, typed) | in-app users | shipped with Relay | file patch via PR |
-| `clidocs` | MDX pages under `docs-mintlify/cli/` | developers | as `mintlify` | **generated** — regen, never hand-patch |
-| `release` | YAML records + generated changelog MDX | mixed | as `mintlify` | append generated entry |
-| `generated` | feature matrix, availability tables, structured metadata | mixed + agents | as `mintlify` | **generated** — regen |
+All six live in **repo 2**. Paths below are relative to the estate repo root.
+
+| Surface id | Path | Format | Audience | Publishing | Concord write mode |
+|---|---|---|---|---|---|
+| `mintlify` | `docs-mintlify/*.mdx` + `docs.json` | MDX + frontmatter | developers | Mintlify GitHub app on merge | file patch via PR |
+| `helpcenter` | `help-center/` | Markdown + `index.json` | end users | static, served by Concord Worker | file patch via PR |
+| `inproduct` | `in-product-copy/*.json` | copy registry (JSON, typed) | in-app users | reaches Relay via the submodule pin | file patch via PR |
+| `clidocs` | `docs-mintlify/generated/cli/` | MDX | developers | as `mintlify` | **generated** — regen, never hand-patch |
+| `release` | `docs-mintlify/generated/changelog.mdx` | MDX | mixed | as `mintlify` | **generated** from repo 1's release records |
+| `generated` | `docs-mintlify/generated/` | MDX + JSON fragments | mixed + agents | as `mintlify` | **generated** — regen |
 
 Each surface has an adapter implementing one interface (`contracts.md` §11). Adapters are pure: `read(fs) → DocUnit[]`
 and `patch(DocUnit, newBody) → FileDiff`. No adapter performs I/O itself.
+
+**The `release` surface is a projection, not a source.** The authoritative records are `product-truth/releases/*.yaml`
+in repo 1, which Concord cannot write. Concord generates the changelog page in repo 2 from them. If a run concludes that
+a record's own prose (`notes_md`) should change, that is an `EDITORIAL_REVIEW` escalation naming the owner — there is no
+patch path to repo 1, by construction.
 
 ---
 
@@ -316,5 +345,9 @@ with a terminal disposition, including `unresolved` and `abandoned_budget`.
 - Deploys are independent: `pnpm deploy:relay`, `pnpm deploy:concord`, `pnpm deploy:kernel`. There is no coordinated
   deploy, and neither app may hard-fail on the other being an older version — Concord degrades to "surface unavailable"
   for a missing Relay endpoint.
+- **Estate updates ship by bumping the submodule pin**, which is an ordinary commit in repo 1 followed by a deploy. A
+  merged PR in repo 2 changes the published Mintlify site immediately (Mintlify builds from repo 2 directly) but does
+  not change Relay's in-product copy or Concord's ingested snapshot until the pin moves. Treat that lag as a real
+  product state worth showing, not a bug to engineer around.
 - Seed data (`pnpm seed:relay`, `pnpm seed:concord`) must reproduce byte-identical state from an empty database. This is
   what makes the public demo reproducible and the eval numbers meaningful.

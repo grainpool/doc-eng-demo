@@ -17,8 +17,11 @@ SCOPE — and this list is exhaustive
 2. TWO adapters only: `mintlify` and `inproduct`, implementing `SurfaceAdapter` from `contracts.md` §11.
    - `mintlify`: parse `.mdx` files with `gray-matter`; produce `DocUnit`s keyed by heading anchors.
    - `inproduct`: parse the copy registry from `GET /api/copy-registry`; one `DocUnit` per copy entry.
-   Create just enough surface content to exercise this: ONE Mintlify page (`surfaces/docs-mintlify/supported-files.mdx`)
-   that states the upload limit, plus the existing copy entry that states it. Do not author the rest of the docs estate.
+   Create just enough surface content to exercise this: ONE Mintlify page in the estate repo at
+   `estate/docs-mintlify/supported-files.mdx` that states the upload limit, plus the existing copy entry in
+   `estate/in-product-copy/` that states it. Do not author the rest of the docs estate.
+   Doc-unit ids are ESTATE-RELATIVE — `mintlify:docs-mintlify/supported-files.mdx#...`, never with an `estate/` prefix.
+   Strip the mount prefix at the adapter boundary; the ids must match the paths sent to GitHub in Phase 19.
 
 3. ONE fact: `limit.upload.csv.max_bytes`. ONE extractor: `declared_reference` — an MDX comment marker
    `{/* concord:fact key=limit.upload.csv.max_bytes */}` on the Mintlify side, and the copy entry's `references_facts`

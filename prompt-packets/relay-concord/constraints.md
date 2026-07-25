@@ -149,6 +149,20 @@ script. Paths in code use `path.join`, never string concatenation with `/`.
 **G20 — Tests are part of the phase, not a follow-up.** A phase is not complete without the tests its verification row
 requires.
 
+**G21 — Writes go one direction only: Concord writes to the estate repo (repo 2) and never to the code repo (repo 1).**
+Not a policy — a topology. The GitHub App is installed on repo 2 alone, so repo 1 is unreachable. Never propose
+widening this, never add a second installation, and never route "just this one file" through another mechanism. If a
+run concludes something in repo 1 should change (a release record's prose, a product-config value, a code constant), the
+correct output is an `EDITORIAL_REVIEW` escalation naming the owner. That is the boundary working.
+
+**G22 — The estate mount prefix never leaks into an identifier.** Repo 2 is mounted at `estate/` in repo 1, but doc-unit
+ids and GitHub API paths are estate-relative. Strip the prefix at the adapter boundary. An id containing `estate/`
+would break the moment the mount moved and would not match the paths sent to GitHub.
+
+**G23 — Eval defects are injected in memory.** Never commit a defect into the estate. The published docs site must not
+serve known-wrong content, and the answer key must not live in the repo being evaluated. An eval run leaves `estate/`
+git-clean.
+
 ---
 
 ## 4. Performance and reliability constraints
@@ -178,6 +192,10 @@ requires.
   change a product fact.
 - Mintlify config is `docs.json` (not `mint.json`), and `$ref` splitting is used so generated fragments are separate
   files.
+- The estate repo is a **git submodule** mounted at `estate/`. `pnpm setup` runs `git submodule update --init`; CI
+  checks out with `submodules: recursive`; the README instructs `git clone --recurse-submodules`. No build step may
+  fetch the estate over the network — it is read from disk. On Windows, submodule paths work normally; do not add
+  symlink-based alternatives.
 - Browser target: last two versions of evergreen browsers. No polyfills, no IE handling.
 
 ## 6. What must not be refactored or redesigned without necessity
@@ -190,7 +208,8 @@ requires.
 6. `Conflict.resolution: null` (`contracts.md` §15).
 7. The public/privileged split and the `DEMO_ADMIN_ENABLED` default-off flag.
 8. The mutation and path allowlists (`security.md` §4).
-9. The 18 invariants (`contracts.md` §18).
+9. The two-repository boundary and the one-way write direction (§G21).
+10. The invariant list (`contracts.md` §18).
 
 If a phase genuinely requires changing one of these, say so explicitly, explain the forcing constraint, and propose the
 minimal change. Do not change one quietly to make a test pass.

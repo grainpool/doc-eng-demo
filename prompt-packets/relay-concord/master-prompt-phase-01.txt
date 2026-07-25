@@ -39,10 +39,25 @@ Deliverables:
 
 A. MONOREPO SKELETON — pnpm workspaces, TypeScript strict, per `architecture.md` §2. Create these packages now, even
    where they are near-empty stubs with a README: `packages/contracts`, `packages/relay-api`, `packages/relay-web`,
-   `packages/relay-cli`, `packages/relay-kernel`. Do NOT create the `concord-*` packages or the `surfaces/` tree yet.
-   Root scripts: `typecheck`, `lint`, `test`, `build`, `dev`, `deploy:relay`, `deploy:kernel`. Node 22+, pnpm 9+.
+   `packages/relay-cli`, `packages/relay-kernel`. Do NOT create the `concord-*` packages yet.
+   Root scripts: `setup`, `typecheck`, `lint`, `test`, `build`, `dev`, `deploy:relay`, `deploy:kernel`. Node 22+, pnpm 9+.
    The developer is on WINDOWS: no POSIX-only shell in package scripts, no `rm -rf`, use `path.join` in code
    (`constraints.md` §G19).
+
+A2. TWO REPOSITORIES — read `architecture.md` §1.1 before doing anything here. This project is TWO public repos:
+   - repo 1 `doc-eng-demo` (this one): all code, `product-truth/`, `fixtures/`, and `.github/workflows/`. CI lives here
+     and only here.
+   - repo 2, the documentation estate: the six documentation surfaces. It has **no `.github/` directory, ever**.
+   I will give you repo 2's clone URL; it may be empty. Wire it as a git submodule mounted at `estate/`:
+     `git submodule add <url> estate`
+   Add `pnpm setup` running `git submodule update --init --recursive`, make CI check out with `submodules: recursive`,
+   and put `git clone --recurse-submodules` in the README. Create placeholder directories in repo 2 with a `.gitkeep`
+   and a short README explaining that an automated system opens PRs against it: `docs-mintlify/`, `help-center/`,
+   `in-product-copy/`. Nothing else in repo 2 yet — the content arrives in Phase 11.
+   Builds read the estate FROM DISK through the submodule. No build step may fetch it over the network.
+   The reason for the split is security: the Concord GitHub App will need `Contents: write`, and a visitor can trigger a
+   run. Installing it where CI lives would make safety depend on GitHub's workflow-trigger semantics. Keeping CI in
+   repo 1 and the App on repo 2 makes it structural. Do not merge the repos back together for convenience.
 
 B. RELAY WORKER — `packages/relay-api` using Hono, built and deployed together with `packages/relay-web` via
    `@cloudflare/vite-plugin`. Configure `wrangler.jsonc` with `assets: { directory, binding: "ASSETS",
@@ -86,9 +101,9 @@ F. `COMPAT.md` — the most valuable artifact of this phase. Record the OBSERVED
   operation, no Concord package. If you are tempted, write it in `NOTES.md` and move on.
 - The API key goes in via `wrangler secret put` only. Never in `wrangler.jsonc` `vars`, never in a committed file,
   never echoed by any endpoint including the health check.
-- I will supply: the Cloudflare account id, the literal hostname for Relay, and the Anthropic API key. If you do not
-  have one of them, STOP and ask for that specific item. Do not invent a domain or commit a placeholder that could be
-  mistaken for working configuration.
+- I will supply: the Cloudflare account id, the literal hostname for Relay, the Anthropic API key, and the estate repo's
+  clone URL. If you do not have one of them, STOP and ask for that specific item. Do not invent a domain or a repo URL,
+  and do not commit a placeholder that could be mistaken for working configuration.
 - Add only dependencies from the approved list in `constraints.md` §G18. Anything else needs a stated justification.
 - Write the Phase 01 test from `validation.md` §2: `relay-api/test/health.test.ts` using
   `@cloudflare/vitest-pool-workers`, asserting all five checks pass and that the response body contains no
@@ -106,7 +121,9 @@ contingency (`research-findings.md` §2) that I will decide on.
 
 I can visit the deployed URL, see the health page, and `GET /api/health` returns five green checks with real values
 including a real `pandas` version from inside the container. `pnpm typecheck && pnpm lint && pnpm test && pnpm build`
-all pass. Grepping the built client bundle finds no secret. `COMPAT.md` is written and non-trivial.
+all pass. Grepping the built client bundle finds no secret. A fresh `git clone --recurse-submodules` into a new
+directory yields a populated `estate/` and `pnpm setup && pnpm build` works there. `COMPAT.md` is written and
+non-trivial.
 
 Report at the end: what you built, the observed values from `/api/health`, any deviation you recorded in `COMPAT.md`,
 and anything you deferred to `NOTES.md`.

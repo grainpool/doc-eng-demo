@@ -26,8 +26,8 @@ Explicitly out of scope: a compromised Cloudflare account, a compromised GitHub 
 |---|---|---|
 | Obtain the Anthropic API key | Secret only in Worker secret store; never in `vars`, client bundle, health output, error body, or log. No endpoint echoes env. | 01 |
 | Obtain GitHub credentials | GitHub App private key in Worker secret store. Installation tokens minted per run, repo-scoped, short-lived, never returned in a response. | 19 |
-| Modify CI/CD workflows | The demo repo **contains no `.github/workflows/` directory**, and `.github/**` is on the path denylist. Deploys run from the primary repo, where the App is not installed. | 19 |
-| Modify arbitrary repository files | Path allowlist (§4) checked in `concord-core` before any GitHub call; branch protection on `main`; PR-only. | 19 |
+| Modify CI/CD workflows | **Structural, not procedural:** all CI lives in repo 1, and the App is not installed on repo 1. The estate repo (repo 2) contains no `.github/` directory at all, and `.github/**` is on the path denylist as a second layer. There is no privileged workflow within reach of a visitor-authored branch. | 19 |
+| Modify arbitrary repository files | The App can only reach repo 2, which holds documentation and nothing executable. Within it: path allowlist + denylist checked in `concord-core` before any GitHub call, re-checked before the Octokit call; branch protection on `main`; PR-only. | 19 |
 | Execute arbitrary shell commands | No component shells out. No `child_process` in any Worker. The CLI runs on the developer's machine only. | all |
 | Execute arbitrary server-side code | Kernel exposes a closed enum of 8 operations; `filter_rows` uses structured predicates, never `query()`/`eval()`. Model output is a validated `{operation_id, params}` pair. | 04, 05 |
 | Supply arbitrary URLs for server-side fetching | **No endpoint accepts a URL.** The kernel fetches only presigned R2 URLs it is handed by the Worker, host-checked. No link-checker fetches external URLs — reference validation is repo-internal only. | 04, 11 |
@@ -124,7 +124,8 @@ Defined in `packages/contracts/src/change-lab.ts` as a frozen table. A mutation 
 Nine keys, closed value sets. **No free-text fact values.** No key patterns, no wildcards, no "any boolean fact".
 
 ### 4.2 Doc-body mutation allowlist
-- Only `doc_unit_id`s present in `fixtures/changelab/editable-units.json` (a committed list of ≤ 12 fixture units).
+- Only `doc_unit_id`s present in `fixtures/changelab/editable-units.json` — a committed list of ≤ 12 units, held in
+  **repo 1** so that a write to repo 2 can never widen the set of things writable in repo 2.
 - Body ≤ 8192 bytes, UTF-8, Markdown/MDX text only.
 - Rejected content: HTML `<script>`, `<iframe>`, `<object>`, `<embed>`, `on*=` attributes, `javascript:` URIs,
   MDX expression braces `{...}`, `import`/`export` statements, and any JSX component tag not in an allowlist of the
@@ -133,25 +134,33 @@ Nine keys, closed value sets. **No free-text fact values.** No key patterns, no 
   any `.ts`/`.tsx`/`.py`/`.sql`/`.sh`/`.ps1`, any lockfile, any dotfile.
 
 ### 4.3 Repository path allowlist for PRs
-Writes permitted **only** under:
+
+**Layer zero is the repository boundary.** The App is installed on the estate repo (repo 2) and nowhere else, and every
+installation token is additionally scoped by repository id. Repo 1 — all code, all CI, all product truth — is
+unreachable by construction, not by rule. Everything below is defence in depth *within* repo 2.
+
+All paths are relative to the estate repo root. Writes permitted **only** under:
 ```
-surfaces/docs-mintlify/**/*.mdx
-surfaces/docs-mintlify/docs.json
-surfaces/docs-mintlify/generated/**
-surfaces/help-center/**/*.md
-surfaces/help-center/index.json
-surfaces/releases/*.yaml
-packages/relay-web/src/copy/*.json
+docs-mintlify/**/*.mdx
+docs-mintlify/docs.json
+docs-mintlify/generated/**
+help-center/**/*.md
+help-center/index.json
+in-product-copy/*.json
 ```
 Denylist checked **first** and independently (a bug in the allowlist must not open a hole):
 ```
-.github/**   **/wrangler.jsonc   **/package.json   **/pnpm-lock.yaml   **/*.ts   **/*.tsx
-**/*.js      **/*.py            **/*.sql          **/Dockerfile      **/.env*   **/*.pem
-**/*.sh      **/*.ps1           **/.gitignore     **/*.yml (except surfaces/releases/*.yaml)
+.github/**        **/.*  (any dotfile or dot-directory)
+**/*.ts  **/*.tsx  **/*.js  **/*.py  **/*.sql  **/*.sh  **/*.ps1  **/*.yml  **/*.yaml
+**/Dockerfile     **/package.json   **/pnpm-lock.yaml   **/*.pem   **/*.env*
 ```
+Simplest way to state the rule, and the one to put in `SECURITY.md`: **repo 2 holds only `.md`, `.mdx`, and `.json`
+documentation files; Concord may write those and nothing else.** Note `.yaml` is now denied outright — release records
+moved to repo 1 (`product-truth/releases/`), so nothing Concord writes is YAML.
+
 Path checks run in `concord-core` (pure, unit-tested with traversal cases: `..`, URL-encoded `%2e%2e`, absolute paths,
 backslashes, symlink-looking names, unicode normalization tricks) **and** again in `concord-api` immediately before the
-Octokit call.
+Octokit call. A path present in both lists is denied — assert that in a test.
 
 ## 5. Model-call safety and spend (Phases 05, 14, 20)
 

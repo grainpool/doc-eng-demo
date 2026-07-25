@@ -15,12 +15,12 @@ These are stated so you can correct them before Phase 01. Each is also recorded 
 | A1 | You are on **Workers Paid ($5/mo)**. | Cloudflare Containers — the analysis kernel — require it. Free tier also caps Worker CPU at 10 ms, which cannot host AI calls. |
 | A2 | You own a domain on Cloudflare and can add subdomains (`relay.`, `concord.`, `docs.`). | Stated as available in your spec. |
 | A3 | **No real end-user auth in Relay.** Relay identifies "the demo user" via a signed cookie / fixed workspace. | Your scope discipline explicitly excludes complex auth for ordinary Relay users. |
-| A4 | **Mintlify docs are Git-backed MDX inside this monorepo** (`surfaces/docs-mintlify/`), published by Mintlify's GitHub app. | Mintlify's current model is `docs.json` + MDX in a repo. Concord patches files, not a CMS API. |
-| A5 | **Help center is a local fixture first** (`surfaces/help-center/`) behind `HelpCenterAdapter`. Intercom is an optional Phase-20+ extension, not built. | Intercom dev workspaces are free but add OAuth + article-model coupling and external state to a demo that must be reproducible from `git clone`. |
-| A6 | **Single monorepo, pnpm workspaces**, two independent deploy targets. | See "Repo decision" below. |
+| A4 | **Mintlify docs are Git-backed MDX in the estate repo** (`docs-mintlify/`), published by Mintlify's GitHub app. | Mintlify's current model is `docs.json` + MDX in a repo. Concord patches files, not a CMS API. |
+| A5 | **Help center is a local fixture first** (`help-center/` in the estate repo) behind `HelpCenterAdapter`. Intercom is an optional Phase-20+ extension, not built. | Intercom dev workspaces are free but add OAuth + article-model coupling and external state to a demo that must be reproducible from `git clone`. |
+| A6 | **Two repositories**: a code monorepo (pnpm workspaces, two deploy targets) and a separate documentation-estate repo. | See "Repo decision" below. |
 | A7 | Model calls use **`claude-opus-5`** via a single config constant. Cost is controlled by caps + replay mode, not by silently downgrading models. | Your spend requirements are about *budget enforcement*, and model choice should stay yours. `claude-sonnet-5` is a one-line config swap. |
 | A8 | Public demo browses **precomputed run fixtures**; zero model calls on the public path. | Your public/privileged split. |
-| A9 | The GitHub demo repo is **separate from your main personal repo** and contains no CI workflows with secrets. | Required to make visitor-triggered branches safe. |
+| A9 | The estate repo contains **no `.github/` directory at all**, and the Concord GitHub App is installed on it and nothing else. | Required to make visitor-triggered branches safe. See "Repo decision". |
 | A10 | Provisional names `Relay` / `Concord` are placeholders; the agent must read them from one constants file so renaming is trivial. | You said the names don't matter. |
 
 **Deviations from your spec, and why** — see `research-findings.md` §"Deviations". The two that matter:
@@ -33,17 +33,24 @@ These are stated so you can correct them before Phase 01. Each is also recorded 
 
 ---
 
-## Repo decision: one monorepo. Not two repos.
+## Repo decision: two repositories — a code monorepo and a documentation estate.
 
-**Recommendation: single public monorepo `doc-eng-demo`.** Not presented as a tie — this is the choice.
+**Code is one monorepo. The documentation estate is a separate repo.** Both public.
 
-Why: Concord's entire thesis is that it consumes *another system's* contracts. A monorepo lets you enforce that with a
-versioned workspace package (`@relay/contracts`) and a CI typecheck that fails when Relay breaks a contract Concord
-depends on. Two repos would replace that compile-time guarantee with a published-package dance, and the freeze point
-would become a release ceremony instead of a git tag. Independent understandability is preserved by: per-package
-`README.md`, separate `pnpm deploy:relay` / `pnpm deploy:concord` commands, separate Workers, and a rule that Concord
-may import **only** `@relay/contracts` — never `@relay/api` internals (enforced by lint, see `constraints.md` §G4).
+Why a monorepo for the code: Concord's thesis is that it consumes *another system's* contracts. A monorepo enforces that
+with a versioned workspace package (`@relay/contracts`) and a CI typecheck that fails when Relay breaks something
+Concord depends on. Two code repos would replace that compile-time guarantee with a published-package dance, and the
+freeze point would become a release ceremony instead of a git tag.
 
+Why the estate is separate: it is the only way the security argument stays one sentence. The Concord GitHub App needs
+`Contents: write` to open a PR, and a visitor can trigger a run. If the App were installed where CI lives, safety would
+rest on GitHub's workflow-trigger semantics — true, but subtle, and a bad story for a project whose point is rigor.
+Splitting makes it structural: **the App is installed on the estate repo, the estate repo contains no `.github/`
+directory at all, and therefore no privileged CI exists for a visitor-authored branch to reach.** It also mirrors how
+production systems are usually organized — application code and its documentation estate in different repositories with
+different owners and review cultures.
+
+**Repo 1 — `doc-eng-demo`** (this repo). All code, all product truth, all fixtures, CI. **The App is not installed here.**
 ```
 doc-eng-demo/
   packages/
@@ -55,15 +62,46 @@ doc-eng-demo/
     concord-core/        # pure logic: ingest, normalize, fact graph, reconcile, eval. No Cloudflare imports.
     concord-api/         # Concord Worker: Hono API + D1 + R2 + Queue + Access JWT verify
     concord-web/         # Concord UI: Change Lab, run inspector, eval scorecard
-  surfaces/
-    docs-mintlify/       # docs.json + MDX — the developer docs surface
-    help-center/         # Markdown+JSON fixture — the help-center surface
-    releases/            # structured release records
+  product-truth/
+    releases/*.yaml      # T4 — structured release records. TRUTH, not prose.
+    decisions/*.yaml     # T5 — human product decisions
   fixtures/
-    eval/                # seeded-defect fixture + expected findings
-    runs/                # precomputed reconciliation runs for public replay
+    cli-introspection.json
+    eval/defects.json    # answer key + in-memory injections
+    runs/*.json          # precomputed reconciliation runs for public replay
+    changelab/editable-units.json
+  estate/                # ← git submodule → repo 2. Read-only from here.
   prompt-packets/        # this packet
+  .github/workflows/     # CI. Lives here and ONLY here.
 ```
+
+**Repo 2 — `doc-eng-demo-estate`.** The documentation estate. **No `.github/` directory.** Mintlify's GitHub app
+connects here; Concord's App is installed here and nowhere else.
+```
+doc-eng-demo-estate/
+  docs-mintlify/
+    docs.json            # $ref-split so generated fragments are separate files
+    *.mdx                # the developer docs surface
+    generated/           # CLI reference, feature matrix, changelog, metadata fragments
+  help-center/
+    index.json
+    *.md                 # the help-center surface (Intercom stand-in)
+  in-product-copy/
+    *.json               # the copy registry — Relay's UI strings
+  README.md              # explains that this repo is written to by an automated system
+```
+
+**How the two connect.** Repo 2 is mounted into repo 1 at `estate/` as a git submodule pinned to a SHA. Builds read it
+from disk, so nothing needs the network. `pnpm setup` runs `git submodule update --init`; CI checks out with
+`submodules: recursive`; the README tells humans to clone with `--recurse-submodules`.
+
+**The direction of writes is one-way and absolute: Concord writes only to repo 2, never to repo 1.** Two consequences
+you should expect rather than be surprised by:
+- Release *records* are product truth and live in repo 1, so Concord cannot patch them. It generates the changelog
+  *page* into repo 2 from those records, and if it believes a record's prose should change it escalates to the owner.
+  This is the boundary working, not a limitation to route around.
+- Relay's UI copy lives in repo 2 and reaches Relay through the submodule pin. A patch merged in repo 2 does not change
+  the running app until the pin is bumped — which is itself a real, documentable product state.
 
 ---
 
@@ -83,7 +121,7 @@ product logic, then build Relay to a frozen contract, then build Concord against
 
 | Phase | Prompt file | Deliverable | You verify before continuing |
 |---|---|---|---|
-| 01 | `master-prompt-phase-01.txt` | **Walking skeleton.** One Worker on your domain serving a React page; `/api/health` proves D1 write+read, R2 put+get, Container round-trip returning real `pandas.__version__`, and one live Anthropic call. Monorepo + CI. | Visit the URL. `GET /api/health` returns all five checks green with real version strings. `pnpm test` and `pnpm typecheck` pass. `COMPAT.md` exists and records actual observed versions/limits. |
+| 01 | `master-prompt-phase-01.txt` | **Walking skeleton.** One Worker on your domain serving a React page; `/api/health` proves D1 write+read, R2 put+get, Container round-trip returning real `pandas.__version__`, and one live Anthropic call. Both repos created, estate wired as a submodule, CI. | Visit the URL. `GET /api/health` returns all five checks green with real version strings. `pnpm test` and `pnpm typecheck` pass. A fresh `git clone --recurse-submodules` gives you a populated `estate/`. `COMPAT.md` records actual observed versions/limits. |
 | 02 | `phase-02-prompt.txt` | `@relay/contracts` + D1 schema + fact-key registry. Six product-truth source tiers wired as stubs. | `pnpm --filter @relay/contracts test` passes. Every fact key in `contracts.md` §3 resolves to exactly one authoritative tier. No fact is claimed by two tiers *by construction* (conflicts must be data, not schema). |
 | 03 | `phase-03-prompt.txt` | Projects, files, R2 upload with enforced limits, project state, UI shell. | Create project → upload CSV → see it listed. Upload an over-limit file → the rejection message text comes from the copy registry, not a hardcoded string. |
 | 04 | `phase-04-prompt.txt` | **Analysis kernel.** Container with 8 bounded operations, no arbitrary code path. `/kernel/versions` + `/kernel/operations` introspection. | `curl` each of the 8 ops directly against the kernel via the Worker proxy. Confirm no endpoint accepts code. `/kernel/operations` matches the contract. |
@@ -98,7 +136,7 @@ product logic, then build Relay to a frozen contract, then build Concord against
 | 13 | `phase-13-prompt.txt` | Deterministic reconciliation + generators (feature matrix, CLI reference, structured metadata). | Regenerate twice → byte-identical output. Hand-edit a generated file → next run overwrites it and says so. |
 | 14 | `phase-14-prompt.txt` | Grounded AI patch proposals with mandatory evidence. Queues introduced here. | Every proposed patch carries citations to source facts. Strip the evidence → the proposal is rejected by validation, not merely unflagged. |
 | 15 | `phase-15-prompt.txt` | Conflict detection, escalation, adversarial verification (propose → falsify → surface). | Plant two contradicting authoritative sources → the system refuses to edit, names the owner, and states what evidence is missing. |
-| 16 | `phase-16-prompt.txt` | Evaluation harness, seeded-defect fixture, scorecard, "What the system gets wrong". | `pnpm eval` prints precision/recall/FP/escalation metrics and writes a report. Unsafe-autofix count is **0** or the phase fails. |
+| 16 | `phase-16-prompt.txt` | Evaluation harness, defect corpus applied as in-memory injections, scorecard, "What the system gets wrong". | `pnpm eval` prints precision/recall/FP/escalation metrics and writes a report. Unsafe-autofix count is **0** or the phase fails. The live estate is unchanged by an eval run — `git status` in `estate/` is clean afterwards. |
 | 17 | `phase-17-prompt.txt` | Change Lab + public replay of precomputed runs. | In a private window (no auth), replay a full change end-to-end. Confirm zero model calls in logs. |
 | 18 | `phase-18-prompt.txt` | Cloudflare Access (`@anthropic.com` + OTP) + backend JWT validation + allowlisted live mutation. | Hit the privileged API with no JWT → 403. With a forged JWT → 403. With a real one → live run. Try a fact key outside the allowlist → rejected. |
 | 19 | `phase-19-prompt.txt` | GitHub App ephemeral branch/PR, least privilege, auto-cleanup. | A run opens a real PR touching only allowlisted paths. Attempt a path outside the allowlist → refused before any API call. Branch is reaped. |
@@ -156,8 +194,11 @@ The packet is otherwise self-contained. These four things only you have:
 
 1. **`ANTHROPIC_API_KEY`** — set via `wrangler secret put`, never in a file. Phase 01 needs it.
 2. **Your domain + chosen subdomains.** Give the agent the literal hostnames in Phase 01.
-3. **The GitHub repo name/org for the demo repo**, plus the GitHub App id + private key — Phase 19 only.
-4. **Cloudflare account id, and the Access team domain + AUD tag** after you create the Access app — Phase 18 only.
+3. **Both GitHub repos created and the estate repo's clone URL** — Phase 01 needs the estate repo to exist (it can be
+   empty) so the submodule can be wired. Create it with **no `.github/` directory**, and do not add one later.
+4. **The GitHub App id, installation id, and private key**, after you create the App and install it on the estate repo
+   only — Phase 19.
+5. **Cloudflare account id, and the Access team domain + AUD tag** after you create the Access app — Phase 18.
 
 If you have brand/visual preferences, hand them to the agent at Phase 03 (Relay UI) and Phase 17 (Concord UI). Absent
 that, the agent is instructed to keep both UIs plain and legible and not invent a brand.

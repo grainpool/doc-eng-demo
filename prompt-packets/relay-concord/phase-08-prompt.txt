@@ -24,13 +24,14 @@ SCOPE
    `references_facts` key, and record each one in `fixtures/eval/defects.json` as class `UNDECLARED_FACT_REF` with
    `expected_detection: true`. These are the beginning of the evaluation corpus. Do not fix them; do not hide them.
 
-5. Releases — `surfaces/releases/*.yaml`, at least SIX historical records per `contracts.md` §9, covering a limit
+5. Releases — `product-truth/releases/*.yaml` in REPO 1 (not the estate — these are product truth, and Concord must
+   never be able to patch them), at least SIX historical records per `contracts.md` §9, covering a limit
    increase, a platform enablement, a terminology rename, a capability addition, a CLI change, and a retention change.
    Each `changes[]` entry names a `fact_key`, `from`, `to`, and `kind`. Wire the T4_RELEASE resolver.
    REMEMBER: T4 is temporal, not factual. It is authoritative for WHEN something changed and never for the current
    value.
 
-6. Decisions — `surfaces/decisions/*.yaml`, at least THREE T5_HUMAN records: a deliberate exception, an editorial
+6. Decisions — `product-truth/decisions/*.yaml` in REPO 1, at least THREE T5_HUMAN records: a deliberate exception, an editorial
    ownership assignment, and a tie-break. Wire the T5_HUMAN resolver. T5 claims a key only where it explicitly says so.
 
 7. Optional, only if the above is finished and tested — the mock `connector_drive` feature: availability facts, a

@@ -12,7 +12,12 @@ SCOPE
    file under `concord-core/src/adapters/`, pure, with `ownedGlobs` declared for the later write allowlist.
    `adapter.patch()` on a unit with `generated: true` must THROW (`constraints.md` §G8).
 
-2. Author the Mintlify surface — `surfaces/docs-mintlify/` with `docs.json` and ~14 MDX pages:
+ALL SIX SURFACES LIVE IN THE ESTATE REPO (repo 2), mounted at `estate/`. Every path below is estate-relative. Doc-unit
+ids use estate-relative paths — the `estate/` mount prefix must NEVER appear in an id, because ids must survive the
+mount moving and must match the paths sent to the GitHub API later (`contracts.md` §2, invariant I15). Strip the prefix
+at the adapter boundary and assert it in the golden files.
+
+2. Author the Mintlify surface — `docs-mintlify/` with `docs.json` and ~14 MDX pages:
    index, getting started, projects & workspaces, analysis sessions, artifacts & provenance, supported files, CLI
    overview, CLI reference (a stub marked generated — Phase 13 fills it), configuration, security & privacy,
    platform & feature availability, troubleshooting, terminology, changelog (stub, generated).
@@ -21,7 +26,7 @@ SCOPE
    page a frontmatter `description` — Mintlify feeds these into the `llms.txt` it generates.
    Register `{/* concord:fact key=... */}` markers where a page states a fact declaratively.
 
-3. Author the help-center surface — `surfaces/help-center/` with `index.json` (collections + article metadata) and ~10
+3. Author the help-center surface — `help-center/` with `index.json` (collections + article metadata) and ~10
    Markdown articles: why an upload failed, how to run an analysis, platform availability, managing the connector,
    general troubleshooting, plan & permission questions, how long artifacts are kept, what the terms mean, working with
    artifacts, using the CLI. Register: `friendly_help`. Audience: `end_user`.
@@ -33,13 +38,18 @@ SCOPE
    than 10 MB — if yours is bigger, try splitting it"; the tooltip says "Max 10 MB"; the generated matrix cell says
    `10485760`. All four are correct simultaneously.
 
-5. SEED MORE EVAL DEFECTS while authoring — as you write the content, deliberately plant defects and record each in
-   `fixtures/eval/defects.json`. Cover at minimum: `STALE_VALUE`, `WRONG_PLATFORM`, `TERM_DRIFT`, `BROKEN_REF`,
-   `DUP_GUIDANCE`, `MISSING_PREREQ`, `CONTRADICTION`, `UNSUPPORTED_CLAIM`, `IA_PROBLEM`, `STALE_INPRODUCT_COPY`.
-   Also plant at least FOUR items with `expected_detection: false` — things that look wrong but are legitimately fine
-   (differing wording with identical meaning, an intentional register difference, a deliberately terse tooltip, a
-   correct value stated in an unusual unit). Without those, a recall-only harness would score 100% for a system that
-   flags everything.
+5. DEFINE EVAL DEFECTS AS INJECTIONS — author the estate CLEAN and correct. Do NOT commit broken documentation: the
+   Mintlify site publishes from repo 2, and it must never serve known-wrong information.
+   Instead, as you write each page, record the defects you *would* have planted in `fixtures/eval/defects.json`
+   (REPO 1) as `{ find, replace }` injections applied in memory at eval time (`contracts.md` §16). Keeping the answer
+   key out of the repo being evaluated is the point, and it means no duplicate copy of the estate can drift.
+   Cover at minimum: `STALE_VALUE`, `WRONG_PLATFORM`, `TERM_DRIFT`, `BROKEN_REF`, `DUP_GUIDANCE`, `MISSING_PREREQ`,
+   `CONTRADICTION`, `UNSUPPORTED_CLAIM`, `IA_PROBLEM`, `STALE_INPRODUCT_COPY`.
+   Also record at least FOUR items with `expected_detection: false` and `injection: null` — things in the CLEAN estate
+   that look wrong but are legitimately fine (differing wording with identical meaning, an intentional register
+   difference, a deliberately terse tooltip, a correct value stated in an unusual unit). Without those, a recall-only
+   harness would score 100% for a system that flags everything.
+   Each `find` string must match exactly once in its target file — assert that, or the injection is ambiguous.
 
 6. `concord ingest --dry-run [--surface=X]` — list every doc unit found per surface with its deterministic id.
 
@@ -55,13 +65,14 @@ HARD RULES
   INPUTS (frontmatter `description`, `docs.json` `description`, `markdown.instructions`). A hand-written `llms.txt`
   would be a second artifact that immediately drifts from the served one (`constraints.md` §G7).
 - Do not build the full fact graph, extra extractors, or reconciliation beyond Phase 10's one fact. That is Phase 12–13.
-- Doc unit ids must be deterministic and stable. Stability matters more than prettiness.
-- Do not fix the defects you plant.
+- Doc unit ids must be deterministic and stable, and estate-relative. Stability matters more than prettiness.
+- The committed estate is CLEAN. Defects exist only as injections in repo 1. `git status` in `estate/` must be clean
+  after any eval or test run.
 
 DONE WHEN
-Six adapters with passing golden files; `ingest --dry-run` lists every unit with stable ids across two runs; the docs
-estate is real and readable; `fixtures/eval/defects.json` has ≥ 24 entries including ≥ 4 with
-`expected_detection: false`.
+Six adapters with passing golden files; `ingest --dry-run` lists every unit with stable, estate-relative ids across two
+runs; the docs estate is real, readable, and CORRECT; `fixtures/eval/defects.json` has ≥ 24 entries including ≥ 4 with
+`expected_detection: false`, and every `find` string matches exactly once.
 
 Report: the doc-unit count per surface; the register difference you used for `limit.upload.csv.max_bytes` across four
 surfaces; and the full defect list you seeded with classes and expected actions.
