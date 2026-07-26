@@ -1,0 +1,345 @@
+[
+  {
+    "id": "mintlify:docs-mintlify/analysis-sessions.mdx#intro",
+    "path": "docs-mintlify/analysis-sessions.mdx",
+    "anchor": "intro",
+    "title": "Analysis sessions",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/analysis-sessions.mdx#the-eight-operations",
+    "path": "docs-mintlify/analysis-sessions.mdx",
+    "anchor": "the-eight-operations",
+    "title": "The eight operations",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/analysis-sessions.mdx#refusals",
+    "path": "docs-mintlify/analysis-sessions.mdx",
+    "anchor": "refusals",
+    "title": "Refusals",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/analysis-sessions.mdx#narration",
+    "path": "docs-mintlify/analysis-sessions.mdx",
+    "anchor": "narration",
+    "title": "Narration",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/artifacts-and-provenance.mdx#intro",
+    "path": "docs-mintlify/artifacts-and-provenance.mdx",
+    "anchor": "intro",
+    "title": "Artifacts & provenance",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/artifacts-and-provenance.mdx#what-provenance-answers",
+    "path": "docs-mintlify/artifacts-and-provenance.mdx",
+    "anchor": "what-provenance-answers",
+    "title": "What provenance answers",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/artifacts-and-provenance.mdx#lineage",
+    "path": "docs-mintlify/artifacts-and-provenance.mdx",
+    "anchor": "lineage",
+    "title": "Lineage",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/artifacts-and-provenance.mdx#retention",
+    "path": "docs-mintlify/artifacts-and-provenance.mdx",
+    "anchor": "retention",
+    "title": "Retention",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/changelog.mdx#intro",
+    "path": "docs-mintlify/changelog.mdx",
+    "anchor": "intro",
+    "title": "Changelog",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-overview.mdx#intro",
+    "path": "docs-mintlify/cli-overview.mdx",
+    "anchor": "intro",
+    "title": "CLI overview",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-overview.mdx#install-and-first-run",
+    "path": "docs-mintlify/cli-overview.mdx",
+    "anchor": "install-and-first-run",
+    "title": "Install and first run",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-overview.mdx#exit-codes",
+    "path": "docs-mintlify/cli-overview.mdx",
+    "anchor": "exit-codes",
+    "title": "Exit codes",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-overview.mdx#introspection",
+    "path": "docs-mintlify/cli-overview.mdx",
+    "anchor": "introspection",
+    "title": "Introspection",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#intro",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "intro",
+    "title": "CLI reference",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/configuration.mdx#intro",
+    "path": "docs-mintlify/configuration.mdx",
+    "anchor": "intro",
+    "title": "Configuration",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/configuration.mdx#retention",
+    "path": "docs-mintlify/configuration.mdx",
+    "anchor": "retention",
+    "title": "Retention",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/configuration.mdx#plans",
+    "path": "docs-mintlify/configuration.mdx",
+    "anchor": "plans",
+    "title": "Plans",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/configuration.mdx#flags",
+    "path": "docs-mintlify/configuration.mdx",
+    "anchor": "flags",
+    "title": "Flags",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/getting-started.mdx#intro",
+    "path": "docs-mintlify/getting-started.mdx",
+    "anchor": "intro",
+    "title": "Getting started",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/getting-started.mdx#before-you-begin",
+    "path": "docs-mintlify/getting-started.mdx",
+    "anchor": "before-you-begin",
+    "title": "Before you begin",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/getting-started.mdx#1-create-a-project",
+    "path": "docs-mintlify/getting-started.mdx",
+    "anchor": "1-create-a-project",
+    "title": "1. Create a project",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/getting-started.mdx#2-upload-a-file",
+    "path": "docs-mintlify/getting-started.mdx",
+    "anchor": "2-upload-a-file",
+    "title": "2. Upload a file",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/getting-started.mdx#3-ask-a-question",
+    "path": "docs-mintlify/getting-started.mdx",
+    "anchor": "3-ask-a-question",
+    "title": "3. Ask a question",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/getting-started.mdx#4-chain-a-result",
+    "path": "docs-mintlify/getting-started.mdx",
+    "anchor": "4-chain-a-result",
+    "title": "4. Chain a result",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/index.mdx#intro",
+    "path": "docs-mintlify/index.mdx",
+    "anchor": "intro",
+    "title": "Relay",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/index.mdx#what-relay-is-not",
+    "path": "docs-mintlify/index.mdx",
+    "anchor": "what-relay-is-not",
+    "title": "What Relay is not",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/index.mdx#where-to-start",
+    "path": "docs-mintlify/index.mdx",
+    "anchor": "where-to-start",
+    "title": "Where to start",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/platform-availability.mdx#intro",
+    "path": "docs-mintlify/platform-availability.mdx",
+    "anchor": "intro",
+    "title": "Platform & feature availability",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/platform-availability.mdx#analysis-sessions",
+    "path": "docs-mintlify/platform-availability.mdx",
+    "anchor": "analysis-sessions",
+    "title": "Analysis sessions",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/platform-availability.mdx#drive-connector",
+    "path": "docs-mintlify/platform-availability.mdx",
+    "anchor": "drive-connector",
+    "title": "Drive connector",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/platform-availability.mdx#the-generated-matrix",
+    "path": "docs-mintlify/platform-availability.mdx",
+    "anchor": "the-generated-matrix",
+    "title": "The generated matrix",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/projects-and-workspaces.mdx#intro",
+    "path": "docs-mintlify/projects-and-workspaces.mdx",
+    "anchor": "intro",
+    "title": "Projects and workspaces",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/projects-and-workspaces.mdx#terminology",
+    "path": "docs-mintlify/projects-and-workspaces.mdx",
+    "anchor": "terminology",
+    "title": "Terminology",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/projects-and-workspaces.mdx#lifecycle",
+    "path": "docs-mintlify/projects-and-workspaces.mdx",
+    "anchor": "lifecycle",
+    "title": "Lifecycle",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/security-and-privacy.mdx#intro",
+    "path": "docs-mintlify/security-and-privacy.mdx",
+    "anchor": "intro",
+    "title": "Security & privacy",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/security-and-privacy.mdx#no-code-execution",
+    "path": "docs-mintlify/security-and-privacy.mdx",
+    "anchor": "no-code-execution",
+    "title": "No code execution",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/security-and-privacy.mdx#how-data-reaches-the-kernel",
+    "path": "docs-mintlify/security-and-privacy.mdx",
+    "anchor": "how-data-reaches-the-kernel",
+    "title": "How data reaches the kernel",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/security-and-privacy.mdx#logging",
+    "path": "docs-mintlify/security-and-privacy.mdx",
+    "anchor": "logging",
+    "title": "Logging",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/security-and-privacy.mdx#data-location",
+    "path": "docs-mintlify/security-and-privacy.mdx",
+    "anchor": "data-location",
+    "title": "Data location",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/supported-files.mdx#intro",
+    "path": "docs-mintlify/supported-files.mdx",
+    "anchor": "intro",
+    "title": "Supported files",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/supported-files.mdx#size-limits",
+    "path": "docs-mintlify/supported-files.mdx",
+    "anchor": "size-limits",
+    "title": "Size limits",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/supported-files.mdx#supported-types",
+    "path": "docs-mintlify/supported-files.mdx",
+    "anchor": "supported-types",
+    "title": "Supported types",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/terminology.mdx#intro",
+    "path": "docs-mintlify/terminology.mdx",
+    "anchor": "intro",
+    "title": "Terminology",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/terminology.mdx#words-we-avoid",
+    "path": "docs-mintlify/terminology.mdx",
+    "anchor": "words-we-avoid",
+    "title": "Words we avoid",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/troubleshooting.mdx#intro",
+    "path": "docs-mintlify/troubleshooting.mdx",
+    "anchor": "intro",
+    "title": "Troubleshooting",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/troubleshooting.mdx#my-upload-was-rejected",
+    "path": "docs-mintlify/troubleshooting.mdx",
+    "anchor": "my-upload-was-rejected",
+    "title": "My upload was rejected",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/troubleshooting.mdx#relay-refused-my-question",
+    "path": "docs-mintlify/troubleshooting.mdx",
+    "anchor": "relay-refused-my-question",
+    "title": "Relay refused my question",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/troubleshooting.mdx#the-analysis-engine-is-unavailable",
+    "path": "docs-mintlify/troubleshooting.mdx",
+    "anchor": "the-analysis-engine-is-unavailable",
+    "title": "\"The analysis engine is unavailable\"",
+    "generated": false
+  },
+  {
+    "id": "mintlify:docs-mintlify/troubleshooting.mdx#why-does-the-app-say-ios-is-unsupported-when-the-changelog-announced-it",
+    "path": "docs-mintlify/troubleshooting.mdx",
+    "anchor": "why-does-the-app-say-ios-is-unsupported-when-the-changelog-announced-it",
+    "title": "Why does the app say iOS is unsupported when the changelog announced it?",
+    "generated": false
+  }
+]

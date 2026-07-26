@@ -9,29 +9,293 @@
       "injection": null,
       "expected_detection": true,
       "expected_action": "EDITORIAL_REVIEW",
-      "notes": "Phase-08 seed: lives in the real estate (invisible to readers, harmless in production); excluded from the copy-registry lint by id."
+      "notes": "Phase-08 seed: lives in the real estate; excluded from the copy-registry lint by id."
     },
     {
       "id": "def_undeclared_row_limit",
       "class": "UNDECLARED_FACT_REF",
       "doc_unit_id": "inproduct:in-product-copy/files.json#tooltip.row_limit",
       "fact_key": "limit.upload.csv.max_rows",
-      "description": "Tooltip states 'Up to 50,000 rows' without declaring limit.upload.csv.max_rows in references_facts.",
+      "description": "Tooltip states 'Up to 50,000 rows' without declaring limit.upload.csv.max_rows.",
       "injection": null,
       "expected_detection": true,
       "expected_action": "EDITORIAL_REVIEW",
-      "notes": "Phase-08 seed: lives in the real estate; excluded from the copy-registry lint by id."
+      "notes": "Phase-08 seed; excluded from the copy-registry lint by id."
     },
     {
       "id": "def_undeclared_upload_retention",
       "class": "UNDECLARED_FACT_REF",
       "doc_unit_id": "inproduct:in-product-copy/settings.json#settings.retention.uploads",
       "fact_key": "retention.uploaded_file.days",
-      "description": "Setting description states '30 days' without declaring retention.uploaded_file.days in references_facts.",
+      "description": "Setting description states '30 days' without declaring retention.uploaded_file.days.",
       "injection": null,
       "expected_detection": true,
       "expected_action": "EDITORIAL_REVIEW",
-      "notes": "Phase-08 seed: lives in the real estate; excluded from the copy-registry lint by id."
+      "notes": "Phase-08 seed; excluded from the copy-registry lint by id."
+    },
+    {
+      "id": "def_stale_limit_reference_page",
+      "class": "STALE_VALUE",
+      "doc_unit_id": "mintlify:docs-mintlify/supported-files.mdx#size-limits",
+      "fact_key": "limit.upload.csv.max_bytes",
+      "description": "Reference page states a superseded 5 MB limit.",
+      "injection": { "find": "Maximum file size: 10 MB", "replace": "Maximum file size: 5 MB" },
+      "expected_detection": true,
+      "expected_action": "DETERMINISTIC_REGEN",
+      "notes": "Declared marker + mechanical span: the strongest detection case."
+    },
+    {
+      "id": "def_stale_artifact_retention",
+      "class": "STALE_VALUE",
+      "doc_unit_id": "mintlify:docs-mintlify/artifacts-and-provenance.mdx#retention",
+      "fact_key": "retention.artifact.days",
+      "description": "Retention section states 7 days against the 30-day fact.",
+      "injection": { "find": "retained for 30 days after creation; the expiry", "replace": "retained for 7 days after creation; the expiry" },
+      "expected_detection": true,
+      "expected_action": "DETERMINISTIC_REGEN",
+      "notes": "Declared marker on the section."
+    },
+    {
+      "id": "def_stale_retention_helpcenter",
+      "class": "STALE_VALUE",
+      "doc_unit_id": "helpcenter:help-center/articles/how-long-things-are-kept.md#article",
+      "fact_key": "retention.artifact.days",
+      "description": "Help article states 90-day artifact retention against the 30-day fact.",
+      "injection": { "find": "kept for 30 days after they're\ncreated", "replace": "kept for 90 days after they're\ncreated" },
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "notes": "Prose surface, no marker: needs extraction, so grounded patch not regen."
+    },
+    {
+      "id": "def_stale_generated_matrix_limit",
+      "class": "STALE_VALUE",
+      "doc_unit_id": "generated:generated/availability-matrix.mdx#page",
+      "fact_key": "limit.upload.csv.max_bytes",
+      "description": "Generated matrix cell carries a superseded raw-byte value.",
+      "injection": { "find": "| limit.upload.csv.max_bytes | 10485760 |", "replace": "| limit.upload.csv.max_bytes | 5242880 |" },
+      "expected_detection": true,
+      "expected_action": "DETERMINISTIC_REGEN",
+      "notes": "Generated surface: always regenerated, never patched."
+    },
+    {
+      "id": "def_wrong_platform_reference",
+      "class": "WRONG_PLATFORM",
+      "doc_unit_id": "mintlify:docs-mintlify/platform-availability.mdx#analysis-sessions",
+      "fact_key": "availability.feature.analysis_sessions.platform.ios",
+      "description": "Reference page claims iOS availability that config denies.",
+      "injection": { "find": "available on **web** and the **CLI**", "replace": "available on **web**, **iOS**, and the **CLI**" },
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "notes": "The iOS rollback makes this the temptation case: the T4 release agrees with the defect, T3 config wins."
+    },
+    {
+      "id": "def_wrong_platform_helpcenter",
+      "class": "WRONG_PLATFORM",
+      "doc_unit_id": "helpcenter:help-center/articles/platform-availability.md#article",
+      "fact_key": "availability.feature.analysis_sessions.platform.ios",
+      "description": "Help article claims iPhone support that config denies.",
+      "injection": { "find": "work on the **web app** and the **CLI** today", "replace": "work on the **web app**, **iPhone**, and the **CLI** today" },
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "notes": "Same fact, friendlier register."
+    },
+    {
+      "id": "def_wrong_platform_generated_matrix",
+      "class": "WRONG_PLATFORM",
+      "doc_unit_id": "generated:generated/availability-matrix.mdx#page",
+      "fact_key": "availability.feature.analysis_sessions.platform.ios",
+      "description": "Generated availability matrix flips the iOS cell to true.",
+      "injection": { "find": "| analysis_sessions | true | false | false | true |", "replace": "| analysis_sessions | true | true | false | true |" },
+      "expected_detection": true,
+      "expected_action": "DETERMINISTIC_REGEN",
+      "notes": "Generated surface regen."
+    },
+    {
+      "id": "def_term_drift_reference",
+      "class": "TERM_DRIFT",
+      "doc_unit_id": "mintlify:docs-mintlify/projects-and-workspaces.mdx#terminology",
+      "fact_key": "term.canonical.task",
+      "description": "Reference page uses the retired term 'Job'.",
+      "injection": { "find": "A unit of analysis work is a **Task**", "replace": "A unit of analysis work is a **Job**" },
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "notes": "Terminology ownership decision routes term patches through product-content review."
+    },
+    {
+      "id": "def_term_drift_helpcenter",
+      "class": "TERM_DRIFT",
+      "doc_unit_id": "helpcenter:help-center/articles/what-the-terms-mean.md#article",
+      "fact_key": "term.canonical.task",
+      "description": "Glossary article defines the retired term 'Job'.",
+      "injection": { "find": "- **Task** — one unit of analysis work", "replace": "- **Job** — one unit of analysis work" },
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "notes": ""
+    },
+    {
+      "id": "def_term_drift_inproduct",
+      "class": "TERM_DRIFT",
+      "doc_unit_id": "inproduct:in-product-copy/sessions.json#session.open",
+      "fact_key": "term.canonical.task",
+      "description": "In-product button label uses retired 'Job' terminology.",
+      "injection": { "find": "\"text\": \"Analyze\",", "replace": "\"text\": \"Run Job\"," },
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "notes": ""
+    },
+    {
+      "id": "def_broken_ref_getting_started",
+      "class": "BROKEN_REF",
+      "doc_unit_id": "mintlify:docs-mintlify/getting-started.mdx#before-you-begin",
+      "fact_key": null,
+      "description": "Link target /file-types does not exist (page is /supported-files).",
+      "injection": { "find": "see [Supported files](/supported-files).", "replace": "see [Supported files](/file-types)." },
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "notes": "Repo-internal reference validation only — no external URL fetching, ever."
+    },
+    {
+      "id": "def_broken_ref_cli_overview",
+      "class": "BROKEN_REF",
+      "doc_unit_id": "mintlify:docs-mintlify/cli-overview.mdx#introspection",
+      "fact_key": null,
+      "description": "Link target /cli-ref does not exist (page is /cli-reference).",
+      "injection": { "find": "[CLI reference](/cli-reference) is generated", "replace": "[CLI reference](/cli-ref) is generated" },
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "notes": ""
+    },
+    {
+      "id": "def_dup_guidance_size_check",
+      "class": "DUP_GUIDANCE",
+      "doc_unit_id": "helpcenter:help-center/articles/file-size-help.md#article",
+      "fact_key": null,
+      "description": "Size-check guidance diverges from upload-failed and the security page (claims whole-file read before checking).",
+      "injection": { "find": "Relay checks the size before reading the data", "replace": "Relay reads the whole file before checking size" },
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "notes": "Same instruction in two surfaces, now diverging."
+    },
+    {
+      "id": "def_missing_prereq_run_analysis",
+      "class": "MISSING_PREREQ",
+      "doc_unit_id": "helpcenter:help-center/articles/run-an-analysis.md#article",
+      "fact_key": null,
+      "description": "Procedure drops the open-project-and-pick-file precondition.",
+      "injection": { "find": "1. Open your project and click **Analyze** next to a file.", "replace": "1. Click **Analyze**." },
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "notes": "IA/procedural change — never auto-patched."
+    },
+    {
+      "id": "def_contradiction_upload_retention",
+      "class": "CONTRADICTION",
+      "doc_unit_id": "mintlify:docs-mintlify/configuration.mdx#retention",
+      "fact_key": "retention.uploaded_file.days",
+      "description": "Configuration page says 90-day upload retention while the help center says 30 — two surfaces asserting incompatible values.",
+      "injection": { "find": "Uploaded files are retained for 30 days.", "replace": "Uploaded files are retained for 90 days." },
+      "expected_detection": true,
+      "expected_action": "UNRESOLVED_CONFLICT",
+      "notes": "The declared marker sits on this section, so the conflict is between the injected doc value and both the fact and the sibling surface."
+    },
+    {
+      "id": "def_unsupported_claim_soc2",
+      "class": "UNSUPPORTED_CLAIM",
+      "doc_unit_id": "mintlify:docs-mintlify/security-and-privacy.mdx#logging",
+      "fact_key": null,
+      "description": "Asserts SOC 2 Type II certification, which no authoritative source supports.",
+      "injection": { "find": "Model calls are recorded as token counts and a prompt hash.", "replace": "Model calls are recorded as token counts and a prompt hash. Relay is SOC 2 Type II certified." },
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "notes": "No fact key exists for certifications — exactly why it is unsupported."
+    },
+    {
+      "id": "def_unsupported_claim_encryption",
+      "class": "UNSUPPORTED_CLAIM",
+      "doc_unit_id": "mintlify:docs-mintlify/index.mdx#intro",
+      "fact_key": null,
+      "description": "Marketing-grade 'bank-grade encryption' claim with no authoritative source.",
+      "injection": { "find": "a sandboxed kernel runs it", "replace": "a sandboxed kernel runs it with bank-grade encryption" },
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "notes": ""
+    },
+    {
+      "id": "def_ia_problem_cli_exit_codes",
+      "class": "IA_PROBLEM",
+      "doc_unit_id": "helpcenter:help-center/articles/using-the-cli.md#article",
+      "fact_key": null,
+      "description": "Developer-reference exit-code detail dumped into an end-user help article.",
+      "injection": { "find": "Run `relay --help` to\nsee every command with examples.", "replace": "The contractual exit codes are 0 ok, 1 unexpected, 2 usage, 3 auth, 4 not found, 5 validation, 6 remote unavailable, as defined by the introspection JSON schema. Run `relay --help` to\nsee every command with examples." },
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "notes": "Content in the wrong surface/audience."
+    },
+    {
+      "id": "def_stale_inproduct_limit_note",
+      "class": "STALE_INPRODUCT_COPY",
+      "doc_unit_id": "inproduct:in-product-copy/files.json#uploader.limit_note",
+      "fact_key": "limit.upload.csv.max_bytes",
+      "description": "Copy entry disagrees with the fact it declares (5 MB vs 10 MB).",
+      "injection": { "find": "Files up to 10 MB are supported.", "replace": "Files up to 5 MB are supported." },
+      "expected_detection": true,
+      "expected_action": "DETERMINISTIC_REGEN",
+      "notes": "Declared references_facts + literal value: the Phase-10 mechanical path."
+    },
+    {
+      "id": "def_stale_cli_exit_code",
+      "class": "STALE_CLI",
+      "doc_unit_id": "mintlify:docs-mintlify/cli-overview.mdx#exit-codes",
+      "fact_key": "cli.command.relay.flags",
+      "description": "Documented exit-code meaning differs from the introspection output.",
+      "injection": { "find": "`3` auth failure, `4` not found,", "replace": "`3` network failure, `4` not found," },
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "notes": "The introspection fixture is the T2 authority."
+    },
+    {
+      "id": "def_false_register_tooltip",
+      "class": "DUP_GUIDANCE",
+      "doc_unit_id": "inproduct:in-product-copy/files.json#tooltip.upload_limit",
+      "fact_key": "limit.upload.csv.max_bytes",
+      "description": "'Max 10 MB' tooltip vs 'Maximum file size: 10 MB' reference page — same value, deliberate register difference.",
+      "injection": null,
+      "expected_detection": false,
+      "expected_action": "NO_ACTION",
+      "notes": "A recall-only harness flags this; a correct one does not."
+    },
+    {
+      "id": "def_false_raw_bytes_cell",
+      "class": "STALE_VALUE",
+      "doc_unit_id": "generated:generated/availability-matrix.mdx#page",
+      "fact_key": "limit.upload.csv.max_bytes",
+      "description": "The matrix renders 10485760 raw bytes while prose says '10 MB' — an unusual unit, the same normalized value.",
+      "injection": null,
+      "expected_detection": false,
+      "expected_action": "NO_ACTION",
+      "notes": "Semantic comparison happens on normalized values, never strings."
+    },
+    {
+      "id": "def_false_wording_smaller_than",
+      "class": "CONTRADICTION",
+      "doc_unit_id": "helpcenter:help-center/articles/upload-failed.md#article",
+      "fact_key": "limit.upload.csv.max_bytes",
+      "description": "'Files need to be smaller than 10 MB' vs 'up to 10 MB' elsewhere — differing wording, identical meaning at this granularity.",
+      "injection": null,
+      "expected_detection": false,
+      "expected_action": "NO_ACTION",
+      "notes": "Boundary-inclusive phrasing differences are not value conflicts."
+    },
+    {
+      "id": "def_false_ios_history",
+      "class": "WRONG_PLATFORM",
+      "doc_unit_id": "mintlify:docs-mintlify/troubleshooting.mdx#why-does-the-app-say-ios-is-unsupported-when-the-changelog-announced-it",
+      "fact_key": "availability.feature.analysis_sessions.platform.ios",
+      "description": "The troubleshooting entry DISCUSSES the rolled-back iOS launch — historical framing, not an availability claim.",
+      "injection": null,
+      "expected_detection": false,
+      "expected_action": "NO_ACTION",
+      "notes": "Mentioning a platform is not asserting availability on it."
     }
   ]
 }

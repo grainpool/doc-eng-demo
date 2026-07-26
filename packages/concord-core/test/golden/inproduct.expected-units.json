@@ -1,0 +1,674 @@
+[
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifacts.list.heading",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifacts.list.heading",
+    "title": "artifacts.list.heading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifacts.list.empty",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifacts.list.empty",
+    "title": "artifacts.list.empty",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifact.back",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifact.back",
+    "title": "artifact.back",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifact.download",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifact.download",
+    "title": "artifact.download",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifact.provenance.heading",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifact.provenance.heading",
+    "title": "artifact.provenance.heading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifact.provenance.source_file",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifact.provenance.source_file",
+    "title": "artifact.provenance.source_file",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifact.provenance.operation",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifact.provenance.operation",
+    "title": "artifact.provenance.operation",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifact.provenance.params",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifact.provenance.params",
+    "title": "artifact.provenance.params",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifact.provenance.versions",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifact.provenance.versions",
+    "title": "artifact.provenance.versions",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifact.provenance.generated",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifact.provenance.generated",
+    "title": "artifact.provenance.generated",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifact.retention",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifact.retention",
+    "title": "artifact.retention",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifact.lineage.heading",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifact.lineage.heading",
+    "title": "artifact.lineage.heading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifact.lineage.none",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifact.lineage.none",
+    "title": "artifact.lineage.none",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#session.turn.artifacts",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "session.turn.artifacts",
+    "title": "session.turn.artifacts",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#session.chain.label",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "session.chain.label",
+    "title": "session.chain.label",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#session.chain.original",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "session.chain.original",
+    "title": "session.chain.original",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.upload.too_large",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.upload.too_large",
+    "title": "error.upload.too_large",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.upload.unsupported_type",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.upload.unsupported_type",
+    "title": "error.upload.unsupported_type",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.upload.missing_file",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.upload.missing_file",
+    "title": "error.upload.missing_file",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.validation.required_field",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.validation.required_field",
+    "title": "error.validation.required_field",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.generic.not_found",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.generic.not_found",
+    "title": "error.generic.not_found",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.generic.internal",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.generic.internal",
+    "title": "error.generic.internal",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.analysis.kernel_unavailable",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.analysis.kernel_unavailable",
+    "title": "error.analysis.kernel_unavailable",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.analysis.invalid_params",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.analysis.invalid_params",
+    "title": "error.analysis.invalid_params",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.analysis.kernel_rejected",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.analysis.kernel_rejected",
+    "title": "error.analysis.kernel_rejected",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.analysis.unsupported_request",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.analysis.unsupported_request",
+    "title": "error.analysis.unsupported_request",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.analysis.model_unavailable",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.analysis.model_unavailable",
+    "title": "error.analysis.model_unavailable",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.generic.network",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.generic.network",
+    "title": "error.generic.network",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.analysis.budget_exhausted",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.analysis.budget_exhausted",
+    "title": "error.analysis.budget_exhausted",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.analysis.rate_limited",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.analysis.rate_limited",
+    "title": "error.analysis.rate_limited",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#files.list.empty",
+    "path": "in-product-copy/files.json",
+    "anchor": "files.list.empty",
+    "title": "files.list.empty",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#files.list.loading",
+    "path": "in-product-copy/files.json",
+    "anchor": "files.list.loading",
+    "title": "files.list.loading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#files.table.name",
+    "path": "in-product-copy/files.json",
+    "anchor": "files.table.name",
+    "title": "files.table.name",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#files.table.size",
+    "path": "in-product-copy/files.json",
+    "anchor": "files.table.size",
+    "title": "files.table.size",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#files.table.rows",
+    "path": "in-product-copy/files.json",
+    "anchor": "files.table.rows",
+    "title": "files.table.rows",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#files.table.columns",
+    "path": "in-product-copy/files.json",
+    "anchor": "files.table.columns",
+    "title": "files.table.columns",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#files.table.uploaded",
+    "path": "in-product-copy/files.json",
+    "anchor": "files.table.uploaded",
+    "title": "files.table.uploaded",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#uploader.help",
+    "path": "in-product-copy/files.json",
+    "anchor": "uploader.help",
+    "title": "uploader.help",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#uploader.button",
+    "path": "in-product-copy/files.json",
+    "anchor": "uploader.button",
+    "title": "uploader.button",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#uploader.choose",
+    "path": "in-product-copy/files.json",
+    "anchor": "uploader.choose",
+    "title": "uploader.choose",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#uploader.uploading",
+    "path": "in-product-copy/files.json",
+    "anchor": "uploader.uploading",
+    "title": "uploader.uploading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#uploader.success",
+    "path": "in-product-copy/files.json",
+    "anchor": "uploader.success",
+    "title": "uploader.success",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#tooltip.upload_limit",
+    "path": "in-product-copy/files.json",
+    "anchor": "tooltip.upload_limit",
+    "title": "tooltip.upload_limit",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#tooltip.row_limit",
+    "path": "in-product-copy/files.json",
+    "anchor": "tooltip.row_limit",
+    "title": "tooltip.row_limit",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#tooltip.supported_types",
+    "path": "in-product-copy/files.json",
+    "anchor": "tooltip.supported_types",
+    "title": "tooltip.supported_types",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#uploader.limit_note",
+    "path": "in-product-copy/files.json",
+    "anchor": "uploader.limit_note",
+    "title": "uploader.limit_note",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/health.json#health.title",
+    "path": "in-product-copy/health.json",
+    "anchor": "health.title",
+    "title": "health.title",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/health.json#health.intro",
+    "path": "in-product-copy/health.json",
+    "anchor": "health.intro",
+    "title": "health.intro",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/health.json#health.loading",
+    "path": "in-product-copy/health.json",
+    "anchor": "health.loading",
+    "title": "health.loading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/health.json#health.all_ok",
+    "path": "in-product-copy/health.json",
+    "anchor": "health.all_ok",
+    "title": "health.all_ok",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/health.json#health.not_ok",
+    "path": "in-product-copy/health.json",
+    "anchor": "health.not_ok",
+    "title": "health.not_ok",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/health.json#health.check.worker_assets",
+    "path": "in-product-copy/health.json",
+    "anchor": "health.check.worker_assets",
+    "title": "health.check.worker_assets",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/health.json#health.check.d1",
+    "path": "in-product-copy/health.json",
+    "anchor": "health.check.d1",
+    "title": "health.check.d1",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/health.json#health.check.r2",
+    "path": "in-product-copy/health.json",
+    "anchor": "health.check.r2",
+    "title": "health.check.r2",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/health.json#health.check.kernel",
+    "path": "in-product-copy/health.json",
+    "anchor": "health.check.kernel",
+    "title": "health.check.kernel",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/health.json#health.check.anthropic",
+    "path": "in-product-copy/health.json",
+    "anchor": "health.check.anthropic",
+    "title": "health.check.anthropic",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/health.json#health.duration",
+    "path": "in-product-copy/health.json",
+    "anchor": "health.duration",
+    "title": "health.duration",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#app.title",
+    "path": "in-product-copy/projects.json",
+    "anchor": "app.title",
+    "title": "app.title",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.list.title",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.list.title",
+    "title": "projects.list.title",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.list.empty",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.list.empty",
+    "title": "projects.list.empty",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.list.loading",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.list.loading",
+    "title": "projects.list.loading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.create.open",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.create.open",
+    "title": "projects.create.open",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.create.name_label",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.create.name_label",
+    "title": "projects.create.name_label",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.create.description_label",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.create.description_label",
+    "title": "projects.create.description_label",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.create.submit",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.create.submit",
+    "title": "projects.create.submit",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.create.cancel",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.create.cancel",
+    "title": "projects.create.cancel",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.detail.back",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.detail.back",
+    "title": "projects.detail.back",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.detail.files_heading",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.detail.files_heading",
+    "title": "projects.detail.files_heading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.state.active",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.state.active",
+    "title": "projects.state.active",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.state.archived",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.state.archived",
+    "title": "projects.state.archived",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#onboarding.welcome",
+    "path": "in-product-copy/projects.json",
+    "anchor": "onboarding.welcome",
+    "title": "onboarding.welcome",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#onboarding.first_upload",
+    "path": "in-product-copy/projects.json",
+    "anchor": "onboarding.first_upload",
+    "title": "onboarding.first_upload",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.open",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.open",
+    "title": "session.open",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.list.heading",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.list.heading",
+    "title": "session.list.heading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.list.empty",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.list.empty",
+    "title": "session.list.empty",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.back",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.back",
+    "title": "session.back",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.preview.heading",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.preview.heading",
+    "title": "session.preview.heading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.preview.loading",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.preview.loading",
+    "title": "session.preview.loading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.prompt.placeholder",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.prompt.placeholder",
+    "title": "session.prompt.placeholder",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.prompt.submit",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.prompt.submit",
+    "title": "session.prompt.submit",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.prompt.running",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.prompt.running",
+    "title": "session.prompt.running",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.turns.empty",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.turns.empty",
+    "title": "session.turns.empty",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.turn.operation_label",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.turn.operation_label",
+    "title": "session.turn.operation_label",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.turn.refused_heading",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.turn.refused_heading",
+    "title": "session.turn.refused_heading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.turn.alternatives",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.turn.alternatives",
+    "title": "session.turn.alternatives",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.turn.failed_heading",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.turn.failed_heading",
+    "title": "session.turn.failed_heading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.result.truncated",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.result.truncated",
+    "title": "session.result.truncated",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.result.plot_alt",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.result.plot_alt",
+    "title": "session.result.plot_alt",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.narrate",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.narrate",
+    "title": "session.narrate",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.narrating",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.narrating",
+    "title": "session.narrating",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#session.tooltip.chain",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "session.tooltip.chain",
+    "title": "session.tooltip.chain",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/settings.json#settings.retention.artifacts",
+    "path": "in-product-copy/settings.json",
+    "anchor": "settings.retention.artifacts",
+    "title": "settings.retention.artifacts",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/settings.json#settings.retention.uploads",
+    "path": "in-product-copy/settings.json",
+    "anchor": "settings.retention.uploads",
+    "title": "settings.retention.uploads",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/settings.json#settings.availability.sessions",
+    "path": "in-product-copy/settings.json",
+    "anchor": "settings.availability.sessions",
+    "title": "settings.availability.sessions",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/settings.json#settings.plan.sessions",
+    "path": "in-product-copy/settings.json",
+    "anchor": "settings.plan.sessions",
+    "title": "settings.plan.sessions",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/settings.json#settings.terminology",
+    "path": "in-product-copy/settings.json",
+    "anchor": "settings.terminology",
+    "title": "settings.terminology",
+    "generated": false
+  }
+]

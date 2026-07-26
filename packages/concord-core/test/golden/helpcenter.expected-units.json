@@ -1,0 +1,72 @@
+[
+  {
+    "id": "helpcenter:help-center/articles/file-size-help.md#article",
+    "path": "help-center/articles/file-size-help.md",
+    "anchor": "article",
+    "title": "My file is too large — what now?",
+    "generated": false
+  },
+  {
+    "id": "helpcenter:help-center/articles/how-long-things-are-kept.md#article",
+    "path": "help-center/articles/how-long-things-are-kept.md",
+    "anchor": "article",
+    "title": "How long does Relay keep my data?",
+    "generated": false
+  },
+  {
+    "id": "helpcenter:help-center/articles/plans-and-permissions.md#article",
+    "path": "help-center/articles/plans-and-permissions.md",
+    "anchor": "article",
+    "title": "Plans and permissions",
+    "generated": false
+  },
+  {
+    "id": "helpcenter:help-center/articles/platform-availability.md#article",
+    "path": "help-center/articles/platform-availability.md",
+    "anchor": "article",
+    "title": "Which platforms can I use Relay on?",
+    "generated": false
+  },
+  {
+    "id": "helpcenter:help-center/articles/run-an-analysis.md#article",
+    "path": "help-center/articles/run-an-analysis.md",
+    "anchor": "article",
+    "title": "How do I run an analysis?",
+    "generated": false
+  },
+  {
+    "id": "helpcenter:help-center/articles/supported-file-types.md#article",
+    "path": "help-center/articles/supported-file-types.md",
+    "anchor": "article",
+    "title": "Which file types can I upload?",
+    "generated": false
+  },
+  {
+    "id": "helpcenter:help-center/articles/upload-failed.md#article",
+    "path": "help-center/articles/upload-failed.md",
+    "anchor": "article",
+    "title": "Why did my upload fail?",
+    "generated": false
+  },
+  {
+    "id": "helpcenter:help-center/articles/using-the-cli.md#article",
+    "path": "help-center/articles/using-the-cli.md",
+    "anchor": "article",
+    "title": "Using the CLI",
+    "generated": false
+  },
+  {
+    "id": "helpcenter:help-center/articles/what-the-terms-mean.md#article",
+    "path": "help-center/articles/what-the-terms-mean.md",
+    "anchor": "article",
+    "title": "What the terms mean",
+    "generated": false
+  },
+  {
+    "id": "helpcenter:help-center/articles/working-with-artifacts.md#article",
+    "path": "help-center/articles/working-with-artifacts.md",
+    "anchor": "article",
+    "title": "Working with artifacts",
+    "generated": false
+  }
+]

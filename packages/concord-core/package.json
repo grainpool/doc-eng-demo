@@ -4,7 +4,19 @@
   "version": "0.1.0",
   "type": "module",
   "main": "src/index.ts",
-  "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run" },
-  "dependencies": { "@relay/contracts": "workspace:*", "gray-matter": "^4.0.3", "zod": "^4" },
-  "devDependencies": { "typescript": "^5.7.0", "vitest": "^4" }
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "ingest": "esbuild cli/ingest.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/ingest.js --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" && node dist/ingest.js --dry-run"
+  },
+  "dependencies": {
+    "@relay/contracts": "workspace:*",
+    "gray-matter": "^4.0.3",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^4",
+    "esbuild": "^0.25.0"
+  }
 }
