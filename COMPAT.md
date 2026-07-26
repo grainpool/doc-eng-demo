@@ -111,6 +111,49 @@ wheels — no compilation during the image build.
   (`relay-web/src/theme.ts`). No token was altered; no new color pairings were introduced beyond
   the README's verified list.
 
+## Phase 04 additions (2026-07-26)
+
+- **Container egress is OPEN — the security.md §3 "no general egress" network policy does not exist
+  on Cloudflare Containers today.** Verified with the hardcoded startup probe
+  (`RELAY_EGRESS_PROBE=1`, target `https://example.com/`, reported via the kernel's `/health`):
+  observed `open:http_200` from inside the deployed container. There is no per-container egress
+  policy in the platform config surface. Compensating controls actually in place: the kernel never
+  accepts a URL from any request except the Worker-signed `DatasetRef`, it host-pins that fetch to
+  `RELAY_DATASET_HOST`, verifies sha256 before parsing, and enforces `max_bytes` on read. Recorded
+  as a real gap between the spec's assumption and the platform, not silently papered over.
+- **R2 presigned URLs require S3-compatible access keys that exist nowhere in the operator
+  inventory** (operator-runbook.md lists no such credential, and inventing one is forbidden).
+  Objective preserved per the research-findings deviation rule: the Worker signs its own
+  capability URLs (HMAC-SHA256; TTL ≤ 60 s, method and single object key inside the signed
+  payload) and serves the bytes from the R2 binding at `GET /api/dataset`. See
+  `packages/relay-api/src/kernel/presign.ts`.
+- **The zone's bot protection blocks server-to-server fetches to the custom domain.** The
+  kernel's dataset fetch to `relay.otonieltrejo.com` was rejected at the edge: Python's default
+  user agent gets error 1010 outright, and even with a custom `relay-kernel/1.0` UA the edge
+  intermittently 403'd (one success, then blocks — fingerprint-based scoring). Fix that needs no
+  dashboard work: dataset capability URLs are signed for
+  `https://relay-api.trejootoniel.workers.dev` (workers.dev requests do not traverse the zone's
+  security products). `workers_dev: true` + `preview_urls: false` in wrangler.jsonc;
+  `RELAY_DATASET_ORIGIN` var is the signing origin and `RELAY_DATASET_HOST` pins the kernel.
+- **`max_instances: 1` + two DO ids = a 500.** The health check used `getContainer(env.KERNEL,
+  "health")` while the op proxy used `"kernel"`; the second actor could not schedule a container
+  and its fetches failed with status 500. Everything now shares the single instance id `"kernel"`.
+- **A deployed image change does not restart a running container instance.** The warm instance
+  kept serving the old image/env for minutes after `wrangler deploy`; new code arrives only when
+  the instance restarts (sleep, eviction, or rollout). Verification polls must expect this lag.
+- **The true OCI image digest IS visible at deploy time** (`registry.cloudflare.com/...@sha256:d9da1376…`
+  in wrangler's push output) but is not knowable from inside the image at build time; `/versions`
+  continues to report the build-content hash (`17e675bd…`) as `image_digest` (NOTES.md item stands).
+- **Observed Phase-04 latency** through `POST /api/internal/kernel/op/:id` (12-row fixture, warm
+  container): inspect_schema ~0.40 s · summary_statistics ~0.35 s · filter_rows ~0.37 s ·
+  group_aggregate ~0.39 s · correlation_matrix ~0.36 s · linear_regression ~0.38 s ·
+  distribution_test ~0.39 s · plot ~0.91–1.12 s (22 KB PNG). First op after a container start:
+  ~7.9 s total (within the 8 s per-attempt budget; the proxy's one retry covers the pathological
+  cold case).
+- Kernel pytest suite (29 tests incl. committed OLS coefficients/p-values at rel 1e-6) runs inside
+  the pinned image locally (`docker run … pytest`) and on `python:3.12` + the same
+  `requirements.txt` in CI's `kernel` job.
+
 ## Development environment notes (Windows)
 
 - **`pnpm setup` is shadowed by pnpm's built-in `setup` command** (which configures `PNPM_HOME`

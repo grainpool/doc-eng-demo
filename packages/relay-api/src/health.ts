@@ -112,7 +112,9 @@ function checkKernel(env: Env): Promise<HealthCheck> {
     if (!env.KERNEL) {
       return { ok: false, value: "kernel_binding_unavailable" };
     }
-    const container = getContainer(env.KERNEL, "health");
+    // Same instance id as the op proxy: with max_instances=1, a second DO id
+    // ("health") could not schedule a container and 500'd (COMPAT.md).
+    const container = getContainer(env.KERNEL, "kernel");
     // Generous timeout: first hit of the day pays the container cold start.
     const res = await container.fetch("http://kernel/versions", {
       signal: AbortSignal.timeout(90_000),

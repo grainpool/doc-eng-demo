@@ -6,9 +6,10 @@ import {
   type ProductTruthSnapshot,
 } from "@relay/contracts";
 import type { Env } from "../env.js";
+import { t0Runtime } from "./t0-runtime.js";
 import { t1Schema } from "./t1-schema.js";
 import { t3Config } from "./t3-config.js";
-import { t0Runtime, t2Cli, t4Release, t5Human } from "./pending.js";
+import { t2Cli, t4Release, t5Human } from "./pending.js";
 import type { TierResolver } from "./types.js";
 
 const RESOLVERS: readonly TierResolver[] = [
@@ -21,14 +22,15 @@ const RESOLVERS: readonly TierResolver[] = [
 ];
 
 export interface ProductTruthResponse extends ProductTruthSnapshot {
-  /** Phase-02 marker: which tiers are wired vs pending. Extra field on top of
-   *  the contract snapshot shape; the snapshot itself stays schema-valid. */
+  /** Which tiers resolved real claims for THIS snapshot vs are pending.
+   *  Extra field on top of the contract snapshot shape; the snapshot itself
+   *  stays schema-valid. */
   tier_status: Record<FactTier, "ok" | "pending">;
 }
 
 export async function buildProductTruth(env: Env): Promise<ProductTruthResponse> {
-  const results = await Promise.all(RESOLVERS.map((r) => r.resolve(env)));
-  const facts = results.flat();
+  const resolutions = await Promise.all(RESOLVERS.map((r) => r.resolve(env)));
+  const facts = resolutions.flatMap((r) => r.claims);
 
   const snapshot: ProductTruthSnapshot = {
     snapshot_id: `snap_${ulid()}`,
@@ -41,7 +43,7 @@ export async function buildProductTruth(env: Env): Promise<ProductTruthResponse>
   ProductTruthSnapshotSchema.parse(snapshot);
 
   const tierStatus = Object.fromEntries(
-    RESOLVERS.map((r) => [r.tier, r.status]),
+    RESOLVERS.map((r, i) => [r.tier, resolutions[i]?.status ?? "pending"]),
   ) as Record<FactTier, "ok" | "pending">;
 
   return { ...snapshot, tier_status: tierStatus };

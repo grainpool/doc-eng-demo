@@ -1,0 +1,4 @@
+# Test-only dependencies — NEVER installed into the container image
+# (requirements.txt is the product-truth surface; this file is not).
+pytest==8.4.2
+httpx==0.28.1

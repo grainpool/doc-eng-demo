@@ -10,4 +10,9 @@ export interface Env {
   ANTHROPIC_API_KEY?: string;
   /** Signs the demo-user cookie (the entire Relay auth model). Secret store only. */
   RELAY_DEMO_COOKIE_SECRET?: string;
+  /** Signs 60 s dataset capability URLs (kernel/presign.ts). Secret store only. */
+  RELAY_DATASET_URL_SECRET?: string;
+  /** Origin dataset capability URLs are signed for (workers.dev — COMPAT.md).
+   *  Absent in tests: falls back to the request origin. */
+  RELAY_DATASET_ORIGIN?: string;
 }

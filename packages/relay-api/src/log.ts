@@ -22,6 +22,8 @@ const DENIED_KEY_PATTERNS: RegExp[] = [
   /token/i,
   /private[_-]?key/i,
   /presigned/i,
+  // dataset capability-URL signature (kernel/presign.ts)
+  /^sig$/i,
   /^prompt$/i,
   /^completion$/i,
 ];

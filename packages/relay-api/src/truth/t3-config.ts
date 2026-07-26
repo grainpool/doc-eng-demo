@@ -5,8 +5,12 @@ const CONFIG_FILE = "packages/contracts/src/product-config.ts";
 
 export const t3Config: TierResolver = {
   tier: "T3_CONFIG",
-  status: "ok",
-  resolve(): Promise<FactClaim[]> {
+  async resolve() {
+    return { status: "ok" as const, claims: await claims() };
+  },
+};
+
+function claims(): Promise<FactClaim[]> {
     const observedAt = new Date().toISOString();
     const claim = (key: string, value: string | number | boolean, anchor: string): FactClaim => ({
       key,
@@ -58,5 +62,4 @@ export const t3Config: TierResolver = {
       ),
     ];
     return Promise.resolve(claims);
-  },
-};
+}

@@ -51,8 +51,13 @@ describe("GET /api/product-truth", () => {
       expect(entry, `unregistered fact key ${fact.key}`).not.toBeNull();
       expect(entry?.tier).toBe(fact.tier);
 
-      // Every locator is non-empty and plausibly resolvable: repo-file#anchor.
-      expect(fact.locator).toMatch(/^packages\/[a-z-]+\/src\/[a-z-]+\.ts#.+$/);
+      // Every locator is non-empty and plausibly resolvable: repo-file#anchor
+      // for code-sourced tiers; kernel-image digest for T0 (Phase 04).
+      expect(fact.locator).toMatch(
+        fact.tier === "T0_RUNTIME"
+          ? /^kernel-image:[0-9a-f]{64}#.+$/
+          : /^packages\/[a-z-]+\/src\/[a-z-]+\.ts#.+$/,
+      );
       expect(fact.confidence).toBe(1);
     }
 
@@ -60,4 +65,41 @@ describe("GET /api/product-truth", () => {
     const limit = body.facts.find((f) => f.key === "limit.upload.csv.max_bytes");
     expect(limit?.value).toBe(10485760);
   });
+});
+
+describe("GET /api/product-truth — deployed (T0 from the live kernel)", () => {
+  it(
+    "T0 facts carry real runtime versions and the image digest as locator",
+    { timeout: 150_000, retry: 1 },
+    async () => {
+      const res = await fetch("https://relay.otonieltrejo.com/api/product-truth");
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as ProductTruthResponse;
+
+      expect(body.tier_status.T0_RUNTIME).toBe("ok");
+      const t0 = body.facts.filter((f) => f.tier === "T0_RUNTIME");
+      // python + 4 packages + 8 operation-enabled facts
+      expect(t0.length).toBe(13);
+
+      const semver = /^\d+\.\d+\.\d+$/;
+      for (const key of [
+        "runtime.python.version",
+        "runtime.package.pandas.version",
+        "runtime.package.scipy.version",
+        "runtime.package.statsmodels.version",
+        "runtime.package.matplotlib.version",
+      ]) {
+        const fact = t0.find((f) => f.key === key);
+        expect(fact, key).toBeDefined();
+        expect(String(fact?.value)).toMatch(semver);
+        expect(fact?.locator).toMatch(/^kernel-image:[0-9a-f]{64}#.+$/);
+      }
+
+      const enabled = t0.filter((f) =>
+        /^analysis\.operation\.[a-z_]+\.enabled$/.test(f.key),
+      );
+      expect(enabled.length).toBe(8);
+      expect(enabled.every((f) => f.value === true)).toBe(true);
+    },
+  );
 });

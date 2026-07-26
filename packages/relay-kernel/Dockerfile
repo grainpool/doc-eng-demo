@@ -17,7 +17,7 @@ COPY app ./app
 # Build identifier baked at image-build time: a digest over the exact inputs
 # (requirements + source). The true OCI image digest is not readable from
 # inside the container, so this is the provenance value /versions reports.
-RUN sha256sum requirements.txt app/main.py | sha256sum | cut -d' ' -f1 > /app/build-id \
+RUN sha256sum requirements.txt app/*.py | sha256sum | cut -d' ' -f1 > /app/build-id \
     && chmod 444 /app/build-id
 
 # Non-root. Everything outside /tmp is unwritable for this user.

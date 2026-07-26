@@ -19,7 +19,19 @@
 
   "observability": { "enabled": true },
 
+  // workers.dev stays enabled: dataset capability URLs are served from this
+  // host because the custom domain's zone-level bot protection intermittently
+  // 403s the kernel's fetches (Phase 04, COMPAT.md). workers.dev requests do
+  // not pass through the zone's security products.
+  "workers_dev": true,
+  "preview_urls": false,
+
   "routes": [{ "pattern": "relay.otonieltrejo.com", "custom_domain": true }],
+
+  "vars": {
+    // Not a secret: the fixed origin dataset capability URLs are signed for.
+    "RELAY_DATASET_ORIGIN": "https://relay-api.trejootoniel.workers.dev"
+  },
 
   "d1_databases": [
     {

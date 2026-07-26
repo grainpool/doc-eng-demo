@@ -17,7 +17,10 @@
   },
   // Test-only signing value — not a real secret (the real one is in the
   // Worker secret store).
-  "vars": { "RELAY_DEMO_COOKIE_SECRET": "test-only-cookie-secret" },
+  "vars": {
+    "RELAY_DEMO_COOKIE_SECRET": "test-only-cookie-secret",
+    "RELAY_DATASET_URL_SECRET": "test-only-dataset-secret"
+  },
   "d1_databases": [
     {
       "binding": "relay_db",

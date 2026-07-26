@@ -15,3 +15,16 @@ Ideas noted during a phase and deliberately not built in it (constraints.md AP11
   gate it behind an env var and keep it in a scheduled workflow instead.
 - `test` script currently only exists in `relay-api`; as packages gain tests, keep `pnpm -r run test`
   as the aggregate entry point.
+
+## From Phase 04
+
+- Container egress is open (COMPAT.md). If Cloudflare ships per-container egress policies, adopt
+  them and re-run the probe; until then the host-pin + no-URL-inputs design is the control.
+- Dataset capability URLs ride the workers.dev host because the zone's bot protection 403s the
+  container's fetches. An operator could alternatively add a bot-management exception in the
+  dashboard; deliberately not requested — not worth an operator gate for a working path.
+- The egress probe (`RELAY_EGRESS_PROBE`) is left enabled: one hardcoded HEAD-of-startup fetch per
+  container start. Flip the env var off in `kernel.ts` once Phase 20's audit no longer wants the
+  live observation.
+- The true OCI digest is printed by every deploy; if Phase 06 provenance wants it instead of the
+  build-content hash, thread it in as a container env var at deploy time.

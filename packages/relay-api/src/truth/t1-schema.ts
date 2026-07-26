@@ -15,8 +15,12 @@ const LIMITS_FILE = "packages/relay-api/src/limits.ts";
 
 export const t1Schema: TierResolver = {
   tier: "T1_SCHEMA",
-  status: "ok",
-  resolve(): Promise<FactClaim[]> {
+  async resolve() {
+    return { status: "ok" as const, claims: await claims() };
+  },
+};
+
+function claims(): Promise<FactClaim[]> {
     const observedAt = new Date().toISOString();
     const claims: FactClaim[] = [
       {
@@ -47,5 +51,4 @@ export const t1Schema: TierResolver = {
       ),
     ];
     return Promise.resolve(claims);
-  },
-};
+}

@@ -6,6 +6,7 @@ import { buildProductTruth } from "./truth/index.js";
 import { demoUser } from "./demo-auth.js";
 import { projects } from "./routes/projects.js";
 import { files } from "./routes/files.js";
+import { kernelInternal } from "./routes/kernel-internal.js";
 import type { Env } from "./env.js";
 
 export { RelayKernelContainer } from "./kernel.js";
@@ -31,6 +32,7 @@ app.use("*", async (c, next) => {
 app.use("/api/*", demoUser);
 app.route("/api/projects", projects);
 app.route("/api", files);
+app.route("/api", kernelInternal);
 
 app.get("/api/product-truth", async (c) => {
   const snapshot = await buildProductTruth(c.env);
