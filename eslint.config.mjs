@@ -39,6 +39,24 @@ export default tseslint.config(
     },
   },
   {
+    // Invariant I13: Concord must not import Relay implementation packages.
+    files: ["packages/concord-*/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["*relay-api*", "*relay-web*", "*relay-cli*"],
+              message:
+                "Concord may not import Relay implementation packages — only @relay/contracts and the two frozen HTTP endpoints (invariant I13).",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["scripts/**/*.mjs"],
     languageOptions: {
       globals: { process: "readonly", console: "readonly", fetch: "readonly" },

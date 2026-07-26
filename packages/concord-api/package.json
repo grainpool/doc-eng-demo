@@ -1,0 +1,21 @@
+{
+  "name": "concord-api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@concord/core": "workspace:*",
+    "@relay/contracts": "workspace:*",
+    "hono": "^4.12.0",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "wrangler": "^4.114.0",
+    "@cloudflare/workers-types": "^4.20260501.0"
+  }
+}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Concord — run report</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+  code, pre { font-family: ui-monospace, monospace; background: #f4f4f0; }
+  pre { padding: .75rem; overflow-x: auto; }
+  .impact { border: 1px solid #ddd; border-radius: 6px; padding: 1rem; margin: 1rem 0; }
+  .action { font-weight: 700; }
+  .DETERMINISTIC_REGEN { color: #1a7f37; }
+  .NO_ACTION { color: #6a737d; }
+  .UNRESOLVED_CONFLICT, .EDITORIAL_REVIEW { color: #b35900; }
+  .muted { color: #666; font-size: .9em; }
+  input { padding: .4rem; width: 24rem; max-width: 100%; }
+  button { padding: .4rem .8rem; }
+</style>
+</head>
+<body>
+<h1>Concord run report</h1>
+<p class="muted">Paste a run id, or start a run against the live Relay product truth.</p>
+<p>
+  <input id="runId" placeholder="run_…" />
+  <button id="load">Load</button>
+  <button id="start">Start new run</button>
+</p>
+<div id="out"></div>
+<script>
+const out = document.getElementById("out");
+function esc(s) { const d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; }
+async function load(id) {
+  const res = await fetch("/api/public/runs/" + encodeURIComponent(id));
+  if (!res.ok) { out.innerHTML = "<p>run not found</p>"; return; }
+  const data = await res.json();
+  const patchById = Object.fromEntries((data.patches ?? []).map(p => [p.id, p]));
+  out.innerHTML =
+    "<h2>" + esc(data.run.id) + " — " + esc(data.run.status) + "</h2>" +
+    "<p class='muted'>started " + esc(data.run.started_at) + "</p>" +
+    (data.impacts ?? []).map(impact => {
+      const patch = impact.patch_id ? patchById[impact.patch_id] : null;
+      return "<div class='impact'>" +
+        "<div><span class='action " + esc(impact.action) + "'>" + esc(impact.action) + "</span>" +
+        " <span class='muted'>(rule " + esc(impact.classification_rule) + ")</span></div>" +
+        "<div><code>" + esc(impact.fact_key) + "</code> → <code>" + esc(impact.doc_unit_id) + "</code></div>" +
+        "<div class='muted'>Δ " + esc(impact.delta_json) + "</div>" +
+        "<p>" + esc(impact.explanation) + "</p>" +
+        (patch ? "<pre>" + esc(patch.unified) + "</pre>" : "") +
+        "</div>";
+    }).join("") +
+    "<h3>Steps</h3><pre>" + esc(JSON.stringify(data.steps, null, 2)) + "</pre>";
+}
+document.getElementById("load").onclick = () => load(document.getElementById("runId").value.trim());
+document.getElementById("start").onclick = async () => {
+  const res = await fetch("/api/runs", { method: "POST" });
+  const data = await res.json();
+  document.getElementById("runId").value = data.run_id;
+  await load(data.run_id);
+};
+</script>
+</body>
+</html>

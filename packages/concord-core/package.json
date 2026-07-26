@@ -1,0 +1,10 @@
+{
+  "name": "@concord/core",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run" },
+  "dependencies": { "@relay/contracts": "workspace:*", "gray-matter": "^4.0.3", "zod": "^4" },
+  "devDependencies": { "typescript": "^5.7.0", "vitest": "^4" }
+}
