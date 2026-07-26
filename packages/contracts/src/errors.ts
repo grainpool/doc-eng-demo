@@ -15,6 +15,9 @@ export const ERROR_CODES = [
   "FILE_TOO_LARGE",
   "UNSUPPORTED_FILE_TYPE",
   "TOO_MANY_ROWS",
+  // Phase-09 spend controls (security.md §5): both map to HTTP 429.
+  "BUDGET_EXHAUSTED",
+  "RATE_LIMITED",
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

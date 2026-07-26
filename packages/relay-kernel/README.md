@@ -1,15 +1,19 @@
 # relay-kernel
 
-The analysis kernel: a Cloudflare Container running FastAPI with exactly-pinned scientific Python
-packages. Package versions in `requirements.txt` are product truth (`T0_RUNTIME`) — the deployed
-`/versions` endpoint, read from the actually-imported modules, is the authority source.
+The analysis kernel: a Cloudflare Container running FastAPI + pandas/scipy/
+statsmodels/matplotlib, exposing exactly eight bounded operations
+(`POST /op/{id}`), `/versions` (the T0 authority source, read from the
+actually-imported modules), `/operations` (catalog generated from the same
+validation models the handlers use), and `/health`. Data arrives only as a
+Worker-signed DatasetRef: sha256-verified, size-capped on read, host-pinned.
 
-Phase 01 surface: `GET /health` and `GET /versions` only. The eight bounded analysis operations
-land in Phase 04. There is no code-execution surface, and there never will be (security.md §3).
-
-The container is reachable only through the Relay Worker's Durable Object binding (`KERNEL`);
-it has no public hostname. It runs as a non-root user with `matplotlib` on the `Agg` backend and
-writes nowhere outside `/tmp`.
-
-Deploys together with the Worker: the container image is built and pushed by `wrangler deploy`
-(`pnpm deploy:relay` / `pnpm deploy:kernel`). Requires Docker locally.
+- **Run**: deployed with the Worker (wrangler builds/pushes the image —
+  Docker required locally). Reachable ONLY through the Worker's Durable
+  Object binding; there is no public hostname.
+- **Test**: build the image, then run pytest inside it (CI's `kernel` job is
+  the bare-metal equivalent): 32 tests including committed OLS
+  coefficients/p-values at rel 1e-6 and the no-code-surface enumeration.
+- **Deliberately does not**: expose any code-execution surface — no eval, no
+  exec, no `DataFrame.query()`, no file paths, module names, or expressions
+  from requests; no writes outside /tmp. `requirements.txt` pins are product
+  truth.

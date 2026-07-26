@@ -5,6 +5,7 @@ import { containerKernel } from "../kernel/container-kernel.js";
 import { datasetPreview } from "../analysis/dataset-preview.js";
 import { runTurn } from "../analysis/turn.js";
 import { narrateResult } from "../analysis/narration.js";
+import { guardModelCall } from "../analysis/limits-guard.js";
 import type { MessagesClient } from "../analysis/translator.js";
 import type { Env } from "../env.js";
 import type { FileRow } from "./files.js";
@@ -144,6 +145,17 @@ sessions.post("/sessions/:id/turns", async (c) => {
     return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
   }
 
+  // Spend controls BEFORE anything that could reach the model (security.md
+  // §5): daily budget from model_call rows, then per-IP rate.
+  const rejection = await guardModelCall(
+    c.env,
+    c.req.header("cf-connecting-ip") ?? "unknown",
+    "turns",
+  );
+  if (rejection) {
+    return c.json(rejection.body, rejection.http);
+  }
+
   // Optional lineage input: a previous turn's derived table becomes this
   // turn's dataset (must be a table_csv artifact of the same project).
   let inputArtifact: { id: string; r2_key: string } | undefined;
@@ -197,6 +209,14 @@ sessions.get("/turns/:id/result", async (c) => {
 
 // Optional narration: streams plain text; prompt receives ONLY the result.
 sessions.post("/turns/:id/narration", async (c) => {
+  const rejection = await guardModelCall(
+    c.env,
+    c.req.header("cf-connecting-ip") ?? "unknown",
+    "narration",
+  );
+  if (rejection) {
+    return c.json(rejection.body, rejection.http);
+  }
   if (!c.env.ANTHROPIC_API_KEY) {
     return c.json(
       apiError("UPSTREAM_UNAVAILABLE", "error.analysis.model_unavailable"),

@@ -1,7 +1,13 @@
 # @relay/contracts
 
-The freeze surface: Zod schemas, enums, error codes, and the model constant shared by every other
-package. Depends on `zod` and nothing else (constraints.md G3).
+The single shared vocabulary of the project: fact registry and tiers,
+operation schemas, DatasetRef/KernelResult, TranslationResult, CopyEntry,
+artifacts + provenance, CLI introspection, error codes, defect taxonomy,
+prefixed ULIDs, and the `zodToJsonSchema` / `zodToOutputFormatSchema`
+derivation wrappers.
 
-Phase 01 contents: `MODEL_ID`, the closed `ErrorCode` enum, and the single API error shape.
-The fact-key registry, id helpers, operation schemas, and product config land in Phase 02.
+- **Run**: nothing to run — it is imported by every other package.
+- **Test**: `pnpm --filter @relay/contracts test`
+- **Deliberately does not**: depend on anything but `zod` (constraints.md
+  G3), perform I/O, or contain any Cloudflare/runtime code. Once frozen,
+  version bumps follow `CONTRACTS-FROZEN.md` at the repo root.

@@ -15,4 +15,6 @@ export interface Env {
   /** Origin dataset capability URLs are signed for (workers.dev — COMPAT.md).
    *  Absent in tests: falls back to the request origin. */
   RELAY_DATASET_ORIGIN?: string;
+  /** "1" enables POST /api/internal/seed (tests + local dev only). */
+  RELAY_SEED_ENABLED?: string;
 }

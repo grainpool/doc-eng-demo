@@ -165,6 +165,16 @@ kernelInternal.post("/internal/kernel/op/:id", async (c) => {
   }
 });
 
+/** Phase-09 seed hook. DISABLED unless RELAY_SEED_ENABLED="1" (test config
+ *  and local dev only — the production deploy does not set it). */
+kernelInternal.post("/internal/seed", async (c) => {
+  if (c.env.RELAY_SEED_ENABLED !== "1") {
+    return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
+  }
+  const { seedRelay } = await import("../seed.js");
+  return c.json(await seedRelay(c.env));
+});
+
 /** Pass-through of the kernel's /health — carries the Phase-04 egress-probe
  *  observation (the container has no shell; this is how it is read). */
 kernelInternal.get("/internal/kernel/health", async (c) => {
