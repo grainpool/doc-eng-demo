@@ -2,11 +2,20 @@ import { Hono } from "hono";
 import Anthropic from "@anthropic-ai/sdk";
 import { ProductTruthSnapshotSchema, newId, type ProductTruthSnapshot } from "@relay/contracts";
 import { arbitrateAll, ownerOfFact } from "@concord/core";
+import {
+  ChangeLabRequestSchema,
+  ChangeLabRunSchema,
+} from "@relay/contracts";
+import { assembleChangeLabRun } from "./changelab.js";
+import { REPLAY_RUNS } from "./runs.generated.js";
 import { executeRun, type MessageLike, type RunDeps, type RunEnv, type RunOptions } from "./run.js";
 
 interface Env extends RunEnv {
   ASSETS: Fetcher;
   RUN_QUEUE?: Queue<QueuedRun>;
+  /** Phase 17: admin surface is unreachable unless EXPLICITLY enabled;
+   * unset in the deployed public configuration until Phase 18's Access. */
+  DEMO_ADMIN_ENABLED?: string;
 }
 
 interface QueuedRun {
@@ -35,10 +44,15 @@ function realDeps(env: Env): RunDeps {
 async function enqueueRun(
   c: { env: Env; req: { query(name: string): string | undefined } },
   executionCtx: { waitUntil(promise: Promise<unknown>): void },
+  admin: boolean,
 ): Promise<{ run_id: string; status: string }> {
   const runId = newId("run");
   const options: RunOptions = {
-    modelExtraction: c.req.query("model_extraction") === "1",
+    // The PUBLIC path makes ZERO model calls (invariant I11, security §5):
+    // public runs are deterministic-only; AI paths require the admin
+    // surface, which Phase 18 puts behind Access.
+    ai: admin,
+    modelExtraction: admin && c.req.query("model_extraction") === "1",
   };
   const cap = Number(c.req.query("max_calls") ?? "");
   if (Number.isInteger(cap) && cap > 0 && cap <= 20) options.maxCallsPerRun = cap;
@@ -50,17 +64,60 @@ async function enqueueRun(
     await c.env.RUN_QUEUE.send({ run_id: runId, options });
   } else {
     // Local/dev fallback: no queue binding — run inline off the request.
-    executionCtx.waitUntil(executeRun(c.env, realDeps(c.env), runId, options));
+    const deps = options.ai ? realDeps(c.env) : { createMessage: null };
+    executionCtx.waitUntil(executeRun(c.env, deps, runId, options));
   }
   return { run_id: runId, status: "queued" };
 }
 
-app.post("/api/admin/runs", async (c) => c.json(await enqueueRun(c, c.executionCtx)));
-// The public start button uses the same enqueue path.
-app.post("/api/runs", async (c) => c.json(await enqueueRun(c, c.executionCtx)));
+app.post("/api/admin/runs", async (c) => {
+  // Unreachable in the deployed public configuration (DEMO_ADMIN_ENABLED
+  // unset). Phase 18 replaces this stopgap with Cloudflare Access.
+  if (c.env.DEMO_ADMIN_ENABLED !== "1") {
+    return c.json({ error: "admin_disabled" }, 403);
+  }
+  return c.json(await enqueueRun(c, c.executionCtx, true));
+});
+// The public start button: deterministic-only run, zero model calls (I11).
+app.post("/api/runs", async (c) => c.json(await enqueueRun(c, c.executionCtx, false)));
+
+/** Phase 17 — public replay: serve a committed recording of a REAL run
+ * matching the requested mutation. No auth, no model calls, same
+ * ChangeLabRun shape live mode uses. */
+app.post("/api/public/changelab/replay", async (c) => {
+  const parsed = ChangeLabRequestSchema.safeParse(await c.req.json().catch(() => null));
+  if (!parsed.success || parsed.data.mode !== "replay") {
+    return c.json({ error: "bad_request" }, 400);
+  }
+  const mutation = parsed.data.mutation;
+  const recording = REPLAY_RUNS.map((r) => ChangeLabRunSchema.parse(r.run)).find((run) => {
+    if (mutation.kind !== "fact_value" || run.mutation.kind !== "fact_value") return false;
+    return (
+      run.mutation.fact_key === mutation.fact_key &&
+      JSON.stringify(run.mutation.value) === JSON.stringify(mutation.value)
+    );
+  });
+  if (!recording) return c.json({ error: "no_recording_for_mutation" }, 404);
+  return c.json({ ...recording, mode: "replay" });
+});
+
+/** The five available replay scenarios (for the picker UI). */
+app.get("/api/public/changelab/scenarios", (c) =>
+  c.json({
+    scenarios: REPLAY_RUNS.map((r) => {
+      const run = ChangeLabRunSchema.parse(r.run);
+      return { scenario: r.scenario, mutation: run.mutation, status: run.status };
+    }),
+  }),
+);
 
 app.get("/api/public/runs/:id", async (c) => {
   const runId = c.req.param("id");
+  // ?verbose=1 → the full ChangeLabRun record (Phase 17).
+  if (c.req.query("verbose") === "1") {
+    const record = await assembleChangeLabRun(c.env.concord_db, runId);
+    return record ? c.json(record) : c.json({ error: "not_found" }, 404);
+  }
   const run = await c.env.concord_db
     .prepare("SELECT * FROM run WHERE id = ?")
     .bind(runId)
@@ -191,7 +248,9 @@ export default {
   fetch: app.fetch,
   async queue(batch: MessageBatch<QueuedRun>, env: Env): Promise<void> {
     for (const message of batch.messages) {
-      await executeRun(env, realDeps(env), message.body.run_id, message.body.options);
+      // I11: only admin-enqueued runs get a model client.
+      const deps = message.body.options.ai ? realDeps(env) : { createMessage: null };
+      await executeRun(env, deps, message.body.run_id, message.body.options);
       message.ack();
     }
   },

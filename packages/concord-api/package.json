@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "generate:estate": "node scripts/generate-estate.mjs",
-    "pretypecheck": "node scripts/generate-estate.mjs",
+    "pretypecheck": "node scripts/generate-estate.mjs && node scripts/generate-runs.mjs",
     "typecheck": "tsc --noEmit",
-    "predeploy": "node scripts/generate-estate.mjs",
+    "predeploy": "node scripts/generate-estate.mjs && node scripts/generate-runs.mjs",
     "deploy": "wrangler deploy",
-    "test": "vitest run"
+    "test": "vitest run",
+    "pretest": "node scripts/generate-estate.mjs && node scripts/generate-runs.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",

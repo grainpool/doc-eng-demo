@@ -1,0 +1,836 @@
+{
+ "run_id": "run_01kyegb2esf86e109s2a2pk32j",
+ "mode": "live",
+ "status": "completed",
+ "mutation": {
+  "kind": "fact_value",
+  "fact_key": "term.canonical.task",
+  "value": "Task"
+ },
+ "detected_facts": [
+  {
+   "key": "term.canonical.task",
+   "value": "Task",
+   "tier": "T3_CONFIG",
+   "locator": "packages/contracts/src/product-config.ts#terminology.task",
+   "observed_at": "2026-07-26T06:03:37.909Z",
+   "confidence": 1
+  }
+ ],
+ "impacts": [
+  {
+   "id": "imp_01kyegb76a63wjc3c5n8rjdwqr",
+   "run_id": "run_01kyegb2esf86e109s2a2pk32j",
+   "fact_key": "term.canonical.task",
+   "delta": {
+    "from": "Job",
+    "to": "Task",
+    "kind": "value_changed"
+   },
+   "doc_unit_id": "mintlify:docs-mintlify/projects-and-workspaces.mdx#terminology",
+   "projection_id": "proj:mintlify:docs-mintlify/projects-and-workspaces.mdx#terminology:term.canonical.task:term_occurrence",
+   "action": "NO_ACTION",
+   "classification_rule": 6,
+   "explanation": "mintlify:docs-mintlify/projects-and-workspaces.mdx#terminology (owner docs) uses the term in prose as \"Task\". term.canonical.task changed from \"Job\" to \"Task\" in T3_CONFIG at packages/contracts/src/product-config.ts#terminology.task; the rendered value already equals the new value after normalization, so nothing needs to change.",
+   "disposition": "no_action",
+   "resolution_note": null,
+   "patch_id": null,
+   "conflict_id": null
+  },
+  {
+   "id": "imp_01kyegb76axd51kep02kck4wtj",
+   "run_id": "run_01kyegb2esf86e109s2a2pk32j",
+   "fact_key": "term.canonical.task",
+   "delta": {
+    "from": "Job",
+    "to": "Task",
+    "kind": "value_changed"
+   },
+   "doc_unit_id": "mintlify:docs-mintlify/terminology.mdx#intro",
+   "projection_id": "proj:mintlify:docs-mintlify/terminology.mdx#intro:term.canonical.task:term_occurrence",
+   "action": "EDITORIAL_REVIEW",
+   "classification_rule": 4,
+   "explanation": "mintlify:docs-mintlify/terminology.mdx#intro (owner docs) uses the term in prose as \"Job\". term.canonical.task changed from \"Job\" to \"Task\" in T3_CONFIG at packages/contracts/src/product-config.ts#terminology.task; the prose must be rewritten to match — a grounded, review-required patch (Phase 14) citing T3_CONFIG packages/contracts/src/product-config.ts#terminology.task as evidence.",
+   "disposition": "unresolved",
+   "resolution_note": "editorial_risk meaning — forced to EDITORIAL_REVIEW",
+   "patch_id": null,
+   "conflict_id": null
+  },
+  {
+   "id": "imp_01kyegb76ab5qz36es4zbjf15j",
+   "run_id": "run_01kyegb2esf86e109s2a2pk32j",
+   "fact_key": "term.canonical.task",
+   "delta": {
+    "from": "Job",
+    "to": "Task",
+    "kind": "value_changed"
+   },
+   "doc_unit_id": "helpcenter:help-center/articles/what-the-terms-mean.md#article",
+   "projection_id": "proj:helpcenter:help-center/articles/what-the-terms-mean.md#article:term.canonical.task:term_occurrence",
+   "action": "NO_ACTION",
+   "classification_rule": 6,
+   "explanation": "helpcenter:help-center/articles/what-the-terms-mean.md#article (owner support-content) uses the term in prose as \"Task\". term.canonical.task changed from \"Job\" to \"Task\" in T3_CONFIG at packages/contracts/src/product-config.ts#terminology.task; the rendered value already equals the new value after normalization, so nothing needs to change.",
+   "disposition": "no_action",
+   "resolution_note": null,
+   "patch_id": null,
+   "conflict_id": null
+  },
+  {
+   "id": "imp_01kyegb76a139ytzkr2zhmyw7y",
+   "run_id": "run_01kyegb2esf86e109s2a2pk32j",
+   "fact_key": "term.canonical.task",
+   "delta": {
+    "from": "Job",
+    "to": "Task",
+    "kind": "value_changed"
+   },
+   "doc_unit_id": "inproduct:in-product-copy/settings.json#settings.terminology",
+   "projection_id": "proj:inproduct:in-product-copy/settings.json#settings.terminology:term.canonical.task:term_occurrence",
+   "action": "NO_ACTION",
+   "classification_rule": 6,
+   "explanation": "inproduct:in-product-copy/settings.json#settings.terminology (owner product-content) uses the term in prose as \"Task\". term.canonical.task changed from \"Job\" to \"Task\" in T3_CONFIG at packages/contracts/src/product-config.ts#terminology.task; the rendered value already equals the new value after normalization, so nothing needs to change.",
+   "disposition": "no_action",
+   "resolution_note": null,
+   "patch_id": null,
+   "conflict_id": null
+  }
+ ],
+ "patches": [],
+ "conflicts": [
+  {
+   "id": "cfl_01kyegb76awkj81ycc49cyzrxp",
+   "run_id": "run_01kyegb2esf86e109s2a2pk32j",
+   "fact_key": "flag.analysis.regression_enabled",
+   "kind": "ambiguous_ownership",
+   "claims": [
+    {
+     "fact_key": "flag.analysis.regression_enabled",
+     "tier": "T3_CONFIG",
+     "locator": "packages/contracts/src/product-config.ts#flags.analysis_regression_enabled",
+     "value": true,
+     "observed_at": ""
+    },
+    {
+     "fact_key": "flag.analysis.regression_enabled",
+     "tier": "T5_HUMAN",
+     "locator": "decision.regression_flag_pause.record",
+     "value": "Linear regression should be PAUSED for the next release while the\nstatistics review of coefficient reporting is open. Docs should stop\nrecommending it until the review closes.\n",
+     "observed_at": ""
+    }
+   ],
+   "missing_information": [
+    "Which of the two decision records is the standing one for flag.analysis.regression_enabled",
+    "A single decision record superseding the other, or a retraction"
+   ],
+   "likely_owner": "eng-analysis",
+   "suggested_question": "Two decision records claim flag.analysis.regression_enabled with different positions. Which one stands, and can the other be marked superseded?",
+   "resolution": null
+  },
+  {
+   "id": "cfl_01kyegb76aqawh4ry7bn5fkacf",
+   "run_id": "run_01kyegb2esf86e109s2a2pk32j",
+   "fact_key": "availability.feature.analysis_sessions.platform.ios",
+   "kind": "temporal_contradiction",
+   "claims": [
+    {
+     "fact_key": "availability.feature.analysis_sessions.platform.ios",
+     "tier": "T3_CONFIG",
+     "locator": "packages/contracts/src/product-config.ts#availability.analysis_sessions.ios",
+     "value": false,
+     "observed_at": "2026-07-26T06:03:37.909Z"
+    },
+    {
+     "fact_key": "availability.feature.analysis_sessions.platform.ios",
+     "tier": "T4_RELEASE",
+     "locator": "product-truth/releases/2026-05-02-ios-launch.yaml#changes",
+     "value": true,
+     "observed_at": "2026-05-02T00:00:00Z"
+    }
+   ],
+   "missing_information": [
+    "Whether the announced transition of availability.feature.analysis_sessions.platform.ios to true was rolled back or never shipped",
+    "A release record for the rollback, or a decision record standing by the current value"
+   ],
+   "likely_owner": "product",
+   "suggested_question": "Release release.2026_05_02_ios_launch.changes announced availability.feature.analysis_sessions.platform.ios → true, but the current authoritative value is false. Was this rolled back? Should the docs describe it as unavailable, and is a rollback release record needed?",
+   "resolution": null
+  }
+ ],
+ "findings": [
+  {
+   "kind": "inconsistent_value",
+   "fact_key": "term.canonical.task",
+   "doc_unit_id": "mintlify:docs-mintlify/terminology.mdx#intro",
+   "detail": "asserts \"Job\" (normalized \"Job\") but T3_CONFIG holds \"Task\" (normalized \"Task\")",
+   "owner": "product-content",
+   "disposition": "suppressed",
+   "refutation": "The passage asserts the canonical term is \"Task\", matching the authoritative value; \"Job\" appears only in a historical note about the 1.3.0 rename, not as an assertion of the canonical term."
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "runtime.python.version",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects runtime.python.version (T0_RUNTIME, value \"3.12.13\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "runtime.package.pandas.version",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects runtime.package.pandas.version (T0_RUNTIME, value \"3.0.5\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "runtime.package.scipy.version",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects runtime.package.scipy.version (T0_RUNTIME, value \"1.18.0\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "runtime.package.statsmodels.version",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects runtime.package.statsmodels.version (T0_RUNTIME, value \"0.14.6\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "runtime.package.matplotlib.version",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects runtime.package.matplotlib.version (T0_RUNTIME, value \"3.11.1\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "analysis.operation.inspect_schema.enabled",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects analysis.operation.inspect_schema.enabled (T0_RUNTIME, value true)",
+   "owner": "eng-analysis",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "analysis.operation.summary_statistics.enabled",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects analysis.operation.summary_statistics.enabled (T0_RUNTIME, value true)",
+   "owner": "eng-analysis",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "analysis.operation.filter_rows.enabled",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects analysis.operation.filter_rows.enabled (T0_RUNTIME, value true)",
+   "owner": "eng-analysis",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "analysis.operation.group_aggregate.enabled",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects analysis.operation.group_aggregate.enabled (T0_RUNTIME, value true)",
+   "owner": "eng-analysis",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "analysis.operation.correlation_matrix.enabled",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects analysis.operation.correlation_matrix.enabled (T0_RUNTIME, value true)",
+   "owner": "eng-analysis",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "analysis.operation.linear_regression.enabled",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects analysis.operation.linear_regression.enabled (T0_RUNTIME, value true)",
+   "owner": "eng-analysis",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "analysis.operation.distribution_test.enabled",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects analysis.operation.distribution_test.enabled (T0_RUNTIME, value true)",
+   "owner": "eng-analysis",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "analysis.operation.plot.enabled",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects analysis.operation.plot.enabled (T0_RUNTIME, value true)",
+   "owner": "eng-analysis",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "support.file_type.csv",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects support.file_type.csv (T1_SCHEMA, value true)",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "support.file_type.tsv",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects support.file_type.tsv (T1_SCHEMA, value true)",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "support.file_type.xlsx",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects support.file_type.xlsx (T1_SCHEMA, value false)",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.relay.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.relay.summary (T2_CLI, value \"Relay — bounded data analysis from your terminal.\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.relay.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.relay.flags (T2_CLI, value {\"flags\":[{\"name\":\"--version\",\"alias\":\"-V\",\"type\":\"boolean\",\"required\":false,\"default\":null,\"description\":\"output the version number\"},{\"name\":\"--json\",\"alias\":null,\"type\":\"boolean\",\"required\":false,\"default\":null,\"description\":\"print machine-readable JSON instead of tables\"},{\"name\":\"--api-url\",\"alias\":null,\"type\":\"string\",\"required\":false,\"default\":\"https://relay.otonieltrejo.com\",\"description\":\"Relay API base URL\"},{\"name\":\"--token\",\"alias\":null,\"type\":\"string\",\"required\":false,\"default\":null,\"description\":\"bearer token for privileged deployments\"},{\"name\":\"--no-color\",\"alias\":null,\"type\":\"string\",\"required\":false,\"default\":null,\"description\":\"disable ANSI colors\"},{\"name\":\"--verbose\",\"alias\":null,\"type\":\"boolean\",\"required\":false,\"default\":null,\"description\":\"log every HTTP request to stderr\"}]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.projects.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.projects.summary (T2_CLI, value \"Work with projects\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.projects.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.projects.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.projects.list.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.projects.list.summary (T2_CLI, value \"List all projects\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.projects.list.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.projects.list.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.projects.create.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.projects.create.summary (T2_CLI, value \"Create a project\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.projects.create.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.projects.create.flags (T2_CLI, value {\"flags\":[{\"name\":\"--name\",\"alias\":null,\"type\":\"string\",\"required\":true,\"default\":null,\"description\":\"project name\"},{\"name\":\"--description\",\"alias\":null,\"type\":\"string\",\"required\":false,\"default\":null,\"description\":\"optional description\"}]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.projects.show.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.projects.show.summary (T2_CLI, value \"Show one project\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.projects.show.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.projects.show.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.files.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.files.summary (T2_CLI, value \"Work with uploaded files\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.files.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.files.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.files.list.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.files.list.summary (T2_CLI, value \"List a project's files\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.files.list.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.files.list.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.files.upload.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.files.upload.summary (T2_CLI, value \"Upload a CSV or TSV file\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.files.upload.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.files.upload.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.files.show.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.files.show.summary (T2_CLI, value \"Show one file\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.files.show.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.files.show.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.sessions.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.sessions.summary (T2_CLI, value \"Run analysis sessions\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.sessions.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.sessions.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.sessions.list.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.sessions.list.summary (T2_CLI, value \"List a project's sessions\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.sessions.list.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.sessions.list.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.sessions.create.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.sessions.create.summary (T2_CLI, value \"Create a session bound to a file\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.sessions.create.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.sessions.create.flags (T2_CLI, value {\"flags\":[{\"name\":\"--file\",\"alias\":null,\"type\":\"string\",\"required\":true,\"default\":null,\"description\":\"file id the session analyzes\"},{\"name\":\"--title\",\"alias\":null,\"type\":\"string\",\"required\":false,\"default\":null,\"description\":\"session title\"}]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.sessions.run.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.sessions.run.summary (T2_CLI, value \"Ask a question in plain language\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.sessions.run.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.sessions.run.flags (T2_CLI, value {\"flags\":[{\"name\":\"--input-artifact\",\"alias\":null,\"type\":\"string\",\"required\":false,\"default\":null,\"description\":\"run on a previous derived table instead of the file\"}]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.artifacts.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.artifacts.summary (T2_CLI, value \"Inspect and download artifacts\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.artifacts.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.artifacts.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.artifacts.list.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.artifacts.list.summary (T2_CLI, value \"List a project's artifacts\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.artifacts.list.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.artifacts.list.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.artifacts.show.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.artifacts.show.summary (T2_CLI, value \"Show an artifact with its provenance\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.artifacts.show.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.artifacts.show.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.artifacts.download.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.artifacts.download.summary (T2_CLI, value \"Download an artifact\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.artifacts.download.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.artifacts.download.flags (T2_CLI, value {\"flags\":[{\"name\":\"--out\",\"alias\":null,\"type\":\"string\",\"required\":false,\"default\":null,\"description\":\"output path (defaults to the artifact filename)\"}]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.config.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.config.summary (T2_CLI, value \"Inspect CLI configuration and API health\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.config.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.config.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.config.show.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.config.show.summary (T2_CLI, value \"Show resolved configuration\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.config.show.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.config.show.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.config.status.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.config.status.summary (T2_CLI, value \"Check the Relay API health\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.config.status.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.config.status.flags (T2_CLI, value {\"flags\":[]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.introspect.summary",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.introspect.summary (T2_CLI, value \"Emit the machine-readable CLI surface\")",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "cli.command.introspect.flags",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects cli.command.introspect.flags (T2_CLI, value {\"flags\":[{\"name\":\"--json\",\"alias\":null,\"type\":\"boolean\",\"required\":false,\"default\":null,\"description\":\"emit JSON (the only supported format)\"}]})",
+   "owner": "eng-platform",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "plan.feature.connector_drive.min_plan",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects plan.feature.connector_drive.min_plan (T3_CONFIG, value \"team\")",
+   "owner": "product",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undocumented_fact",
+   "fact_key": "flag.analysis.regression_enabled",
+   "doc_unit_id": null,
+   "detail": "no documentation surface projects flag.analysis.regression_enabled (T3_CONFIG, value true)",
+   "owner": "eng-analysis",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "authority_conflict",
+   "fact_key": "flag.analysis.regression_enabled",
+   "doc_unit_id": null,
+   "detail": "two T5 records (decision.regression_flag_keep.record, decision.regression_flag_pause.record) claim flag.analysis.regression_enabled with different positions — unresolvable by design",
+   "owner": "eng-analysis",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undeclared_reference",
+   "fact_key": "limit.upload.csv.max_bytes",
+   "doc_unit_id": "inproduct:in-product-copy/files.json#tooltip.upload_limit",
+   "detail": "inproduct:in-product-copy/files.json#tooltip.upload_limit renders limit.upload.csv.max_bytes (\"10 MB\", via numeric_pattern) without declaring it in references_facts — it will silently go stale when the fact changes",
+   "owner": "product-content",
+   "disposition": "active",
+   "refutation": null
+  },
+  {
+   "kind": "undeclared_reference",
+   "fact_key": "limit.upload.csv.max_rows",
+   "doc_unit_id": "inproduct:in-product-copy/files.json#tooltip.row_limit",
+   "detail": "inproduct:in-product-copy/files.json#tooltip.row_limit renders limit.upload.csv.max_rows (\"50,000\", via numeric_pattern) without declaring it in references_facts — it will silently go stale when the fact changes",
+   "owner": "product-content",
+   "disposition": "active",
+   "refutation": null
+  }
+ ],
+ "generated_release_entry": null,
+ "pull_request_url": null,
+ "model_usage": {
+  "calls": 2,
+  "input_tokens": 849,
+  "output_tokens": 844,
+  "estimated_usd": 0.0364
+ },
+ "steps": [
+  {
+   "name": "fetch",
+   "status": "completed",
+   "started_at": "2026-07-26T06:03:38.070Z",
+   "duration_ms": 346,
+   "detail": {
+    "facts": 84,
+    "registry_entries": 96
+   }
+  },
+  {
+   "name": "pipeline",
+   "status": "completed",
+   "started_at": "2026-07-26T06:03:38.416Z",
+   "duration_ms": 15740,
+   "detail": {
+    "deltas": 1,
+    "units": 194,
+    "projections": 80,
+    "impacts": 4,
+    "patches": 0,
+    "findings": 64,
+    "warnings": 0,
+    "generated_paths": [
+     "generated/availability-matrix.mdx",
+     "generated/plan-gating.mdx",
+     "docs-mintlify/cli-reference.mdx",
+     "cli-docs/relay.md",
+     "cli-docs/projects.md",
+     "cli-docs/files.md",
+     "cli-docs/sessions.md",
+     "cli-docs/artifacts.md",
+     "cli-docs/config.md",
+     "cli-docs/introspect.md",
+     "cli-docs/README.md",
+     "docs-mintlify/changelog.mdx",
+     "docs-mintlify/navigation-generated.json",
+     "docs-mintlify/supported-files.mdx"
+    ],
+    "refusals": [
+     {
+      "doc_unit_id": "mintlify:docs-mintlify/artifacts-and-provenance.mdx#retention",
+      "text": "30 days",
+      "reason": "ambiguous attribution: matches retention.artifact.days, retention.uploaded_file.days equally — refused rather than guessed"
+     },
+     {
+      "doc_unit_id": "mintlify:docs-mintlify/configuration.mdx#retention",
+      "text": "30 days",
+      "reason": "ambiguous attribution: matches retention.artifact.days, retention.uploaded_file.days equally — refused rather than guessed"
+     },
+     {
+      "doc_unit_id": "helpcenter:help-center/articles/how-long-things-are-kept.md#article",
+      "text": "30 days",
+      "reason": "ambiguous attribution: matches retention.artifact.days, retention.uploaded_file.days equally — refused rather than guessed"
+     },
+     {
+      "doc_unit_id": "helpcenter:help-center/articles/how-long-things-are-kept.md#article",
+      "text": "30 days",
+      "reason": "ambiguous attribution: matches retention.artifact.days, retention.uploaded_file.days equally — refused rather than guessed"
+     },
+     {
+      "doc_unit_id": "inproduct:in-product-copy/settings.json#settings.retention.artifacts",
+      "text": "30 days",
+      "reason": "ambiguous attribution: matches retention.artifact.days, retention.uploaded_file.days equally — refused rather than guessed"
+     },
+     {
+      "doc_unit_id": "inproduct:in-product-copy/settings.json#settings.retention.uploads",
+      "text": "30 days",
+      "reason": "ambiguous attribution: matches retention.artifact.days, retention.uploaded_file.days equally — refused rather than guessed"
+     }
+    ]
+   }
+  },
+  {
+   "name": "resolve",
+   "status": "completed",
+   "started_at": "2026-07-26T06:03:54.156Z",
+   "duration_ms": 0,
+   "detail": {
+    "impacts": 4,
+    "model_patches": 0,
+    "model_calls": 2,
+    "conflicts": 2,
+    "findings_active": 63,
+    "findings_suppressed": 1,
+    "falsified": 1,
+    "exhausted": false
+   }
+  }
+ ]
+}

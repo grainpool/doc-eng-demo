@@ -120,4 +120,19 @@ export {
   type ConflictKind,
   type ConflictDraft,
 } from "./conflicts.js";
+export {
+  FACT_MUTATION_ALLOWLIST,
+  mutationAllowed,
+  AllowedMutationSchema,
+  ChangeLabRequestSchema,
+  ChangeLabRunSchema,
+  ImpactRecordSchema,
+  PatchRecordSchema,
+  FileDiffSchema,
+  type AllowedMutation,
+  type ChangeLabRequest,
+  type ChangeLabRun,
+  type ImpactRecord,
+  type PatchRecord,
+} from "./change-lab.js";
 export { CONTRACTS_VERSION } from "./version.js";

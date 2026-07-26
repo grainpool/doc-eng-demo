@@ -73,6 +73,9 @@ export interface RunDeps {
 }
 
 export interface RunOptions {
+  /** AI paths (grounded/editorial/falsifier/extraction) run only when true
+   * — public runs are deterministic-only (I11). */
+  ai?: boolean;
   modelExtraction?: boolean;
   maxCallsPerRun?: number;
   dailyCapUsd?: number;
@@ -195,6 +198,10 @@ export async function executeRun(
     await env.concord_db
       .prepare("INSERT INTO snapshot (id, taken_at, snapshot_json) VALUES (?, ?, ?)")
       .bind(current.snapshot_id, new Date().toISOString(), JSON.stringify(current))
+      .run();
+    await env.concord_db
+      .prepare("UPDATE run SET snapshot_id = ? WHERE id = ?")
+      .bind(current.snapshot_id, runId)
       .run();
     const previous: ProductTruthSnapshot = previousRow
       ? ProductTruthSnapshotSchema.parse(JSON.parse(previousRow.snapshot_json))

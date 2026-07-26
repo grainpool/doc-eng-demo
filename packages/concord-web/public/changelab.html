@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Concord — Change Lab</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+  code, pre { font-family: ui-monospace, monospace; background: #f4f4f0; }
+  .muted { color: #666; }
+  .card { border: 1px solid #ddd; border-radius: 8px; padding: .8rem 1rem; cursor: pointer; flex: 1; min-width: 15rem; }
+  .card:hover { background: #f8fafc; }
+  .card.sel { border-color: #556b2f; background: #f6f8f2; }
+</style>
+</head>
+<body>
+<h1>Change Lab</h1>
+<p class="muted">Pick a product change and watch it propagate through the whole pipeline:
+<code>change → detect → normalize → trace impact → reconcile → validate → patch/escalate → publish</code>.
+Every replay is a committed recording of a REAL run — same shape, same renderer live mode uses.
+Serving it costs zero model calls.
+See also: <a href="/">run inspector</a> · <a href="/facts.html">fact explorer</a> · <a href="/failures.html">what the system gets wrong</a>.</p>
+<div id="picker" style="display:flex;gap:1rem;flex-wrap:wrap;margin:1rem 0"></div>
+<div id="stage"></div>
+<script src="/changelab-render.js"></script>
+<script>
+"use strict";
+const picker = document.getElementById("picker");
+const stage = document.getElementById("stage");
+const TITLES = {
+  "term-rename-job-to-task": ["Terminology rename", "Job → Task across every surface; anchors escalate, prose patches"],
+  "limit-increase-10-to-25mb": ["File-limit increase", "10 MB → 25 MB: mechanical substitutions + grounded prose patches"],
+  "platform-enablement-ios": ["Platform enablement", "iOS turns on — availability matrix regenerates, prose escalates"],
+  "retention-change-30-to-90": ["Retention change", "30 → 90 days: the retention-twins ambiguity in action"],
+  "capability-addition-regression": ["Capability addition", "regression analysis enabled — flags, docs, and conflicts"],
+};
+async function load() {
+  const res = await fetch("/api/public/changelab/scenarios");
+  const { scenarios } = await res.json();
+  picker.innerHTML = scenarios.map(s => {
+    const [title, blurb] = TITLES[s.scenario] ?? [s.scenario, ""];
+    return "<div class='card' data-s='" + s.scenario + "' data-k='" + s.mutation.fact_key + "' data-v='" +
+      encodeURIComponent(JSON.stringify(s.mutation.value)) + "'><b>" + title + "</b><br><span class='muted'>" + blurb + "</span></div>";
+  }).join("");
+  for (const card of picker.querySelectorAll(".card")) card.onclick = () => select(card);
+  const first = picker.querySelector(".card");
+  if (first) select(first);
+}
+async function select(card) {
+  for (const c of picker.querySelectorAll(".card")) c.classList.remove("sel");
+  card.classList.add("sel");
+  stage.innerHTML = "<p class='muted'>loading replay…</p>";
+  const res = await fetch("/api/public/changelab/replay", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      mode: "replay",
+      idempotency_key: "replay-" + card.dataset.s,
+      mutation: { kind: "fact_value", fact_key: card.dataset.k, value: JSON.parse(decodeURIComponent(card.dataset.v)) },
+    }),
+  });
+  if (!res.ok) { stage.innerHTML = "<p>replay unavailable</p>"; return; }
+  stage.innerHTML = renderChangeLabRun(await res.json());
+}
+load();
+</script>
+</body>
+</html>

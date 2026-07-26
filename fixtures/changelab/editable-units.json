@@ -1,0 +1,15 @@
+{
+  "comment": "Phase 17 (security.md §4.2): the EXHAUSTIVE list of doc units editable in Change Lab live mode. Lives in REPO 1 so a write to the estate can never widen what is writable in the estate. ≤ 12 units; nothing generated; nothing outside the estate repo.",
+  "editable_doc_unit_ids": [
+    "mintlify:docs-mintlify/supported-files.mdx#size-limits",
+    "mintlify:docs-mintlify/supported-files.mdx#supported-types",
+    "mintlify:docs-mintlify/troubleshooting.mdx#my-upload-was-rejected",
+    "mintlify:docs-mintlify/getting-started.mdx#2-upload-a-file",
+    "helpcenter:help-center/articles/upload-failed.md#article",
+    "helpcenter:help-center/articles/using-the-cli.md#article",
+    "helpcenter:help-center/articles/how-long-things-are-kept.md#article",
+    "helpcenter:help-center/articles/platform-availability.md#article",
+    "inproduct:in-product-copy/files.json#uploader.limit_note",
+    "inproduct:in-product-copy/files.json#tooltip.upload_limit"
+  ]
+}
