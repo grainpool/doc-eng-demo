@@ -1,4 +1,13 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src", "test"]
+  "include": [
+    "src",
+    "cli",
+    "test"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  }
 }
