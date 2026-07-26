@@ -4,10 +4,12 @@ import { runExtractors, type ExtractionRefusal } from "./extractors.js";
 import {
   authorityConflictFindings,
   consistencyFindings,
+  undeclaredReferenceFindings,
   undocumentedFactFindings,
 } from "./consistency.js";
 import { arbitrateAll, type Arbitration } from "./authority.js";
 import { detectConflicts } from "./conflicts.js";
+import { checkInternalLinks } from "./linkcheck.js";
 import { runGenerators } from "./generators/index.js";
 import { parseEstate } from "./select.js";
 import { makeDiff } from "./diff.js";
@@ -194,6 +196,10 @@ export function runPipeline(input: PipelineInput): PipelineOutput {
     ...consistencyFindings(input.current.facts, projections),
     ...undocumentedFactFindings(input.current.facts, projections),
     ...authorityConflictFindings(input.current.facts),
+    // Repo-internal link/anchor resolution (BROKEN_REF; never external).
+    ...checkInternalLinks(units),
+    // In-product copy rendering a fact it never declared (UNDECLARED_FACT_REF).
+    ...undeclaredReferenceFindings(units, projections),
   ];
 
   // Conflicts (Phase 15): detected before classification; a conflict on a

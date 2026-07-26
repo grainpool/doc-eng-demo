@@ -86,6 +86,7 @@ export {
 export {
   consistencyFindings,
   undocumentedFactFindings,
+  undeclaredReferenceFindings,
   authorityConflictFindings,
 } from "./consistency.js";
 export {
@@ -120,5 +121,6 @@ export {
   type Normalized,
   type FactUnit,
 } from "./normalize-value.js";
+export { checkInternalLinks } from "./linkcheck.js";
 export { makeDiff } from "./diff.js";
 export { sha256Hex } from "./hash.js";

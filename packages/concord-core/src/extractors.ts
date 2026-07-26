@@ -443,9 +443,18 @@ export function dedupeProjections(projections: FactProjection[]): FactProjection
       projection.mode === "editorial" ? " editorial" : ""
     }`;
     const existing = byKey.get(key);
+    // A projection that asserts a VALUE always beats one that asserts
+    // nothing, regardless of extractor priority — a null-asserted marker
+    // must not shadow the occurrence that actually carries the rendering
+    // (real bug found by the Phase 16 harness: a concord:fact marker on a
+    // terminology section hid the term_occurrence "Job" assertion).
+    const existingHasValue = existing?.asserted_value !== null && existing?.asserted_value !== undefined;
+    const candidateHasValue = projection.asserted_value !== null && projection.asserted_value !== undefined;
     if (
       !existing ||
-      EXTRACTOR_PRIORITY[projection.extractor] < EXTRACTOR_PRIORITY[existing.extractor]
+      (candidateHasValue && !existingHasValue) ||
+      (candidateHasValue === existingHasValue &&
+        EXTRACTOR_PRIORITY[projection.extractor] < EXTRACTOR_PRIORITY[existing.extractor])
     ) {
       byKey.set(key, projection);
     }

@@ -76,6 +76,41 @@ export function undocumentedFactFindings(
   return findings;
 }
 
+/**
+ * UNDECLARED_FACT_REF (Phase 16): an in-product copy entry that RENDERS a
+ * registered fact's value without declaring it in references_facts. The
+ * value may be correct today — the missing declaration is what breaks the
+ * reconciliation contract (the entry will silently go stale on change).
+ */
+export function undeclaredReferenceFindings(
+  units: readonly { id: string; surface: string; owner: string; frontmatter: Record<string, unknown> }[],
+  projections: readonly FactProjection[],
+): Finding[] {
+  const unitById = new Map(units.map((u) => [u.id, u]));
+  const findings: Finding[] = [];
+  for (const projection of projections) {
+    if (projection.extractor === "declared_reference") continue;
+    const unit = unitById.get(projection.doc_unit_id);
+    if (!unit || unit.surface !== "inproduct") continue;
+    const declared = (unit.frontmatter.references_facts ?? []) as string[];
+    if (declared.includes(projection.fact_key)) continue;
+    if (matchFactKey(projection.fact_key) === null) continue;
+    if (projection.fact_key.startsWith("term.canonical.")) continue; // term usage ≠ value rendering
+    findings.push({
+      kind: "undeclared_reference",
+      fact_key: projection.fact_key,
+      doc_unit_id: projection.doc_unit_id,
+      projection_id: projection.id,
+      detail:
+        `${projection.doc_unit_id} renders ${projection.fact_key} ` +
+        `(${JSON.stringify(projection.asserted_value)}, via ${projection.extractor}) ` +
+        `without declaring it in references_facts — it will silently go stale when the fact changes`,
+      owner: unit.owner,
+    });
+  }
+  return findings;
+}
+
 /** Authority conflicts surfaced as findings (Phase 15 acts on them). */
 export function authorityConflictFindings(facts: readonly FactClaim[]): Finding[] {
   const findings: Finding[] = [];

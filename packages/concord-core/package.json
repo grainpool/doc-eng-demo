@@ -8,7 +8,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "ingest": "esbuild cli/ingest.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/ingest.js --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" && node dist/ingest.js --dry-run",
-    "regen:estate": "esbuild cli/regen-estate.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/regen-estate.js --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" && node dist/regen-estate.js"
+    "regen:estate": "esbuild cli/regen-estate.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/regen-estate.js --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" && node dist/regen-estate.js",
+    "eval": "esbuild cli/eval.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/eval.js --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" && node dist/eval.js",
+    "eval:failures-page": "esbuild cli/gen-failures.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/gen-failures.js --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" && node dist/gen-failures.js"
   },
   "dependencies": {
     "@relay/contracts": "workspace:*",
@@ -19,6 +21,7 @@
     "@types/node": "^26.1.1",
     "esbuild": "^0.25.0",
     "typescript": "^5.7.0",
-    "vitest": "^4"
+    "vitest": "^4",
+    "@anthropic-ai/sdk": "^0.115.0"
   }
 }

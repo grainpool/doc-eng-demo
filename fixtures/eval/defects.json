@@ -392,6 +392,87 @@
       "expected_detection": true,
       "expected_action": "UNRESOLVED_CONFLICT",
       "notes": "Phase 15 planted fixture (ambiguous_ownership): competing T5 records in the CLEAN truth. Concord escalates to the fact owner (eng-analysis) and resolves nothing (I7)."
+    },
+    {
+      "id": "def_stale_cli_generated_version",
+      "class": "STALE_CLI",
+      "doc_unit_id": "mintlify:docs-mintlify/cli-reference.mdx#cli-reference",
+      "fact_key": null,
+      "description": "The generated CLI reference is hand-edited to claim a different CLI version than the introspection capture.",
+      "injection": {
+        "find": "Generated from `relay introspect --json` (CLI v0.1.0).",
+        "replace": "Generated from `relay introspect --json` (CLI v0.2.0)."
+      },
+      "expected_detection": true,
+      "expected_action": "DETERMINISTIC_REGEN",
+      "notes": "Hand-edit detection must flag the generated file and the regen overwrite restores the captured version."
+    },
+    {
+      "id": "def_broken_ref_anchor",
+      "class": "BROKEN_REF",
+      "doc_unit_id": "mintlify:docs-mintlify/troubleshooting.mdx#my-upload-was-rejected",
+      "fact_key": null,
+      "description": "A link's anchor is changed to one that does not exist on the target page (page resolves, fragment does not).",
+      "injection": {
+        "find": "(see [Supported files](/supported-files) for the limit)",
+        "replace": "(see [Supported files](/supported-files#size-limitz) for the limit)"
+      },
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "notes": "Repo-internal anchor resolution: /supported-files exists, #size-limitz does not."
+    },
+    {
+      "id": "def_term_drift_lowercase",
+      "class": "TERM_DRIFT",
+      "doc_unit_id": "mintlify:docs-mintlify/getting-started.mdx#1-upload-a-csv",
+      "fact_key": "term.canonical.task",
+      "description": "HARD: lowercase 'job' in running prose. The capitalized-word heuristic that keeps 'the task at hand' out of scope also blinds the extractor to lowercase drift.",
+      "injection": {
+        "find": "exported to CSV first — see [Supported files](/supported-files).",
+        "replace": "exported to CSV first — see [Supported files](/supported-files). Each analysis job gets its own session."
+      },
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "notes": "Expected MISS with the current extractor — kept deliberately so TERM_DRIFT recall stays honest (AP7)."
+    },
+    {
+      "id": "def_dup_guidance_retention",
+      "class": "DUP_GUIDANCE",
+      "doc_unit_id": "mintlify:docs-mintlify/configuration.mdx#retention",
+      "fact_key": "retention.artifact.days",
+      "description": "HARD: a duplicated retention claim is added on the configuration page, diverging (90 days) from artifacts-and-provenance (30 days).",
+      "injection": {
+        "find": "Artifact retention is covered in\n[Artifacts & provenance](/artifacts-and-provenance).",
+        "replace": "Artifacts are kept for 90 days. Artifact retention is also covered in\n[Artifacts & provenance](/artifacts-and-provenance)."
+      },
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "notes": "Cross-surface divergence needs either a numeric mismatch hit ('90 days' matches no current value) or a dup detector that does not exist — expected miss, on the failures page."
+    },
+    {
+      "id": "def_missing_prereq_json_flag",
+      "class": "MISSING_PREREQ",
+      "doc_unit_id": "helpcenter:help-center/articles/using-the-cli.md#article",
+      "fact_key": null,
+      "description": "HARD: the scripting guidance loses its precondition (use --json before relying on output shape).",
+      "injection": {
+        "find": "Add `--json` to any command for machine-readable output, and rely on the exit\ncodes in scripts — they're part of the CLI's contract.",
+        "replace": "Rely on the exit\ncodes in scripts — they're part of the CLI's contract."
+      },
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "notes": "Removed preconditions leave no contradiction to measure — detection would need procedure modeling. Expected miss, analyzed on the failures page."
+    },
+    {
+      "id": "def_false_matrix_dash_cells",
+      "class": "WRONG_PLATFORM",
+      "doc_unit_id": "generated:generated/availability-matrix.mdx#page",
+      "fact_key": "availability.feature.connector_drive.platform.web",
+      "description": "NEGATIVE CONTROL: the matrix's '—' cells (connector_drive on ios/android/cli) claim nothing; only declared cells project. A finding here is a false positive.",
+      "injection": null,
+      "expected_detection": false,
+      "expected_action": "NO_ACTION",
+      "notes": "Asserts the clean estate: unclaimed platform cells must not be read as availability claims."
     }
   ]
 }

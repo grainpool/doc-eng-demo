@@ -1,0 +1,731 @@
+{
+  "generated_at": "2026-07-26T05:47:35.806Z",
+  "corpus_size": 36,
+  "matching_rule": "location (doc_unit_id | fact_key | file path) AND fixed per-class signal mapping; new-vs-baseline event diffing; see cli/eval.ts header",
+  "metrics": {
+    "detection_precision": 0.882,
+    "detection_recall_overall": 0.484,
+    "detection_recall_per_class": {
+      "UNDECLARED_FACT_REF": {
+        "recall": 0.667,
+        "detected": 2,
+        "total": 3
+      },
+      "STALE_VALUE": {
+        "recall": 0.5,
+        "detected": 2,
+        "total": 4
+      },
+      "WRONG_PLATFORM": {
+        "recall": 0.333,
+        "detected": 1,
+        "total": 3
+      },
+      "TERM_DRIFT": {
+        "recall": 0.75,
+        "detected": 3,
+        "total": 4
+      },
+      "BROKEN_REF": {
+        "recall": 1,
+        "detected": 3,
+        "total": 3
+      },
+      "DUP_GUIDANCE": {
+        "recall": 0,
+        "detected": 0,
+        "total": 2
+      },
+      "MISSING_PREREQ": {
+        "recall": 0,
+        "detected": 0,
+        "total": 2
+      },
+      "CONTRADICTION": {
+        "recall": 0.667,
+        "detected": 2,
+        "total": 3
+      },
+      "UNSUPPORTED_CLAIM": {
+        "recall": 0,
+        "detected": 0,
+        "total": 3
+      },
+      "IA_PROBLEM": {
+        "recall": 0,
+        "detected": 0,
+        "total": 1
+      },
+      "STALE_INPRODUCT_COPY": {
+        "recall": 1,
+        "detected": 1,
+        "total": 1
+      },
+      "STALE_CLI": {
+        "recall": 0.5,
+        "detected": 1,
+        "total": 2
+      }
+    },
+    "false_positive_rate": 0,
+    "remediation_correctness": 1,
+    "remediation_patches_checked": 3,
+    "escalation_appropriateness": 0.286,
+    "unsafe_autofix_count": 0,
+    "provenance_completeness": 1,
+    "falsification_suppression_rate": 0.25
+  },
+  "gates": {
+    "unsafe_autofix_count_is_zero": true,
+    "provenance_completeness_is_one": true
+  },
+  "misses": [
+    {
+      "id": "def_undeclared_upload_retention",
+      "class": "UNDECLARED_FACT_REF",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Phase-08 seed; excluded from the copy-registry lint by id."
+    },
+    {
+      "id": "def_stale_artifact_retention",
+      "class": "STALE_VALUE",
+      "expected_detection": true,
+      "expected_action": "DETERMINISTIC_REGEN",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Declared marker on the section."
+    },
+    {
+      "id": "def_stale_retention_helpcenter",
+      "class": "STALE_VALUE",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Prose surface, no marker: needs extraction, so grounded patch not regen."
+    },
+    {
+      "id": "def_wrong_platform_reference",
+      "class": "WRONG_PLATFORM",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "The iOS rollback makes this the temptation case: the T4 release agrees with the defect, T3 config wins."
+    },
+    {
+      "id": "def_wrong_platform_helpcenter",
+      "class": "WRONG_PLATFORM",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Same fact, friendlier register."
+    },
+    {
+      "id": "def_dup_guidance_size_check",
+      "class": "DUP_GUIDANCE",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Same instruction in two surfaces, now diverging."
+    },
+    {
+      "id": "def_missing_prereq_run_analysis",
+      "class": "MISSING_PREREQ",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "IA/procedural change — never auto-patched."
+    },
+    {
+      "id": "def_contradiction_upload_retention",
+      "class": "CONTRADICTION",
+      "expected_detection": true,
+      "expected_action": "UNRESOLVED_CONFLICT",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "The declared marker sits on this section, so the conflict is between the injected doc value and both the fact and the sibling surface."
+    },
+    {
+      "id": "def_unsupported_claim_soc2",
+      "class": "UNSUPPORTED_CLAIM",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "No fact key exists for certifications — exactly why it is unsupported."
+    },
+    {
+      "id": "def_unsupported_claim_encryption",
+      "class": "UNSUPPORTED_CLAIM",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": ""
+    },
+    {
+      "id": "def_ia_problem_cli_exit_codes",
+      "class": "IA_PROBLEM",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Content in the wrong surface/audience."
+    },
+    {
+      "id": "def_stale_cli_exit_code",
+      "class": "STALE_CLI",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "The introspection fixture is the T2 authority."
+    },
+    {
+      "id": "def_conflict_insufficient_evidence",
+      "class": "UNSUPPORTED_CLAIM",
+      "expected_detection": true,
+      "expected_action": "UNRESOLVED_CONFLICT",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Phase 15 planted fixture (insufficient_evidence): the cited 'SLA page' resolves nowhere in the product-truth snapshot."
+    },
+    {
+      "id": "def_term_drift_lowercase",
+      "class": "TERM_DRIFT",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Expected MISS with the current extractor — kept deliberately so TERM_DRIFT recall stays honest (AP7)."
+    },
+    {
+      "id": "def_dup_guidance_retention",
+      "class": "DUP_GUIDANCE",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Cross-surface divergence needs either a numeric mismatch hit ('90 days' matches no current value) or a dup detector that does not exist — expected miss, on the failures page."
+    },
+    {
+      "id": "def_missing_prereq_json_flag",
+      "class": "MISSING_PREREQ",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Removed preconditions leave no contradiction to measure — detection would need procedure modeling. Expected miss, analyzed on the failures page."
+    }
+  ],
+  "false_positives": [],
+  "results": [
+    {
+      "id": "def_undeclared_upload_limit",
+      "class": "UNDECLARED_FACT_REF",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": true,
+      "matched_events": [
+        "undeclared_reference: inproduct:in-product-copy/files.json#tooltip.upload_limit renders limit.upload.csv.max_bytes (\"10 MB\", via numeric_pattern) without declarin"
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Phase-08 seed: lives in the real estate; excluded from the copy-registry lint by id."
+    },
+    {
+      "id": "def_undeclared_row_limit",
+      "class": "UNDECLARED_FACT_REF",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": true,
+      "matched_events": [
+        "undeclared_reference: inproduct:in-product-copy/files.json#tooltip.row_limit renders limit.upload.csv.max_rows (\"50,000\", via numeric_pattern) without declaring i"
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Phase-08 seed; excluded from the copy-registry lint by id."
+    },
+    {
+      "id": "def_undeclared_upload_retention",
+      "class": "UNDECLARED_FACT_REF",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Phase-08 seed; excluded from the copy-registry lint by id."
+    },
+    {
+      "id": "def_stale_limit_reference_page",
+      "class": "STALE_VALUE",
+      "expected_detection": true,
+      "expected_action": "DETERMINISTIC_REGEN",
+      "detected": true,
+      "matched_events": [
+        "inconsistent_value: asserts \"5 MB\" (normalized 5242880) but T1_SCHEMA holds 10485760 (normalized 10485760)"
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Declared marker + mechanical span: the strongest detection case."
+    },
+    {
+      "id": "def_stale_artifact_retention",
+      "class": "STALE_VALUE",
+      "expected_detection": true,
+      "expected_action": "DETERMINISTIC_REGEN",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Declared marker on the section."
+    },
+    {
+      "id": "def_stale_retention_helpcenter",
+      "class": "STALE_VALUE",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Prose surface, no marker: needs extraction, so grounded patch not regen."
+    },
+    {
+      "id": "def_stale_generated_matrix_limit",
+      "class": "STALE_VALUE",
+      "expected_detection": true,
+      "expected_action": "DETERMINISTIC_REGEN",
+      "detected": true,
+      "matched_events": [
+        "inconsistent_value: asserts \"5242880\" (normalized 5242880) but T1_SCHEMA holds 10485760 (normalized 10485760)"
+      ],
+      "unmatched_new_events": 1,
+      "remediation_correct": true,
+      "notes": "Generated surface: always regenerated, never patched."
+    },
+    {
+      "id": "def_wrong_platform_reference",
+      "class": "WRONG_PLATFORM",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "The iOS rollback makes this the temptation case: the T4 release agrees with the defect, T3 config wins."
+    },
+    {
+      "id": "def_wrong_platform_helpcenter",
+      "class": "WRONG_PLATFORM",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Same fact, friendlier register."
+    },
+    {
+      "id": "def_wrong_platform_generated_matrix",
+      "class": "WRONG_PLATFORM",
+      "expected_detection": true,
+      "expected_action": "DETERMINISTIC_REGEN",
+      "detected": true,
+      "matched_events": [
+        "inconsistent_value: asserts \"true\" (normalized true) but T3_CONFIG holds false (normalized false)"
+      ],
+      "unmatched_new_events": 1,
+      "remediation_correct": true,
+      "notes": "Generated surface regen."
+    },
+    {
+      "id": "def_term_drift_reference",
+      "class": "TERM_DRIFT",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": true,
+      "matched_events": [
+        "inconsistent_value: asserts \"Job\" (normalized \"Job\") but T3_CONFIG holds \"Task\" (normalized \"Task\")"
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Terminology ownership decision routes term patches through product-content review."
+    },
+    {
+      "id": "def_term_drift_helpcenter",
+      "class": "TERM_DRIFT",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": true,
+      "matched_events": [
+        "inconsistent_value: asserts \"Job\" (normalized \"Job\") but T3_CONFIG holds \"Task\" (normalized \"Task\")"
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": ""
+    },
+    {
+      "id": "def_term_drift_inproduct",
+      "class": "TERM_DRIFT",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": true,
+      "matched_events": [
+        "inconsistent_value: asserts \"Job\" (normalized \"Job\") but T3_CONFIG holds \"Task\" (normalized \"Task\")"
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": ""
+    },
+    {
+      "id": "def_broken_ref_getting_started",
+      "class": "BROKEN_REF",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": true,
+      "matched_events": [
+        "broken_ref: mintlify:docs-mintlify/getting-started.mdx#before-you-begin links to /file-types, but page /file-types does not exist in the estate"
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Repo-internal reference validation only — no external URL fetching, ever."
+    },
+    {
+      "id": "def_broken_ref_cli_overview",
+      "class": "BROKEN_REF",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": true,
+      "matched_events": [
+        "broken_ref: mintlify:docs-mintlify/cli-overview.mdx#introspection links to /cli-ref, but page /cli-ref does not exist in the estate"
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": ""
+    },
+    {
+      "id": "def_dup_guidance_size_check",
+      "class": "DUP_GUIDANCE",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Same instruction in two surfaces, now diverging."
+    },
+    {
+      "id": "def_missing_prereq_run_analysis",
+      "class": "MISSING_PREREQ",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "IA/procedural change — never auto-patched."
+    },
+    {
+      "id": "def_contradiction_upload_retention",
+      "class": "CONTRADICTION",
+      "expected_detection": true,
+      "expected_action": "UNRESOLVED_CONFLICT",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "The declared marker sits on this section, so the conflict is between the injected doc value and both the fact and the sibling surface."
+    },
+    {
+      "id": "def_unsupported_claim_soc2",
+      "class": "UNSUPPORTED_CLAIM",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "No fact key exists for certifications — exactly why it is unsupported."
+    },
+    {
+      "id": "def_unsupported_claim_encryption",
+      "class": "UNSUPPORTED_CLAIM",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": ""
+    },
+    {
+      "id": "def_ia_problem_cli_exit_codes",
+      "class": "IA_PROBLEM",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Content in the wrong surface/audience."
+    },
+    {
+      "id": "def_stale_inproduct_limit_note",
+      "class": "STALE_INPRODUCT_COPY",
+      "expected_detection": true,
+      "expected_action": "DETERMINISTIC_REGEN",
+      "detected": true,
+      "matched_events": [
+        "inconsistent_value: asserts \"5 MB\" (normalized 5242880) but T1_SCHEMA holds 10485760 (normalized 10485760)"
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Declared references_facts + literal value: the Phase-10 mechanical path."
+    },
+    {
+      "id": "def_stale_cli_exit_code",
+      "class": "STALE_CLI",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "The introspection fixture is the T2 authority."
+    },
+    {
+      "id": "def_false_register_tooltip",
+      "class": "DUP_GUIDANCE",
+      "expected_detection": false,
+      "expected_action": "NO_ACTION",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "A recall-only harness flags this; a correct one does not."
+    },
+    {
+      "id": "def_false_raw_bytes_cell",
+      "class": "STALE_VALUE",
+      "expected_detection": false,
+      "expected_action": "NO_ACTION",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Semantic comparison happens on normalized values, never strings."
+    },
+    {
+      "id": "def_false_wording_smaller_than",
+      "class": "CONTRADICTION",
+      "expected_detection": false,
+      "expected_action": "NO_ACTION",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Boundary-inclusive phrasing differences are not value conflicts."
+    },
+    {
+      "id": "def_false_ios_history",
+      "class": "WRONG_PLATFORM",
+      "expected_detection": false,
+      "expected_action": "NO_ACTION",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Mentioning a platform is not asserting availability on it."
+    },
+    {
+      "id": "def_conflict_t4_ios_contradiction",
+      "class": "CONTRADICTION",
+      "expected_detection": true,
+      "expected_action": "UNRESOLVED_CONFLICT",
+      "detected": true,
+      "matched_events": [
+        "conflict:temporal_contradiction: Release release.2026_05_02_ios_launch.changes announced availability.feature.analysis_sessions.platform.ios → true, but the current authorit"
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Phase 15 planted fixture (temporal_contradiction). The tie-break decision dec_ios_rollback_tiebreak exists as a HUMAN record; Concord still surfaces the conflict rather than applying it."
+    },
+    {
+      "id": "def_conflict_insufficient_evidence",
+      "class": "UNSUPPORTED_CLAIM",
+      "expected_detection": true,
+      "expected_action": "UNRESOLVED_CONFLICT",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Phase 15 planted fixture (insufficient_evidence): the cited 'SLA page' resolves nowhere in the product-truth snapshot."
+    },
+    {
+      "id": "def_conflict_ambiguous_ownership_regression",
+      "class": "CONTRADICTION",
+      "expected_detection": true,
+      "expected_action": "UNRESOLVED_CONFLICT",
+      "detected": true,
+      "matched_events": [
+        "conflict:ambiguous_ownership: Two decision records claim flag.analysis.regression_enabled with different positions. Which one stands, and can the other be marked supersed"
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Phase 15 planted fixture (ambiguous_ownership): competing T5 records in the CLEAN truth. Concord escalates to the fact owner (eng-analysis) and resolves nothing (I7)."
+    },
+    {
+      "id": "def_stale_cli_generated_version",
+      "class": "STALE_CLI",
+      "expected_detection": true,
+      "expected_action": "DETERMINISTIC_REGEN",
+      "detected": true,
+      "matched_events": [
+        "warning:generated_file_hand_edited: docs-mintlify/cli-reference.mdx matches its generator's output for neither the current nor the previous snapshot — hand-edited, or a pending"
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": true,
+      "notes": "Hand-edit detection must flag the generated file and the regen overwrite restores the captured version."
+    },
+    {
+      "id": "def_broken_ref_anchor",
+      "class": "BROKEN_REF",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": true,
+      "matched_events": [
+        "broken_ref: mintlify:docs-mintlify/troubleshooting.mdx#my-upload-was-rejected links to /supported-files#size-limitz, but anchor #size-limitz does not ex"
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Repo-internal anchor resolution: /supported-files exists, #size-limitz does not."
+    },
+    {
+      "id": "def_term_drift_lowercase",
+      "class": "TERM_DRIFT",
+      "expected_detection": true,
+      "expected_action": "GROUNDED_PATCH",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Expected MISS with the current extractor — kept deliberately so TERM_DRIFT recall stays honest (AP7)."
+    },
+    {
+      "id": "def_dup_guidance_retention",
+      "class": "DUP_GUIDANCE",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Cross-surface divergence needs either a numeric mismatch hit ('90 days' matches no current value) or a dup detector that does not exist — expected miss, on the failures page."
+    },
+    {
+      "id": "def_missing_prereq_json_flag",
+      "class": "MISSING_PREREQ",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Removed preconditions leave no contradiction to measure — detection would need procedure modeling. Expected miss, analyzed on the failures page."
+    },
+    {
+      "id": "def_false_matrix_dash_cells",
+      "class": "WRONG_PLATFORM",
+      "expected_detection": false,
+      "expected_action": "NO_ACTION",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Asserts the clean estate: unclaimed platform cells must not be read as availability claims."
+    }
+  ],
+  "baseline": {
+    "findings": 9,
+    "conflicts": 2,
+    "warnings": 0,
+    "broken_refs": 0
+  },
+  "determinism_note": "This run is fully deterministic (no model calls); scores are identical across runs by construction. Model-assisted stats (falsification) are produced by eval:model (N=3) and merged below when present.",
+  "model_leg": {
+    "n": 3,
+    "candidates": 4,
+    "suppression_rates": [
+      0.25,
+      0.25,
+      0.25
+    ],
+    "mean": 0.25,
+    "spread": 0,
+    "model_calls": 12,
+    "cost_usd": 0.0573,
+    "per_candidate": [
+      {
+        "defect": "def_wrong_platform_generated_matrix",
+        "suppressed_runs": 0,
+        "sample_refutation": null
+      },
+      {
+        "defect": "def_term_drift_reference",
+        "suppressed_runs": 0,
+        "sample_refutation": null
+      },
+      {
+        "defect": "def_term_drift_helpcenter",
+        "suppressed_runs": 0,
+        "sample_refutation": null
+      },
+      {
+        "defect": "def_term_drift_inproduct",
+        "suppressed_runs": 3,
+        "sample_refutation": "The passage is a two-word UI label (\"Run Job\") with no context establishing that \"Job\" refers to the same concept as the canonical \"Task\" term; \"job\" is a plausibly distinct entity (e.g., a run/background job), so this is an unsupported term-matching inference rather than a demonstrated inconsistent value."
+      }
+    ]
+  }
+}

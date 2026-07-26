@@ -70,6 +70,9 @@ importers:
         specifier: ^4
         version: 4.4.3
     devDependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.115.0
+        version: 0.115.0(zod@4.4.3)
       '@types/node':
         specifier: ^26.1.1
         version: 26.1.1

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Concord — what the system gets wrong</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+  code { font-family: ui-monospace, monospace; background: #f4f4f0; }
+  .miss { border: 1px solid #ddd; border-left: 4px solid #b30000; border-radius: 6px; padding: .8rem 1rem; margin: 1rem 0; }
+  .muted { color: #666; font-size: .92em; }
+  table { border-collapse: collapse; } td, th { border: 1px solid #ddd; padding: .3rem .7rem; text-align: left; }
+</style>
+</head>
+<body>
+<h1>What the system gets wrong</h1>
+<p class="muted">Generated from <code>eval-report.json</code> (2026-07-26T05:47:35.806Z), corpus 36 seeded defects.
+This page is a deliverable, not an apology: the misses below are kept in the fixture deliberately (constraints.md AP7).
+See the <a href="/">run report</a> and <a href="/facts.html">fact explorer</a>.</p>
+
+<h2>Recall per class</h2>
+<table><tr><th>class</th><th>recall</th><th>detected/total</th></tr>
+<tr><td>BROKEN_REF</td><td>1</td><td>3/3</td></tr>
+<tr><td>CONTRADICTION</td><td>0.667</td><td>2/3</td></tr>
+<tr><td>DUP_GUIDANCE</td><td>0</td><td>0/2</td></tr>
+<tr><td>IA_PROBLEM</td><td>0</td><td>0/1</td></tr>
+<tr><td>MISSING_PREREQ</td><td>0</td><td>0/2</td></tr>
+<tr><td>STALE_CLI</td><td>0.5</td><td>1/2</td></tr>
+<tr><td>STALE_INPRODUCT_COPY</td><td>1</td><td>1/1</td></tr>
+<tr><td>STALE_VALUE</td><td>0.5</td><td>2/4</td></tr>
+<tr><td>TERM_DRIFT</td><td>0.75</td><td>3/4</td></tr>
+<tr><td>UNDECLARED_FACT_REF</td><td>0.667</td><td>2/3</td></tr>
+<tr><td>UNSUPPORTED_CLAIM</td><td>0</td><td>0/3</td></tr>
+<tr><td>WRONG_PLATFORM</td><td>0.333</td><td>1/3</td></tr>
+</table>
+
+<h2>Misses (16)</h2>
+<div class="miss"><b>def_undeclared_upload_retention</b> <code>UNDECLARED_FACT_REF</code> <span class="muted">expected EDITORIAL_REVIEW</span>
+<p>The settings copy renders '30 days', but retention.artifact.days and retention.uploaded_file.days are both 30 — numeric attribution is deliberately REFUSED as ambiguous (AP2), so no projection exists to hang the undeclared-reference finding on. Detection returns when the two values diverge, or when the copy declares its fact.</p></div>
+<div class="miss"><b>def_stale_artifact_retention</b> <code>STALE_VALUE</code> <span class="muted">expected DETERMINISTIC_REGEN</span>
+<p>'7 days' matches no current fact value and no previous-snapshot value (the eval runs previous == current), and the retention twins make '30 days' unattributable — numeric_pattern has nothing to project. A drift detector for VALUES NEAR a fact (same unit-class, wrong number, adjacent prose) does not exist yet.</p></div>
+<div class="miss"><b>def_stale_retention_helpcenter</b> <code>STALE_VALUE</code> <span class="muted">expected GROUNDED_PATCH</span>
+<p>Same mechanism as def_stale_artifact_retention: '90 days' normalizes cleanly but matches no fact, and the passage carries no declared marker.</p></div>
+<div class="miss"><b>def_wrong_platform_reference</b> <code>WRONG_PLATFORM</code> <span class="muted">expected GROUNDED_PATCH</span>
+<p>Prose availability ('available on web, iOS, and the CLI') is not a table — availability_table only parses matrices, and no deterministic extractor reads platform claims out of running text. This is squarely the model_extraction gap; the bounded fan-out did not cover this page.</p></div>
+<div class="miss"><b>def_wrong_platform_helpcenter</b> <code>WRONG_PLATFORM</code> <span class="muted">expected GROUNDED_PATCH</span>
+<p>Same as def_wrong_platform_reference, in friendlier words ('work on the web app, iPhone, and the CLI'). 'iPhone' additionally fails any literal platform-name normalization.</p></div>
+<div class="miss"><b>def_dup_guidance_size_check</b> <code>DUP_GUIDANCE</code> <span class="muted">expected EDITORIAL_REVIEW</span>
+<p>No cross-surface divergence detector exists: each unit is checked against product truth, never against sibling prose. Both passages are individually 'consistent enough' to survive.</p></div>
+<div class="miss"><b>def_missing_prereq_run_analysis</b> <code>MISSING_PREREQ</code> <span class="muted">expected EDITORIAL_REVIEW</span>
+<p>A REMOVED precondition leaves no contradiction to measure. Detection would need procedure modeling (steps, preconditions), which no phase builds.</p></div>
+<div class="miss"><b>def_contradiction_upload_retention</b> <code>CONTRADICTION</code> <span class="muted">expected UNRESOLVED_CONFLICT</span>
+<p>The injected '90 days' contradicts the fact, but the passage's declared marker sits on retention.uploaded_file.days whose current value ('30 days') no longer appears — the marker's value-after-marker heuristic finds '90 days', normalizes it, mismatches… on the OTHER retention key it cannot disambiguate from. The retention-twins ambiguity again, from the contradiction side.</p></div>
+<div class="miss"><b>def_unsupported_claim_soc2</b> <code>UNSUPPORTED_CLAIM</code> <span class="muted">expected EDITORIAL_REVIEW</span>
+<p>'SOC 2 Type II certified' asserts a fact with no registered key — the deterministic extractors only project REGISTERED facts, so unregistered claims are invisible. model_extraction's closed key enum (a security control) means even the model path cannot name an unregistered fact. Detection needs an 'asserts-something-sourceless' heuristic that does not exist.</p></div>
+<div class="miss"><b>def_unsupported_claim_encryption</b> <code>UNSUPPORTED_CLAIM</code> <span class="muted">expected EDITORIAL_REVIEW</span>
+<p>Same mechanism as the SOC 2 claim: no fact key, no projection, no finding.</p></div>
+<div class="miss"><b>def_ia_problem_cli_exit_codes</b> <code>IA_PROBLEM</code> <span class="muted">expected EDITORIAL_REVIEW</span>
+<p>Content-in-the-wrong-surface needs audience/IA modeling. The exit codes are CORRECT — nothing mechanical is false — so every value-based detector stays silent.</p></div>
+<div class="miss"><b>def_stale_cli_exit_code</b> <code>STALE_CLI</code> <span class="muted">expected GROUNDED_PATCH</span>
+<p>The prose exit-code table on cli-overview is hand-authored (not generated), and T2 cli.command facts are not in the eval snapshot — nothing checks doc prose against introspection. The generated cli-reference page IS protected (hand-edit detection); the hand-written overview is the honest hole.</p></div>
+<div class="miss"><b>def_conflict_insufficient_evidence</b> <code>UNSUPPORTED_CLAIM</code> <span class="muted">expected UNRESOLVED_CONFLICT</span>
+<p>insufficient_evidence conflicts are built at patch-validation gate (a) — which only runs when a DELTA drives a patch attempt. An injected sourceless claim with no fact change never reaches the gate. Detecting it statically is the same unsourced-claim gap as UNSUPPORTED_CLAIM.</p></div>
+<div class="miss"><b>def_term_drift_lowercase</b> <code>TERM_DRIFT</code> <span class="muted">expected GROUNDED_PATCH</span>
+<p>The term extractor requires the capitalized product noun — deliberately, because lowercase matching floods on prose coincidences ('the task at hand'). Lowercase drift ('each analysis job') slips under it. A smarter heuristic (lowercase + product-noun context) is future work; loosening capitalization wholesale would trade this miss for many false positives.</p></div>
+<div class="miss"><b>def_dup_guidance_retention</b> <code>DUP_GUIDANCE</code> <span class="muted">expected EDITORIAL_REVIEW</span>
+<p>Same gap — the added '90 days' claim matches no fact value, and nothing compares the configuration page's guidance against artifacts-and-provenance.</p></div>
+<div class="miss"><b>def_missing_prereq_json_flag</b> <code>MISSING_PREREQ</code> <span class="muted">expected EDITORIAL_REVIEW</span>
+<p>Same gap: deleting the '--json first' guidance leaves grammatically clean, factually silent prose.</p></div>
+
+<h2>False positives (0)</h2>
+<p>None: all negative controls held (false-positive rate 0).</p>
+
+<h2>Falsifier behavior (model leg)</h2>
+<p>N=3 over 4 non-deterministic findings: mean suppression 0.25, spread 0. Notably, the falsifier consistently suppressed the seeded <code>def_term_drift_inproduct</code> defect ("Run Job" button label) as ambiguous — a REAL defect lost to falsifier aggressiveness:</p>
+<div class="miss"><b>def_term_drift_inproduct</b><p class="muted">The passage is a two-word UI label ("Run Job") with no context establishing that "Job" refers to the same concept as the canonical "Task" term; "job" is a plausibly distinct entity (e.g., a run/background job), so this is an unsupported term-matching inference rather than a demonstrated inconsistent value.</p>
+<p>The refutation is reasonable on its own terms — a two-word label lacks context — which is exactly the cost of defaulting to refuted under uncertainty. The deterministic detection still catches this defect; the suppression only bites where the deterministic path is silent.</p></div>
+</body>
+</html>

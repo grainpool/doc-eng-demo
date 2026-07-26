@@ -17,7 +17,8 @@
     "seed:relay": "node scripts/seed-relay.mjs",
     "dev": "pnpm --filter relay-web dev",
     "deploy:relay": "pnpm --filter relay-web run deploy",
-    "deploy:kernel": "pnpm --filter relay-web run deploy"
+    "deploy:kernel": "pnpm --filter relay-web run deploy",
+    "eval": "pnpm --filter @concord/core eval"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

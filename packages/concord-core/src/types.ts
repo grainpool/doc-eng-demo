@@ -80,7 +80,7 @@ export type FactProjection = z.infer<typeof FactProjectionSchema>;
 
 /** Phase 12 findings — recorded now, acted on in Phase 13/15. */
 export const FindingSchema = z.object({
-  kind: z.enum(["inconsistent_value", "undocumented_fact", "authority_conflict"]),
+  kind: z.enum(["inconsistent_value", "undocumented_fact", "authority_conflict", "broken_ref", "undeclared_reference"]),
   fact_key: z.string(),
   doc_unit_id: z.string().nullable(),
   projection_id: z.string().nullable(),
