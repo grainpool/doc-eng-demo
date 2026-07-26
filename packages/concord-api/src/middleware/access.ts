@@ -28,6 +28,11 @@ export interface AccessEnv {
   DEMO_ADMIN_ENABLED?: string;
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUD?: string;
+  /** Comma-separated EXACT email addresses admitted in addition to the
+   * @anthropic.com domain — the demo's operator identity (Phase 19,
+   * documented deviation in SECURITY.md). Exact match only: this is an
+   * allowlist of named individuals, never a second domain rule. */
+  ACCESS_OPERATOR_EMAILS?: string;
   /** Test-only: a JSON JWK public key. Never set in deployed config. */
   TEST_ACCESS_JWKS?: string;
 }
@@ -80,7 +85,13 @@ export async function requireAccessIdentity(
     return forbid(c, "ACCESS_INVALID_ASSERTION");
   }
   const email = String(payload.email ?? "");
-  if (!email.toLowerCase().endsWith("@anthropic.com")) {
+  const operatorEmails = (c.env.ACCESS_OPERATOR_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter((e) => e.length > 0);
+  const domainOk = email.toLowerCase().endsWith("@anthropic.com");
+  const operatorOk = operatorEmails.includes(email.toLowerCase());
+  if (!domainOk && !operatorOk) {
     return forbid(c, "ACCESS_DOMAIN_DENIED");
   }
   c.set("identity", { email, sub: String(payload.sub ?? "") });

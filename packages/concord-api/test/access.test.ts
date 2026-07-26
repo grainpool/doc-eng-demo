@@ -175,6 +175,28 @@ describe("requireAccessIdentity — the 403 matrix (AP10)", () => {
     expect(res.status).toBe(403);
     expect(((await res.json()) as { error: string }).error).toBe("ACCESS_DOMAIN_DENIED");
   });
+
+  it("ACCESS_OPERATOR_EMAILS admits the EXACT operator address — and only it", async () => {
+    const operatorEnv = {
+      ...adminEnv(),
+      ACCESS_OPERATOR_EMAILS: "operator@example.com",
+    } as typeof env;
+    // Exact operator address: admitted past the identity gate (the request
+    // then proceeds into the normal live-run flow).
+    const operator = await token({ email: "operator@example.com" });
+    const admitted = await adminFetch("/api/admin/changelab", { "Cf-Access-Jwt-Assertion": operator }, operatorEnv, LIVE_REQUEST);
+    expect(admitted.status).not.toBe(403);
+    // Same domain, different mailbox: still denied — this is an exact-match
+    // allowlist of named individuals, never a second domain rule.
+    const neighbor = await token({ email: "someone-else@example.com" });
+    const denied = await adminFetch("/api/admin/changelab", { "Cf-Access-Jwt-Assertion": neighbor }, operatorEnv, LIVE_REQUEST);
+    expect(denied.status).toBe(403);
+    expect(((await denied.json()) as { error: string }).error).toBe("ACCESS_DOMAIN_DENIED");
+    // And without the var, the operator address itself is denied (the
+    // deviation exists only where the deployed config names it).
+    const unset = await adminFetch("/api/admin/changelab", { "Cf-Access-Jwt-Assertion": operator }, adminEnv(), LIVE_REQUEST);
+    expect(unset.status).toBe(403);
+  });
 });
 
 describe("live runs — locks, limits, audit", () => {

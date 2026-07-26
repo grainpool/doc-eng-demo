@@ -39,6 +39,17 @@ itself, the app is wide open.
   verification would accept any Access team's token.
 - The `@anthropic.com` email check is repeated in code. Two independent
   gates: the edge policy and the backend.
+- **Documented deviation (Phase 19): the operator identity.** The spec
+  assumes an Anthropic-internal operator; this demo's operator
+  authenticates as `trejootoniel@gmail.com`, and the first live-run
+  attempt was correctly rejected by the backend gate
+  (`ACCESS_DOMAIN_DENIED` — observed 2026-07-26, proof the second gate
+  works even when the edge admits an identity). The accommodation is
+  `ACCESS_OPERATOR_EMAILS`: a comma-separated list of **exact** email
+  addresses admitted in addition to the domain. It is an allowlist of
+  named individuals — never a second domain rule (tested: a different
+  mailbox on the same domain stays denied; with the var unset, behavior
+  is exactly the spec's). The deployed value names the one operator.
 - Note the `workers.dev` host: requests there bypass the zone's edge
   Access entirely — which is exactly why backend verification is
   mandatory. Observed behavior: unauthenticated `/api/admin/*` on

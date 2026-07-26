@@ -33,6 +33,9 @@
     // which this deployed config deliberately does NOT set (default-off).
     "ACCESS_TEAM_DOMAIN": "grainpool.cloudflareaccess.com",
     "ACCESS_AUD": "be136ff79ded93a44ad0b615f810999d6128adcfbf86112a2e9daab09b599278",
+    // The demo's operator identity — EXACT-match addition to the
+    // @anthropic.com domain check (documented deviation, SECURITY.md).
+    "ACCESS_OPERATOR_EMAILS": "trejootoniel@gmail.com",
     // The ONLY Relay surface Concord touches (CONTRACTS-FROZEN.md §1).
     "RELAY_BASE_URL": "https://relay.otonieltrejo.com",
     // Phase 19: the estate repo the App is installed on. Not a secret —
