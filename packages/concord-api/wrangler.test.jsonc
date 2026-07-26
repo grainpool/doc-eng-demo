@@ -1,0 +1,20 @@
+{
+  // Test-only variant of wrangler.jsonc for @cloudflare/vitest-pool-workers:
+  // no queues (tests call executeRun directly), no routes/account_id, no
+  // assets. RELAY_BASE_URL points at a host the tests stub via fetchMock.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "concord-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "RELAY_BASE_URL": "https://relay.test"
+  },
+  "d1_databases": [
+    {
+      "binding": "concord_db",
+      "database_name": "concord_db",
+      "database_id": "test"
+    }
+  ]
+}

@@ -35,12 +35,39 @@ async function load(id) {
   if (!res.ok) { out.innerHTML = "<p>run not found</p>"; return; }
   const data = await res.json();
   const patchById = Object.fromEntries((data.patches ?? []).map(p => [p.id, p]));
+  const REPO1 = "https://github.com/grainpool/doc-eng-demo/blob/main/";
+  function evidencePanel(patch) {
+    if (!patch || !patch.evidence_json) return "";
+    let items = [];
+    try { items = JSON.parse(patch.evidence_json); } catch { return ""; }
+    return "<div style='border:1px solid #cbd5e1;background:#f8fafc;border-radius:6px;padding:.6rem .9rem;margin:.5rem 0'>" +
+      "<b>Evidence</b>" + items.map(e =>
+        "<div class='muted'>• <code>" + esc(e.fact_key) + "</code> (" + esc(e.tier) + ") = <code>" +
+        esc(JSON.stringify(e.value)) + "</code> — <a href='" + REPO1 + esc(String(e.locator).split("#")[0]) +
+        "'>" + esc(e.locator) + "</a> · observed " + esc(e.observed_at) + "</div>").join("") + "</div>";
+  }
+  function patchBlock(patch) {
+    if (!patch) return "";
+    return "<div class='muted'>patch <b>" + esc(patch.origin ?? "deterministic") + "</b>" +
+      (Number(patch.requires_review) ? " · <span style='color:#b35900'>REVIEW REQUIRED — never auto-applied</span>" : " · may auto-apply") +
+      (patch.changed_because ? "<br>why: " + esc(patch.changed_because) : "") +
+      (patch.needs_human_because ? "<br>needs a human: " + esc(patch.needs_human_because) : "") +
+      "</div>" + evidencePanel(patch) + "<pre>" + esc(patch.unified) + "</pre>";
+  }
   const ORDER = ["DETERMINISTIC_REGEN", "GROUNDED_PATCH", "EDITORIAL_REVIEW", "UNRESOLVED_CONFLICT", "NO_ACTION"];
   const groups = ORDER.map(action => [action, (data.impacts ?? []).filter(i => i.action === action)])
     .filter(([, list]) => list.length > 0);
   out.innerHTML =
-    "<h2>" + esc(data.run.id) + " — " + esc(data.run.status) + "</h2>" +
-    "<p class='muted'>started " + esc(data.run.started_at) + "</p>" +
+    "<h2>" + esc(data.run.id) + " — " + esc(data.run.status) +
+    (data.run.reason ? " <span class='muted'>(" + esc(data.run.reason) + ")</span>" : "") + "</h2>" +
+    "<p class='muted'>started " + esc(data.run.started_at) +
+    (data.estimated_cost_usd != null ? " · estimated model cost $" + esc(data.estimated_cost_usd) : "") + "</p>" +
+    ((data.model_calls ?? []).length
+      ? "<p class='muted'>" + data.model_calls.map(m =>
+          esc(m.purpose) + ": " + esc(m.calls) + " call(s), " + esc(m.input_tokens) + " in / " +
+          esc(m.output_tokens) + " out, cache " + esc(m.cache_read ?? 0) + " read / " +
+          esc(m.cache_creation ?? 0) + " written").join(" · ") + "</p>"
+      : "") +
     (data.warnings ?? []).map(w =>
       "<div class='impact' style='border-color:#b35900'><b>⚠ " + esc(w.kind) + "</b> <code>" + esc(w.path) + "</code>" +
       "<p class='muted'>" + esc(w.detail) + "</p></div>").join("") +
@@ -50,11 +77,12 @@ async function load(id) {
         const patch = impact.patch_id ? patchById[impact.patch_id] : null;
         return "<div class='impact'>" +
           "<div><span class='muted'>rule " + esc(impact.classification_rule) +
-          " · disposition " + esc(impact.disposition ?? "—") + "</span></div>" +
+          " · disposition " + esc(impact.disposition ?? "—") +
+          (impact.resolution_note ? " · " + esc(impact.resolution_note) : "") + "</span></div>" +
           "<div><code>" + esc(impact.fact_key) + "</code> → <code>" + esc(impact.doc_unit_id) + "</code></div>" +
           "<div class='muted'>Δ " + esc(impact.delta_json) + "</div>" +
           "<p>" + esc(impact.explanation) + "</p>" +
-          (patch ? "<pre>" + esc(patch.unified) + "</pre>" : "") +
+          patchBlock(patch) +
           "</div>";
       }).join("")).join("") +
     ((data.findings ?? []).length
@@ -70,6 +98,16 @@ document.getElementById("start").onclick = async () => {
   const res = await fetch("/api/runs", { method: "POST" });
   const data = await res.json();
   document.getElementById("runId").value = data.run_id;
+  // Queued runs (Phase 14): poll until the consumer finishes.
+  out.innerHTML = "<p class='muted'>run " + esc(data.run_id) + " queued…</p>";
+  for (let i = 0; i < 120; i++) {
+    await new Promise(r => setTimeout(r, 2500));
+    const check = await fetch("/api/public/runs/" + encodeURIComponent(data.run_id));
+    if (!check.ok) continue;
+    const body = await check.json();
+    if (["completed", "failed", "partial"].includes(body.run.status)) break;
+    out.innerHTML = "<p class='muted'>run " + esc(data.run_id) + " " + esc(body.run.status) + "…</p>";
+  }
   await load(data.run_id);
 };
 </script>

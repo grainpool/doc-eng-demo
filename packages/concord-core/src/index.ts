@@ -39,6 +39,21 @@ export {
   type ExtractionRefusal,
 } from "./extractors.js";
 export {
+  pathAllowlisted,
+  bodyContentSafe,
+  validatePatch,
+  type PatchVerdict,
+  type ValidatePatchInput,
+} from "./patch-validate.js";
+export {
+  PATCH_SYSTEM_PROMPT,
+  EDITORIAL_SYSTEM_PROMPT,
+  PATCH_PROPOSAL_OUTPUT_SCHEMA,
+  buildPatchUserPrompt,
+  evidenceFromDelta,
+  parsePatchProposal,
+} from "./patch-prompts.js";
+export {
   MODEL_EXTRACTION_CONFIDENCE_CAP,
   MODEL_EXTRACTION_SCHEMA,
   buildModelExtractionPrompt,

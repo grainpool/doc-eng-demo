@@ -37,7 +37,11 @@ describe("coupling (I13)", () => {
           // convention: Relay calls are made via relayFetch() and its two
           // constants — anything else matching a Relay route shape fails.
           if (ALLOWED.has(literal)) continue;
-          if (literal.startsWith("/api/runs") || literal.startsWith("/api/public")) {
+          if (
+            literal.startsWith("/api/runs") ||
+            literal.startsWith("/api/public") ||
+            literal.startsWith("/api/admin") // Concord's own admin surface (Phase 14)
+          ) {
             continue;
           }
           offenders.push(`${file}: ${literal}`);

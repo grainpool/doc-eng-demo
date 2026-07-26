@@ -26,11 +26,18 @@ export interface ModelExtractionResult {
   first_error: string | null;
 }
 
+type Usage = {
+  input_tokens: number;
+  output_tokens: number;
+  cache_creation_input_tokens?: number | null;
+  cache_read_input_tokens?: number | null;
+};
+
 async function extractOne(
   client: Anthropic,
   unit: DocUnit,
   detectedAt: string,
-): Promise<{ projections: FactProjection[]; refused: boolean }> {
+): Promise<{ projections: FactProjection[]; refused: boolean; usage: Usage }> {
   const { system, user } = buildModelExtractionPrompt(unit);
   // No temperature/top_p/top_k/budget_tokens — rejected by this model (G13).
   const message = await client.messages.create({
@@ -43,25 +50,33 @@ async function extractOne(
         schema: MODEL_EXTRACTION_SCHEMA as unknown as Record<string, unknown>,
       },
     },
-    system,
+    // The system prompt is the stable prefix — cache it; the unit body and
+    // everything volatile is strictly after the breakpoint.
+    system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: user }],
   });
   // stop_reason is checked BEFORE content is read, on every call (G11).
   if (message.stop_reason === "refusal") {
-    return { projections: [], refused: true };
+    return { projections: [], refused: true, usage: message.usage };
   }
   const text = message.content.find(
     (block): block is { type: "text"; text: string; citations: null } =>
       block.type === "text",
   )?.text;
-  if (!text) return { projections: [], refused: false };
-  return { projections: parseModelExtraction(unit, detectedAt, text), refused: false };
+  if (!text) return { projections: [], refused: false, usage: message.usage };
+  return {
+    projections: parseModelExtraction(unit, detectedAt, text),
+    refused: false,
+    usage: message.usage,
+  };
 }
 
 export async function runModelExtraction(
   apiKey: string,
   units: DocUnit[],
   detectedAt: string,
+  /** Spend attribution (Phase 14): called once per completed call. */
+  onUsage?: (usage: Usage) => Promise<void>,
 ): Promise<ModelExtractionResult> {
   const client = new Anthropic({ apiKey });
   const result: ModelExtractionResult = {
@@ -86,6 +101,7 @@ export async function runModelExtraction(
         }
         continue;
       }
+      if (onUsage) await onUsage(outcome.value.usage);
       if (outcome.value.refused) result.refused += 1;
       result.projections.push(...outcome.value.projections);
     }

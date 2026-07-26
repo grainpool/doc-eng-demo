@@ -1,278 +1,63 @@
 import { Hono } from "hono";
-import {
-  ProductTruthSnapshotSchema,
-  newId,
-  type ProductTruthSnapshot,
-} from "@relay/contracts";
-import {
-  arbitrateAll,
-  ownerOfFact,
-  runPipeline,
-  unitsNeedingModelExtraction,
-  consistencyFindings,
-  type FactProjection,
-  type Finding,
-} from "@concord/core";
-import { CliIntrospectionSchema } from "@relay/contracts";
-import cliIntrospection from "../../../fixtures/cli-introspection.json";
-import { ESTATE_FILES } from "./estate.generated.js";
-import { runModelExtraction } from "./model-extract.js";
+import Anthropic from "@anthropic-ai/sdk";
+import { ProductTruthSnapshotSchema, newId, type ProductTruthSnapshot } from "@relay/contracts";
+import { arbitrateAll, ownerOfFact } from "@concord/core";
+import { executeRun, type MessageLike, type RunDeps, type RunEnv, type RunOptions } from "./run.js";
 
-interface Env {
+interface Env extends RunEnv {
   ASSETS: Fetcher;
-  concord_db: D1Database;
-  RELAY_BASE_URL: string;
-  ANTHROPIC_API_KEY?: string;
+  RUN_QUEUE?: Queue<QueuedRun>;
 }
 
-/** The only two Relay endpoints Concord may call (CONTRACTS-FROZEN.md §1). */
-const RELAY_PRODUCT_TRUTH = "/api/product-truth";
-const RELAY_COPY_REGISTRY = "/api/copy-registry";
-
-/** Bound on model_extraction fan-out per run (spend is not a rounding error). */
-const MODEL_EXTRACTION_MAX_UNITS = 10;
+interface QueuedRun {
+  run_id: string;
+  options: RunOptions;
+}
 
 const app = new Hono<{ Bindings: Env }>();
 
-async function step(
-  env: Env,
-  runId: string,
-  name: string,
-  detail: unknown,
-): Promise<void> {
-  await env.concord_db
-    .prepare(
-      "INSERT INTO run_step (id, run_id, step, detail_json, created_at) VALUES (?, ?, ?, ?, ?)",
-    )
-    .bind(newId("run"), runId, name, JSON.stringify(detail), new Date().toISOString())
-    .run();
+function realDeps(env: Env): RunDeps {
+  if (!env.ANTHROPIC_API_KEY) return { createMessage: null };
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  return {
+    createMessage: (params) =>
+      client.messages.create(
+        params as unknown as Parameters<typeof client.messages.create>[0],
+      ) as unknown as Promise<MessageLike>,
+  };
 }
 
-async function batchAll(env: Env, statements: D1PreparedStatement[]): Promise<void> {
-  const CHUNK = 50;
-  for (let i = 0; i < statements.length; i += CHUNK) {
-    await env.concord_db.batch(statements.slice(i, i + CHUNK));
-  }
-}
-
-app.post("/api/runs", async (c) => {
+/**
+ * Enqueue a run (Phase 14): validate, write a `queued` row, enqueue, return
+ * the id immediately. The consumer gets a 15-minute CPU budget for the
+ * 5–15 model calls a run makes. Unauthenticated for now — Phase 18 gates it.
+ */
+async function enqueueRun(
+  c: { env: Env; req: { query(name: string): string | undefined } },
+  executionCtx: { waitUntil(promise: Promise<unknown>): void },
+): Promise<{ run_id: string; status: string }> {
   const runId = newId("run");
-  const startedAt = new Date().toISOString();
-  const wantModelExtraction = c.req.query("model_extraction") === "1";
+  const options: RunOptions = {
+    modelExtraction: c.req.query("model_extraction") === "1",
+  };
+  const cap = Number(c.req.query("max_calls") ?? "");
+  if (Number.isInteger(cap) && cap > 0 && cap <= 20) options.maxCallsPerRun = cap;
   await c.env.concord_db
-    .prepare("INSERT INTO run (id, started_at, status) VALUES (?, ?, 'running')")
-    .bind(runId, startedAt)
+    .prepare("INSERT INTO run (id, started_at, status) VALUES (?, ?, 'queued')")
+    .bind(runId, new Date().toISOString())
     .run();
-
-  try {
-    // DETECT input: the current authoritative snapshot from Relay…
-    const truthRes = await fetch(`${c.env.RELAY_BASE_URL}${RELAY_PRODUCT_TRUTH}`);
-    const current: ProductTruthSnapshot = ProductTruthSnapshotSchema.parse(
-      await truthRes.json(),
-    );
-    // …and a freshness cross-check of the build-pinned copy against the live
-    // registry (the second permitted endpoint).
-    const registryRes = await fetch(`${c.env.RELAY_BASE_URL}${RELAY_COPY_REGISTRY}`);
-    const registry = (await registryRes.json()) as { entries: { id: string }[] };
-    await step(c.env, runId, "fetch", {
-      facts: current.facts.length,
-      registry_entries: registry.entries.length,
-    });
-
-    const previousRow = await c.env.concord_db
-      .prepare("SELECT snapshot_json FROM snapshot ORDER BY taken_at DESC LIMIT 1")
-      .first<{ snapshot_json: string }>();
-    await c.env.concord_db
-      .prepare("INSERT INTO snapshot (id, taken_at, snapshot_json) VALUES (?, ?, ?)")
-      .bind(current.snapshot_id, new Date().toISOString(), JSON.stringify(current))
-      .run();
-
-    const previous: ProductTruthSnapshot = previousRow
-      ? ProductTruthSnapshotSchema.parse(JSON.parse(previousRow.snapshot_json))
-      : current; // first run: baseline, no deltas by definition
-
-    const out = runPipeline({
-      previous,
-      current,
-      files: ESTATE_FILES,
-      detectedAt: startedAt,
-      cli: CliIntrospectionSchema.parse(cliIntrospection),
-    });
-    await step(c.env, runId, "pipeline", {
-      deltas: out.deltas.length,
-      units: out.units.length,
-      projections: out.projections.length,
-      impacts: out.impacts.length,
-      patches: out.patches.length,
-      findings: out.findings.length,
-      warnings: out.warnings.length,
-      generated_paths: out.generated_paths,
-      refusals: out.refusals,
-    });
-
-    // model_extraction: candidate generator ONLY, on units where the
-    // deterministic extractors found nothing, bounded and opt-in.
-    let modelProjections: FactProjection[] = [];
-    if (wantModelExtraction && c.env.ANTHROPIC_API_KEY) {
-      const eligible = unitsNeedingModelExtraction(out.units, out.projections);
-      const selected = eligible.slice(0, MODEL_EXTRACTION_MAX_UNITS);
-      const extraction = await runModelExtraction(
-        c.env.ANTHROPIC_API_KEY,
-        selected,
-        startedAt,
-      );
-      modelProjections = extraction.projections;
-      await step(c.env, runId, "model_extraction", {
-        eligible: eligible.length,
-        attempted: extraction.attempted,
-        skipped: eligible.length - selected.length,
-        refused: extraction.refused,
-        failed: extraction.failed,
-        first_error: extraction.first_error,
-        candidates: modelProjections.length,
-      });
-    }
-    const allProjections = [...out.projections, ...modelProjections];
-    const modelFindings: Finding[] =
-      modelProjections.length > 0
-        ? consistencyFindings(current.facts, modelProjections)
-        : [];
-    const allFindings = [...out.findings, ...modelFindings];
-
-    const statements: D1PreparedStatement[] = [];
-    for (const unit of out.units) {
-      statements.push(
-        c.env.concord_db
-          .prepare(
-            "INSERT INTO doc_unit (id, run_id, surface, path, anchor, title, body_sha256, owner, generated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-          )
-          .bind(
-            unit.id,
-            runId,
-            unit.surface,
-            unit.path,
-            unit.anchor,
-            unit.title,
-            unit.body_sha256,
-            unit.owner,
-            unit.generated ? 1 : 0,
-          ),
-      );
-    }
-    for (const projection of allProjections) {
-      statements.push(
-        c.env.concord_db
-          .prepare(
-            "INSERT INTO fact_projection (id, run_id, fact_key, doc_unit_id, mode, asserted_value_json, extractor, confidence, span_start, span_end, detected_at, normalized_value_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-          )
-          .bind(
-            projection.id,
-            runId,
-            projection.fact_key,
-            projection.doc_unit_id,
-            projection.mode,
-            JSON.stringify(projection.asserted_value),
-            projection.extractor,
-            projection.confidence,
-            projection.span?.start ?? null,
-            projection.span?.end ?? null,
-            projection.detected_at,
-            JSON.stringify(projection.normalized_value ?? null),
-          ),
-      );
-    }
-    for (const finding of allFindings) {
-      statements.push(
-        c.env.concord_db
-          .prepare(
-            "INSERT INTO finding (id, run_id, kind, fact_key, doc_unit_id, projection_id, detail, owner, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-          )
-          .bind(
-            // Findings are not a contract object (ID_PREFIXES is frozen).
-            `fnd_${crypto.randomUUID()}`,
-            runId,
-            finding.kind,
-            finding.fact_key,
-            finding.doc_unit_id,
-            finding.projection_id,
-            finding.detail,
-            finding.owner,
-            startedAt,
-          ),
-      );
-    }
-    const patchIds = new Map<string, string>();
-    for (const patch of out.patches) {
-      const id = newId("pat");
-      patchIds.set(patch.path, id);
-      statements.push(
-        c.env.concord_db
-          .prepare(
-            "INSERT INTO patch (id, run_id, path, before_text, after_text, unified) VALUES (?, ?, ?, ?, ?, ?)",
-          )
-          .bind(id, runId, patch.path, patch.before, patch.after, patch.unified),
-      );
-    }
-    const unitByIdForPatch = new Map(out.units.map((u) => [u.id, u]));
-    for (const impact of out.impacts) {
-      const unit = unitByIdForPatch.get(impact.doc_unit_id);
-      statements.push(
-        c.env.concord_db
-          .prepare(
-            "INSERT INTO impact (id, run_id, fact_key, delta_json, doc_unit_id, projection_id, action, classification_rule, explanation, disposition, patch_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-          )
-          .bind(
-            newId("imp"),
-            runId,
-            impact.fact_key,
-            JSON.stringify(impact.delta),
-            impact.doc_unit_id,
-            impact.projection_id,
-            impact.action,
-            impact.classification_rule,
-            impact.explanation,
-            impact.disposition,
-            (unit && patchIds.get(unit.path)) ?? null,
-          ),
-      );
-    }
-    for (const warning of out.warnings) {
-      statements.push(
-        c.env.concord_db
-          .prepare(
-            "INSERT INTO run_warning (id, run_id, kind, path, detail, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-          )
-          .bind(`wrn_${crypto.randomUUID()}`, runId, warning.kind, warning.path, warning.detail, startedAt),
-      );
-    }
-    await batchAll(c.env, statements);
-    await c.env.concord_db
-      .prepare("UPDATE run SET status = 'completed', finished_at = ? WHERE id = ?")
-      .bind(new Date().toISOString(), runId)
-      .run();
-    return c.json({
-      run_id: runId,
-      deltas: out.deltas.length,
-      doc_units: out.units.length,
-      projections: allProjections.length,
-      model_candidates: modelProjections.length,
-      impacts: out.impacts.length,
-      patches: out.patches.length,
-      findings: allFindings.length,
-      warnings: out.warnings.length,
-      refusals: out.refusals.length,
-    });
-  } catch (e) {
-    await c.env.concord_db
-      .prepare("UPDATE run SET status = 'failed', finished_at = ? WHERE id = ?")
-      .bind(new Date().toISOString(), runId)
-      .run();
-    return c.json(
-      { run_id: runId, error: e instanceof Error ? e.message.slice(0, 200) : "failed" },
-      500,
-    );
+  if (c.env.RUN_QUEUE) {
+    await c.env.RUN_QUEUE.send({ run_id: runId, options });
+  } else {
+    // Local/dev fallback: no queue binding — run inline off the request.
+    executionCtx.waitUntil(executeRun(c.env, realDeps(c.env), runId, options));
   }
-});
+  return { run_id: runId, status: "queued" };
+}
+
+app.post("/api/admin/runs", async (c) => c.json(await enqueueRun(c, c.executionCtx)));
+// The public start button uses the same enqueue path.
+app.post("/api/runs", async (c) => c.json(await enqueueRun(c, c.executionCtx)));
 
 app.get("/api/public/runs/:id", async (c) => {
   const runId = c.req.param("id");
@@ -281,17 +66,16 @@ app.get("/api/public/runs/:id", async (c) => {
     .bind(runId)
     .first();
   if (!run) return c.json({ error: "not_found" }, 404);
-  const [steps, impacts, patches, findings, warnings] = await Promise.all([
+  const [steps, impacts, patches, findings, warnings, modelCalls] = await Promise.all([
     c.env.concord_db
       .prepare("SELECT step, detail_json, created_at FROM run_step WHERE run_id = ? ORDER BY created_at")
       .bind(runId)
       .all(),
+    c.env.concord_db.prepare("SELECT * FROM impact WHERE run_id = ?").bind(runId).all(),
     c.env.concord_db
-      .prepare("SELECT * FROM impact WHERE run_id = ?")
-      .bind(runId)
-      .all(),
-    c.env.concord_db
-      .prepare("SELECT id, path, unified FROM patch WHERE run_id = ?")
+      .prepare(
+        "SELECT id, path, unified, origin, doc_unit_id, impact_ids_json, evidence_json, requires_review, validation_json, changed_because, needs_human_because FROM patch WHERE run_id = ?",
+      )
       .bind(runId)
       .all(),
     c.env.concord_db
@@ -302,7 +86,17 @@ app.get("/api/public/runs/:id", async (c) => {
       .prepare("SELECT kind, path, detail FROM run_warning WHERE run_id = ?")
       .bind(runId)
       .all(),
+    c.env.concord_db
+      .prepare(
+        "SELECT purpose, COUNT(*) AS calls, SUM(input_tokens) AS input_tokens, SUM(output_tokens) AS output_tokens, SUM(cache_creation_input_tokens) AS cache_creation, SUM(cache_read_input_tokens) AS cache_read, SUM(cost_usd) AS cost_usd FROM model_call WHERE run_id = ? GROUP BY purpose",
+      )
+      .bind(runId)
+      .all(),
   ]);
+  const cost = (modelCalls.results as { cost_usd: number }[]).reduce(
+    (sum, r) => sum + (r.cost_usd ?? 0),
+    0,
+  );
   return c.json({
     run,
     steps: steps.results,
@@ -310,6 +104,8 @@ app.get("/api/public/runs/:id", async (c) => {
     patches: patches.results,
     findings: findings.results,
     warnings: warnings.results,
+    model_calls: modelCalls.results,
+    estimated_cost_usd: Number(cost.toFixed(4)),
   });
 });
 
@@ -320,9 +116,7 @@ interface LatestContext {
 
 async function latestContext(env: Env): Promise<LatestContext | null> {
   const run = await env.concord_db
-    .prepare(
-      "SELECT id FROM run WHERE status = 'completed' ORDER BY started_at DESC LIMIT 1",
-    )
+    .prepare("SELECT id FROM run WHERE status IN ('completed','partial') ORDER BY started_at DESC LIMIT 1")
     .first<{ id: string }>();
   const snapshotRow = await env.concord_db
     .prepare("SELECT snapshot_json FROM snapshot ORDER BY taken_at DESC LIMIT 1")
@@ -339,9 +133,7 @@ app.get("/api/public/facts", async (c) => {
   const ctx = await latestContext(c.env);
   if (!ctx) return c.json({ error: "no_completed_run" }, 404);
   const counts = await c.env.concord_db
-    .prepare(
-      "SELECT fact_key, COUNT(*) AS n FROM fact_projection WHERE run_id = ? GROUP BY fact_key",
-    )
+    .prepare("SELECT fact_key, COUNT(*) AS n FROM fact_projection WHERE run_id = ? GROUP BY fact_key")
     .bind(ctx.runId)
     .all<{ fact_key: string; n: number }>();
   const countByKey = new Map(counts.results.map((r) => [r.fact_key, r.n]));
@@ -390,4 +182,12 @@ app.get("/api/public/facts/:key", async (c) => {
   });
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  async queue(batch: MessageBatch<QueuedRun>, env: Env): Promise<void> {
+    for (const message of batch.messages) {
+      await executeRun(env, realDeps(env), message.body.run_id, message.body.options);
+      message.ack();
+    }
+  },
+};

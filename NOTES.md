@@ -65,3 +65,17 @@ Ideas noted during a phase and deliberately not built in it (constraints.md AP11
   FIXTURE. If the fixture and the live `relay introspect --json` drift, CI's
   staleness gate catches it in repo 1, but Concord itself never verifies —
   consider a T2-vs-fixture freshness check in Phase 15's conflict machinery.
+
+## From Phase 14
+
+- The editorial-draft call reuses buildPatchUserPrompt; a dedicated
+  editorial user-prompt shape (naming the anchor/URL occurrence explicitly)
+  would give reviewers better drafts. Revisit when Phase 15 escalations
+  carry owners into the UI.
+- Queue consumer retries (max_retries 1) re-run the WHOLE executeRun on
+  transient failure; the run row goes back to running. Idempotency holds at
+  the D1 level only for the run row — repeated doc_unit/projection inserts
+  on a retried run would violate PKs. Acceptable now (failed runs re-fail
+  cleanly); Phase 17 should make the consumer resume-aware.
+- The daily spend cap is shared with model_extraction and both AI paths;
+  there is no per-purpose budget split. Phase 20's audit may want one.

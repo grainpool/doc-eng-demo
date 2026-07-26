@@ -96,4 +96,19 @@ export {
   CLI_EXIT_CODES,
   type CliIntrospection,
 } from "./cli.js";
+export {
+  EvidenceSchema,
+  PATCH_ORIGINS,
+  PatchOriginSchema,
+  EDITORIAL_RISKS,
+  PatchProposalSchema,
+  PatchValidationSchema,
+  RUN_STATUSES,
+  RunStatusSchema,
+  type Evidence,
+  type PatchOrigin,
+  type PatchProposal,
+  type PatchValidation,
+  type RunStatus,
+} from "./patches.js";
 export { CONTRACTS_VERSION } from "./version.js";

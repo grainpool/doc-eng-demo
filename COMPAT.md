@@ -225,3 +225,17 @@ Narration: streamed, ~4 s. Both write `model_call` rows (purpose, tokens, prompt
   seconds after `wrangler deploy`/`secret put` can execute the previous version (observed: a
   redeployed step schema missing its new field; a re-put secret still 401ing one run later).
   Verification needs a delay or polling, as with the kernel container (Phase 04 note).
+
+## Phase 14 additions
+
+- **`fetchMock` from `cloudflare:test` is undefined** under @cloudflare/vitest-pool-workers 0.18 +
+  vitest 4 in this setup (`fetchMock.activate()` throws). Outbound HTTP in run tests is therefore
+  injected through `RunDeps.fetchJson` instead of intercepted — which is the better seam anyway.
+- **`wrangler types` does not emit the `cloudflare:test` ProvidedEnv augmentation**; tests need a
+  hand-written `test/env.d.ts` (`declare module "cloudflare:test" { interface ProvidedEnv extends Env }`)
+  alongside the generated `worker-configuration.d.ts`.
+- Prompt-cache behavior across a run: three AI calls fired concurrently in one batch each wrote the
+  cache (`cache_creation > 0`) but read nothing — same-prefix reads only materialize for calls issued
+  AFTER a write completes (second batch of a >5 fan-out, or a later run within the TTL). Cache-read
+  verification therefore uses the 10-unit model-extraction fan-out (two batches), not a rerun —
+  a rerun with no delta makes zero calls by design.
