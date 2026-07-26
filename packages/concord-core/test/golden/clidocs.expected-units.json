@@ -1,5 +1,12 @@
 [
   {
+    "id": "clidocs:cli-docs/README.md#page",
+    "path": "cli-docs/README.md",
+    "anchor": "page",
+    "title": "relay CLI reference (generated)",
+    "generated": true
+  },
+  {
     "id": "clidocs:cli-docs/artifacts.md#page",
     "path": "cli-docs/artifacts.md",
     "anchor": "page",
@@ -32,13 +39,6 @@
     "path": "cli-docs/projects.md",
     "anchor": "page",
     "title": "relay projects",
-    "generated": true
-  },
-  {
-    "id": "clidocs:cli-docs/README.md#page",
-    "path": "cli-docs/README.md",
-    "anchor": "page",
-    "title": "relay CLI reference (generated)",
     "generated": true
   },
   {

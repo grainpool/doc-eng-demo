@@ -32,6 +32,9 @@ export function readEstate(): { path: string; content: string }[] {
     }
   };
   walk(ESTATE);
+  // Deterministic order: readdir order differs across filesystems (Linux
+  // sorts case-sensitively, Windows does not) and golden files depend on it.
+  files.sort((a, b) => (a.path < b.path ? -1 : 1));
   return files;
 }
 
