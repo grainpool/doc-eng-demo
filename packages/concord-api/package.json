@@ -17,7 +17,8 @@
     "@concord/core": "workspace:*",
     "@relay/contracts": "workspace:*",
     "hono": "^4.12.0",
-    "zod": "^4"
+    "zod": "^4",
+    "jose": "^6"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

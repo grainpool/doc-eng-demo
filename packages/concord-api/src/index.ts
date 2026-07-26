@@ -6,7 +6,10 @@ import {
   ChangeLabRequestSchema,
   ChangeLabRunSchema,
 } from "@relay/contracts";
+import { validateMutation } from "@concord/core";
+import editableUnits from "../../../fixtures/changelab/editable-units.json";
 import { assembleChangeLabRun } from "./changelab.js";
+import { requireAccessIdentity, type AccessIdentity } from "./middleware/access.js";
 import { REPLAY_RUNS } from "./runs.generated.js";
 import { executeRun, type MessageLike, type RunDeps, type RunEnv, type RunOptions } from "./run.js";
 
@@ -23,7 +26,12 @@ interface QueuedRun {
   options: RunOptions;
 }
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: { identity: AccessIdentity } }>();
+
+// Phase 18: the ENTIRE admin surface sits behind verified Access identity.
+// Default-off (404 when DEMO_ADMIN_ENABLED unset — invariant I12); missing
+// or invalid Cf-Access-Jwt-Assertion → 403; iss+aud+exp+domain all checked.
+app.use("/api/admin/*", requireAccessIdentity as never);
 
 function realDeps(env: Env): RunDeps {
   if (!env.ANTHROPIC_API_KEY) return { createMessage: null };
@@ -70,13 +78,86 @@ async function enqueueRun(
   return { run_id: runId, status: "queued" };
 }
 
-app.post("/api/admin/runs", async (c) => {
-  // Unreachable in the deployed public configuration (DEMO_ADMIN_ENABLED
-  // unset). Phase 18 replaces this stopgap with Cloudflare Access.
-  if (c.env.DEMO_ADMIN_ENABLED !== "1") {
-    return c.json({ error: "admin_disabled" }, 403);
+app.post("/api/admin/runs", async (c) => c.json(await enqueueRun(c, c.executionCtx, true)));
+
+/** Phase 18 — live Change-Lab run: validated mutation → working copy →
+ * real queued run, watched through THE SAME renderer as replay. */
+app.post("/api/admin/changelab", async (c) => {
+  const identity = c.get("identity");
+  const raw = await c.req.text();
+  if (raw.length > 16_384) return c.json({ error: "BODY_TOO_LARGE" }, 413);
+  const parsed = ChangeLabRequestSchema.safeParse(JSON.parse(raw || "null"));
+  if (!parsed.success || parsed.data.mode !== "live") {
+    return c.json({ error: "bad_request" }, 400);
   }
-  return c.json(await enqueueRun(c, c.executionCtx, true));
+  const auditBase = {
+    email: identity.email,
+    mutation: JSON.stringify(parsed.data.mutation),
+  };
+  async function audit(outcome: string, runId: string | null): Promise<void> {
+    await c.env.concord_db
+      .prepare(
+        "INSERT INTO audit_log (id, ts, access_email, mutation_json, run_id, outcome, pr_url) VALUES (?, ?, ?, ?, ?, ?, NULL)",
+      )
+      .bind(`aud_${crypto.randomUUID()}`, new Date().toISOString(), auditBase.email, auditBase.mutation, runId, outcome)
+      .run();
+  }
+  const verdict = validateMutation(
+    parsed.data.mutation,
+    (editableUnits as { editable_doc_unit_ids: string[] }).editable_doc_unit_ids,
+  );
+  if (!verdict.ok) {
+    await audit(`rejected:${verdict.code}`, null);
+    return c.json({ error: verdict.code, detail: verdict.detail }, 400);
+  }
+  // One concurrent live run — a second request names the in-flight run.
+  const inFlight = await c.env.concord_db
+    .prepare("SELECT id FROM run WHERE mode = 'live' AND status IN ('queued','running') LIMIT 1")
+    .first<{ id: string }>();
+  if (inFlight) {
+    await audit("rejected:LIVE_RUN_IN_FLIGHT", inFlight.id);
+    return c.json({ error: "LIVE_RUN_IN_FLIGHT", in_flight_run_id: inFlight.id }, 409);
+  }
+  // ≤ 5 live runs per identity per hour.
+  const hourAgo = new Date(Date.now() - 3_600_000).toISOString();
+  const recent = await c.env.concord_db
+    .prepare("SELECT COUNT(*) AS n FROM audit_log WHERE access_email = ? AND ts >= ? AND outcome NOT LIKE 'rejected:%'")
+    .bind(identity.email, hourAgo)
+    .first<{ n: number }>();
+  if ((recent?.n ?? 0) >= 5) {
+    await audit("rejected:RATE_LIMITED", null);
+    return c.json({ error: "RATE_LIMITED", detail: "≤ 5 live runs per identity per hour" }, 429);
+  }
+  const runId = newId("run");
+  const options: RunOptions = { ai: true, mutation: parsed.data.mutation };
+  await c.env.concord_db
+    .prepare("INSERT INTO run (id, started_at, status, mode, mutation_json) VALUES (?, ?, 'queued', 'live', ?)")
+    .bind(runId, new Date().toISOString(), auditBase.mutation)
+    .run();
+  await audit("queued", runId);
+  if (c.env.RUN_QUEUE) {
+    await c.env.RUN_QUEUE.send({ run_id: runId, options });
+  } else {
+    c.executionCtx.waitUntil(executeRun(c.env, realDeps(c.env), runId, options));
+  }
+  return c.json({ run_id: runId, status: "queued", mode: "live" });
+});
+
+/** Public audit view — email redacted to its domain (security.md §2). */
+app.get("/api/public/audit", async (c) => {
+  const rows = await c.env.concord_db
+    .prepare("SELECT ts, access_email, mutation_json, run_id, outcome, pr_url FROM audit_log ORDER BY ts DESC LIMIT 50")
+    .all<{ ts: string; access_email: string; mutation_json: string; run_id: string | null; outcome: string; pr_url: string | null }>();
+  return c.json({
+    entries: rows.results.map((r) => ({
+      ts: r.ts,
+      identity_domain: r.access_email.includes("@") ? `@${r.access_email.split("@")[1]}` : "(unknown)",
+      mutation: JSON.parse(r.mutation_json),
+      run_id: r.run_id,
+      outcome: r.outcome,
+      pr_url: r.pr_url,
+    })),
+  });
 });
 // The public start button: deterministic-only run, zero model calls (I11).
 app.post("/api/runs", async (c) => c.json(await enqueueRun(c, c.executionCtx, false)));

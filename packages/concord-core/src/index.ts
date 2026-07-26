@@ -121,6 +121,11 @@ export {
   type Normalized,
   type FactUnit,
 } from "./normalize-value.js";
+export {
+  validateMutation,
+  validateDocBody,
+  type MutationVerdict,
+} from "./mutation-validate.js";
 export { checkInternalLinks } from "./linkcheck.js";
 export { makeDiff } from "./diff.js";
 export { sha256Hex } from "./hash.js";

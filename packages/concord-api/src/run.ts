@@ -30,6 +30,8 @@ import {
   type Impact,
 } from "@concord/core";
 import type { ConflictDraft, Evidence } from "@relay/contracts";
+import type { AllowedMutation } from "@relay/contracts";
+import { parseEstate } from "@concord/core";
 import cliIntrospection from "../../../fixtures/cli-introspection.json";
 import { ESTATE_FILES } from "./estate.generated.js";
 import { runModelExtraction } from "./model-extract.js";
@@ -79,6 +81,10 @@ export interface RunOptions {
   modelExtraction?: boolean;
   maxCallsPerRun?: number;
   dailyCapUsd?: number;
+  /** Change-Lab live mutation (Phase 18): applied to a WORKING COPY of the
+   * snapshot/estate — never to deployed Relay config. Validated by the
+   * admin route before it reaches here. */
+  mutation?: AllowedMutation;
 }
 
 /** Bounded fan-out (G9): never more than `limit` tasks in flight. */
@@ -207,10 +213,37 @@ export async function executeRun(
       ? ProductTruthSnapshotSchema.parse(JSON.parse(previousRow.snapshot_json))
       : current;
 
+    // Change-Lab live mutation: a WORKING COPY only. The base (unmutated)
+    // snapshot was stored above, so the mutation never poisons the next
+    // run's `previous`.
+    let effectiveCurrent = current;
+    let effectiveFiles: ReadonlyArray<{ path: string; content: string }> = ESTATE_FILES;
+    if (options.mutation?.kind === "fact_value") {
+      const mutation = options.mutation;
+      effectiveCurrent = {
+        ...current,
+        facts: current.facts.map((f) =>
+          f.key === mutation.fact_key
+            ? { ...f, value: mutation.value as (typeof f)["value"], observed_at: startedAt }
+            : f,
+        ),
+      };
+    } else if (options.mutation?.kind === "doc_body") {
+      const mutation = options.mutation;
+      const unit = parseEstate(ESTATE_FILES).find((u) => u.id === mutation.doc_unit_id);
+      if (unit) {
+        effectiveFiles = ESTATE_FILES.map((f) =>
+          f.path === unit.path
+            ? { ...f, content: f.content.replace(unit.body, mutation.body) }
+            : f,
+        );
+      }
+    }
+
     const out = runPipeline({
       previous,
-      current,
-      files: ESTATE_FILES,
+      current: effectiveCurrent,
+      files: effectiveFiles,
       detectedAt: startedAt,
       cli: CliIntrospectionSchema.parse(cliIntrospection),
     });
@@ -291,7 +324,7 @@ export async function executeRun(
           return;
         }
         const isGrounded = impact.action === "GROUNDED_PATCH";
-        const evidence = [evidenceFromDelta(delta, current.generated_at)];
+        const evidence = [evidenceFromDelta(delta, effectiveCurrent.generated_at)];
         const message = await guardedCall(env, deps, spend, runId,
           isGrounded ? "grounded_patch" : "editorial_draft",
           {
@@ -344,7 +377,7 @@ export async function executeRun(
         const verdict = validatePatch({
           proposal,
           unit,
-          facts: current.facts,
+          facts: effectiveCurrent.facts,
           detectedAt: startedAt,
         });
         const draftAcceptable =
@@ -356,9 +389,9 @@ export async function executeRun(
             // an insufficient_evidence conflict, recorded and attached.
             const badLocator =
               proposal.evidence.find(
-                (e) => !current.facts.some((f) => f.key === e.fact_key && f.locator === e.locator),
+                (e) => !effectiveCurrent.facts.some((f) => f.key === e.fact_key && f.locator === e.locator),
               )?.locator ?? "(unknown locator)";
-            const draft = insufficientEvidenceConflict(impact.fact_key, badLocator, current.facts);
+            const draft = insufficientEvidenceConflict(impact.fact_key, badLocator, effectiveCurrent.facts);
             const conflictId = newId("cfl");
             conflicts.push({ ...draft, id: conflictId });
             impact.conflict_id = conflictId;
@@ -408,7 +441,7 @@ export async function executeRun(
       });
     }
     const modelFindings: Finding[] =
-      modelProjections.length > 0 ? consistencyFindings(current.facts, modelProjections) : [];
+      modelProjections.length > 0 ? consistencyFindings(effectiveCurrent.facts, modelProjections) : [];
 
     // ── Adversarial verification (Phase 15, architecture §6.2) ──────────
     // Every non-deterministic finding faces a FALSIFIER — a separate call
@@ -442,7 +475,7 @@ export async function executeRun(
       await mapConcurrent(toFalsify, 5, async ({ finding, index }) => {
         const record = verifiedFindings[index] as VerifiedFinding;
         const projection = projectionsById.get(finding.projection_id ?? "");
-        const truthClaim = current.facts.find((f) => f.key === finding.fact_key);
+        const truthClaim = effectiveCurrent.facts.find((f) => f.key === finding.fact_key);
         if (!projection || !truthClaim) return;
         const truth: Evidence = {
           fact_key: truthClaim.key,
@@ -601,10 +634,18 @@ export async function executeRun(
       .prepare("UPDATE run SET status = ?, reason = ?, finished_at = ? WHERE id = ?")
       .bind(finalStatus, exhausted ? "budget_exhausted" : null, new Date().toISOString(), runId)
       .run();
+    await env.concord_db
+      .prepare("UPDATE audit_log SET outcome = ? WHERE run_id = ?")
+      .bind(finalStatus, runId)
+      .run();
   } catch (e) {
     await env.concord_db
       .prepare("UPDATE run SET status = 'failed', reason = ?, finished_at = ? WHERE id = ?")
       .bind(e instanceof Error ? e.message.slice(0, 200) : "failed", new Date().toISOString(), runId)
+      .run();
+    await env.concord_db
+      .prepare("UPDATE audit_log SET outcome = 'failed' WHERE run_id = ?")
+      .bind(runId)
       .run();
   }
 }

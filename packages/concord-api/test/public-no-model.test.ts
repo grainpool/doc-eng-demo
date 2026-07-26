@@ -109,9 +109,9 @@ describe("public path — zero model calls (I11)", () => {
     expect(calls!.n).toBe(0);
   });
 
-  it("the admin surface is unreachable when DEMO_ADMIN_ENABLED is unset", async () => {
+  it("the admin surface does not EXIST when DEMO_ADMIN_ENABLED is unset (I12: 404, not 403)", async () => {
     const res = await publicFetch("/api/admin/runs", { method: "POST" });
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(404);
     expect(anthropicRequests).toBe(0);
   });
 });

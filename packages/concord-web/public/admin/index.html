@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Concord — Change Lab (live)</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+  code, pre { font-family: ui-monospace, monospace; background: #f4f4f0; }
+  .muted { color: #666; }
+  select, textarea, button { font: inherit; padding: .4rem .6rem; }
+  textarea { width: 100%; min-height: 8rem; }
+</style>
+</head>
+<body>
+<h1>Change Lab — live mode</h1>
+<p class="muted">This page sits behind Cloudflare Access (and the backend re-verifies your identity — two gates).
+Mutations apply to a working copy, run through the REAL pipeline, and render through the same renderer as the public replay.
+Every action lands in the audit log under your Access email.</p>
+
+<h3>Fact mutation (nine allowlisted keys, closed values)</h3>
+<p><select id="factKey"></select> → <select id="factValue"></select>
+<button id="runFact">Run live</button></p>
+
+<h3>Doc-body mutation (editable units only)</h3>
+<p><select id="docUnit"></select></p>
+<textarea id="docBody" placeholder="New body (≤ 8192 bytes, no MDX expressions/JSX outside Note/Warning/Info/Tip)"></textarea>
+<p><button id="runDoc">Run live</button></p>
+
+<div id="status"></div>
+<div id="stage"></div>
+<script src="/changelab-render.js"></script>
+<script>
+"use strict";
+const ALLOWLIST = {
+  "term.canonical.task": ["Job", "Task", "Run"],
+  "limit.upload.csv.max_bytes": [5242880, 10485760, 26214400],
+  "availability.feature.analysis_sessions.platform.ios": [true, false],
+  "availability.feature.analysis_sessions.platform.android": [true, false],
+  "availability.feature.connector_drive.platform.web": [true, false],
+  "retention.artifact.days": [7, 30, 90],
+  "plan.feature.analysis_sessions.min_plan": ["free", "pro", "team"],
+  "flag.analysis.regression_enabled": [true, false],
+  "analysis.operation.distribution_test.enabled": [true, false],
+};
+const EDITABLE = [
+  "mintlify:docs-mintlify/supported-files.mdx#size-limits",
+  "mintlify:docs-mintlify/supported-files.mdx#supported-types",
+  "mintlify:docs-mintlify/troubleshooting.mdx#my-upload-was-rejected",
+  "mintlify:docs-mintlify/getting-started.mdx#2-upload-a-file",
+  "helpcenter:help-center/articles/upload-failed.md#article",
+  "helpcenter:help-center/articles/using-the-cli.md#article",
+  "helpcenter:help-center/articles/how-long-things-are-kept.md#article",
+  "helpcenter:help-center/articles/platform-availability.md#article",
+  "inproduct:in-product-copy/files.json#uploader.limit_note",
+  "inproduct:in-product-copy/files.json#tooltip.upload_limit",
+];
+const factKey = document.getElementById("factKey");
+const factValue = document.getElementById("factValue");
+const statusEl = document.getElementById("status");
+const stageEl = document.getElementById("stage");
+factKey.innerHTML = Object.keys(ALLOWLIST).map(k => "<option>" + k + "</option>").join("");
+function refreshValues() {
+  factValue.innerHTML = ALLOWLIST[factKey.value].map(v => "<option value='" + JSON.stringify(v) + "'>" + JSON.stringify(v) + "</option>").join("");
+}
+factKey.onchange = refreshValues; refreshValues();
+document.getElementById("docUnit").innerHTML = EDITABLE.map(u => "<option>" + u + "</option>").join("");
+
+async function live(mutation) {
+  statusEl.textContent = "starting live run…";
+  stageEl.innerHTML = "";
+  const res = await fetch("/api/admin/changelab", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ mode: "live", idempotency_key: "ui-" + Date.now(), mutation }),
+  });
+  const body = await res.json();
+  if (!res.ok) { statusEl.textContent = "rejected: " + JSON.stringify(body); return; }
+  statusEl.textContent = "run " + body.run_id + " queued…";
+  for (let i = 0; i < 120; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    const check = await fetch("/api/public/runs/" + body.run_id);
+    if (!check.ok) continue;
+    const data = await check.json();
+    statusEl.textContent = "run " + body.run_id + " — " + data.run.status;
+    if (["completed", "failed", "partial"].includes(data.run.status)) break;
+  }
+  const verbose = await fetch("/api/public/runs/" + body.run_id + "?verbose=1");
+  if (verbose.ok) stageEl.innerHTML = renderChangeLabRun(await verbose.json());
+}
+document.getElementById("runFact").onclick = () =>
+  live({ kind: "fact_value", fact_key: factKey.value, value: JSON.parse(factValue.value) });
+document.getElementById("runDoc").onclick = () =>
+  live({ kind: "doc_body", doc_unit_id: document.getElementById("docUnit").value, body: document.getElementById("docBody").value });
+</script>
+</body>
+</html>
