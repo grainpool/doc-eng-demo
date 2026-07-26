@@ -65,5 +65,14 @@ export {
 } from "./operations.js";
 export { PRODUCT_CONFIG, PLANS, PLATFORMS, type Plan, type Platform } from "./product-config.js";
 export { TranslationResultSchema, type TranslationResult } from "./translation.js";
+export {
+  ARTIFACT_KINDS,
+  ArtifactKindSchema,
+  ProvenanceSchema,
+  ArtifactSchema,
+  type ArtifactKind,
+  type Provenance,
+  type Artifact,
+} from "./artifacts.js";
 export { zodToJsonSchema, zodToOutputFormatSchema } from "./json-schema.js";
 export { CONTRACTS_VERSION } from "./version.js";

@@ -4,6 +4,7 @@ import { ProjectList } from "./screens/ProjectList.js";
 import { ProjectDetail } from "./screens/ProjectDetail.js";
 import { Health } from "./screens/Health.js";
 import { Session } from "./screens/Session.js";
+import { ArtifactDetail } from "./screens/ArtifactDetail.js";
 
 function useHashRoute(): string {
   const [hash, setHash] = useState(location.hash);
@@ -19,10 +20,12 @@ export function App() {
   const hash = useHashRoute();
   const projectMatch = /^#\/projects\/([a-z0-9_]+)$/.exec(hash);
   const sessionMatch = /^#\/sessions\/([a-z0-9_]+)$/.exec(hash);
+  const artifactMatch = /^#\/artifacts\/([a-z0-9_]+)$/.exec(hash);
 
   let screen = <ProjectList />;
   if (projectMatch) screen = <ProjectDetail projectId={projectMatch[1] as string} />;
   else if (sessionMatch) screen = <Session sessionId={sessionMatch[1] as string} />;
+  else if (artifactMatch) screen = <ArtifactDetail artifactId={artifactMatch[1] as string} />;
   else if (hash === "#/health") screen = <Health />;
 
   return (

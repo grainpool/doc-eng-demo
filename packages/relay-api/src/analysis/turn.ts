@@ -17,6 +17,7 @@ import {
   type TranslationCallRecord,
 } from "./translator.js";
 import { buildDatasetRef } from "../kernel/dataset-ref.js";
+import { persistTurnArtifacts } from "../artifacts/persist.js";
 import type { AnalysisKernel } from "../kernel/types.js";
 import type { Env } from "../env.js";
 import type { FileRow } from "../routes/files.js";
@@ -33,6 +34,14 @@ import type { FileRow } from "../routes/files.js";
 export interface TurnDeps {
   client: MessagesClient | null;
   kernel: AnalysisKernel | null;
+  /** Retention override for tests; production uses the T3 fact source. */
+  retentionDays?: number;
+}
+
+/** A previous turn's derived table used as this turn's dataset (lineage). */
+export interface InputArtifact {
+  id: string;
+  r2_key: string;
 }
 
 export interface TurnResponse {
@@ -112,6 +121,7 @@ export async function runTurn(
   file: FileRow,
   prompt: string,
   requestOrigin: string,
+  inputArtifact?: InputArtifact,
 ): Promise<TurnResponse> {
   const startedAt = Date.now();
   const turnId = newId("trn");
@@ -140,7 +150,12 @@ export async function runTurn(
     return fail(503, "UPSTREAM_UNAVAILABLE", "error.analysis.model_unavailable");
   }
 
-  const preview = await datasetPreview(env, file);
+  // When the input is a previous turn's derived table, both the translation
+  // context and the kernel dataset come from THAT artifact.
+  const datasetSource = inputArtifact
+    ? { r2_key: inputArtifact.r2_key, mime: "text/csv", row_count: null, column_count: null }
+    : file;
+  const preview = await datasetPreview(env, datasetSource);
   if (!preview || preview.columns.length === 0) {
     return fail(500, "INTERNAL", "error.generic.internal");
   }
@@ -205,7 +220,29 @@ export async function runTurn(
   if (!deps.kernel) {
     return fail(503, "KERNEL_UNAVAILABLE", "error.analysis.kernel_unavailable");
   }
-  const dataset = await buildDatasetRef(env, requestOrigin, file);
+  let dataset;
+  if (inputArtifact) {
+    // Derived-table dataset: sign the artifact's key and hash its bytes now —
+    // the kernel verifies the sha256 like any other dataset.
+    const object = await env.relay_artifacts.get(inputArtifact.r2_key);
+    if (!object) {
+      return fail(500, "INTERNAL", "error.generic.internal");
+    }
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      await object.arrayBuffer(),
+    );
+    const sha = [...new Uint8Array(digest)]
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    dataset = await buildDatasetRef(env, requestOrigin, {
+      r2_key: inputArtifact.r2_key,
+      sha256: sha,
+      mime: "text/csv",
+    });
+  } else {
+    dataset = await buildDatasetRef(env, requestOrigin, file);
+  }
   if (!dataset) {
     return fail(500, "INTERNAL", "error.generic.internal");
   }
@@ -259,6 +296,25 @@ export async function runTurn(
     result_r2_key: resultKey,
   });
 
+  // Phase 06: every output of a completed turn becomes a durable artifact
+  // with provenance captured from THIS KernelResult, at computation time.
+  const project = await env.relay_db
+    .prepare("SELECT project_id FROM analysis_session WHERE id = ?")
+    .bind(session.id)
+    .first<{ project_id: string }>();
+  const artifacts = await persistTurnArtifacts(env, {
+    projectId: project?.project_id ?? file.project_id,
+    sessionId: session.id,
+    turnId,
+    sourceFileId: file.id,
+    sourceFileSha256: file.sha256,
+    operationId,
+    params: gate.data as Record<string, unknown>,
+    result,
+    derivedFromArtifactIds: inputArtifact ? [inputArtifact.id] : [],
+    retentionDays: deps.retentionDays,
+  });
+
   return {
     http: 200,
     body: {
@@ -268,6 +324,7 @@ export async function runTurn(
       params: gate.data,
       rationale: translation.rationale,
       result,
+      artifacts,
       model_usage: modelUsage,
       duration_ms: Date.now() - startedAt,
     },

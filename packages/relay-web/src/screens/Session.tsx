@@ -3,6 +3,7 @@ import {
   api,
   ApiFault,
   streamNarration,
+  type ArtifactSummary,
   type DatasetPreviewPayload,
   type KernelResultPayload,
   type SessionRecord,
@@ -20,12 +21,19 @@ function faultCopyId(e: unknown): string {
   return e instanceof ApiFault ? e.copyId : "error.generic.internal";
 }
 
+function tableArtifacts(turns: TurnView[]): ArtifactSummary[] {
+  return turns.flatMap((turn) =>
+    turn.artifacts.filter((artifact) => artifact.kind === "table_csv"),
+  );
+}
+
 interface TurnView {
   id: string;
   prompt: string;
   status: string;
   operationId: string | null;
   result: KernelResultPayload | null;
+  artifacts: ArtifactSummary[];
   refusal: { reason?: string; alternatives: string[] } | null;
   errorCopyId: string | null;
 }
@@ -122,6 +130,20 @@ function Turn({ turn }: { turn: TurnView }) {
         </div>
       )}
       {turn.result && <ResultTables result={turn.result} />}
+      {turn.artifacts.length > 0 && (
+        <p className="empty">
+          {t("session.turn.artifacts")}{" "}
+          {turn.artifacts.map((artifact) => (
+            <a
+              key={artifact.id}
+              href={`#/artifacts/${artifact.id}`}
+              style={{ marginRight: "0.5em" }}
+            >
+              {artifact.name}
+            </a>
+          ))}
+        </p>
+      )}
       {turn.status === "completed" && turn.result && (
         <p>
           <button className="btn-secondary" disabled={narrating} onClick={narrate}>
@@ -141,6 +163,7 @@ export function Session({ sessionId }: { sessionId: string }) {
   const [prompt, setPrompt] = useState("");
   const [running, setRunning] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
+  const [inputArtifactId, setInputArtifactId] = useState<string>("");
 
   useEffect(() => {
     api
@@ -169,6 +192,7 @@ export function Session({ sessionId }: { sessionId: string }) {
       status: row.status,
       operationId: row.operation_id,
       result: null,
+      artifacts: [],
       refusal: row.status === "refused" ? { alternatives: [] } : null,
       errorCopyId: row.status === "failed" ? "error.generic.internal" : null,
     };
@@ -191,7 +215,7 @@ export function Session({ sessionId }: { sessionId: string }) {
     setRunning(true);
     setBanner(null);
     api
-      .postTurn(sessionId, text)
+      .postTurn(sessionId, text, inputArtifactId || undefined)
       .then((outcome: TurnOutcome) => {
         setPrompt("");
         setTurns((prior) => [
@@ -202,6 +226,7 @@ export function Session({ sessionId }: { sessionId: string }) {
             status: outcome.status ?? "failed",
             operationId: outcome.operation_id ?? null,
             result: outcome.result ?? null,
+            artifacts: outcome.artifacts ?? [],
             refusal:
               outcome.status === "refused"
                 ? {
@@ -265,6 +290,25 @@ export function Session({ sessionId }: { sessionId: string }) {
           ))}
 
           {banner && <p className="status-error">{t(banner)}</p>}
+          {tableArtifacts(turns).length > 0 && (
+            <p>
+              <label>
+                {t("session.chain.label")}{" "}
+                <select
+                  className="input"
+                  value={inputArtifactId}
+                  onChange={(e) => setInputArtifactId(e.target.value)}
+                >
+                  <option value="">{t("session.chain.original")}</option>
+                  {tableArtifacts(turns).map((artifact) => (
+                    <option key={artifact.id} value={artifact.id}>
+                      {artifact.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </p>
+          )}
           <p>
             <input
               className="input"

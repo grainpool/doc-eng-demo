@@ -4,6 +4,7 @@ import {
   ApiFault,
   fetchUploadLimitBytes,
   humanBytes,
+  type ArtifactListItem,
   type FileRecord,
   type Project,
   type SessionRecord,
@@ -28,6 +29,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   const [banner, setBanner] = useState<{ kind: "ok" | "error"; copyId: string } | null>(null);
   const [inputKey, setInputKey] = useState(0);
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
+  const [artifacts, setArtifacts] = useState<ArtifactListItem[]>([]);
   const [creatingSession, setCreatingSession] = useState<string | null>(null);
 
   useEffect(() => {
@@ -38,6 +40,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     void fetchUploadLimitBytes().then(setLimitBytes).catch(() => setLimitBytes(null));
     loadFiles();
     void api.listSessions(projectId).then(setSessions).catch(() => setSessions([]));
+    void api.listArtifacts(projectId).then(setArtifacts).catch(() => setArtifacts([]));
   }, [projectId]);
 
   const analyze = (fileId: string) => {
@@ -173,6 +176,22 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                   <a href={`#/sessions/${session.id}`}>{session.title}</a>{" "}
                   <span className="empty">
                     {new Date(session.created_at).toLocaleString()}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <h2>{t("artifacts.list.heading")}</h2>
+          {artifacts.length === 0 && <p className="empty">{t("artifacts.list.empty")}</p>}
+          {artifacts.length > 0 && (
+            <ul>
+              {artifacts.map((artifact) => (
+                <li key={artifact.id}>
+                  <a href={`#/artifacts/${artifact.id}`}>{artifact.name}</a>{" "}
+                  <code>{artifact.kind}</code>{" "}
+                  <span className="empty">
+                    {new Date(artifact.created_at).toLocaleString()}
                   </span>
                 </li>
               ))}

@@ -124,6 +124,7 @@ sessions.post("/sessions/:id/turns", async (c) => {
   }
   const body = (await c.req.json().catch(() => null)) as {
     prompt?: unknown;
+    input_artifact_id?: unknown;
   } | null;
   const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : "";
   if (prompt.length === 0 || prompt.length > 2000) {
@@ -143,6 +144,28 @@ sessions.post("/sessions/:id/turns", async (c) => {
     return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
   }
 
+  // Optional lineage input: a previous turn's derived table becomes this
+  // turn's dataset (must be a table_csv artifact of the same project).
+  let inputArtifact: { id: string; r2_key: string } | undefined;
+  if (body?.input_artifact_id !== undefined) {
+    if (typeof body.input_artifact_id !== "string") {
+      return c.json(
+        apiError("VALIDATION_FAILED", "error.analysis.invalid_params", undefined, "input_artifact_id"),
+        422,
+      );
+    }
+    const artifact = await c.env.relay_db
+      .prepare(
+        "SELECT id, r2_key FROM artifact WHERE id = ? AND project_id = ? AND kind = 'table_csv'",
+      )
+      .bind(body.input_artifact_id, session.project_id)
+      .first<{ id: string; r2_key: string }>();
+    if (!artifact) {
+      return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
+    }
+    inputArtifact = artifact;
+  }
+
   const outcome = await runTurn(
     c.env,
     { client: messagesClient(c.env), kernel: containerKernel(c.env) },
@@ -150,6 +173,7 @@ sessions.post("/sessions/:id/turns", async (c) => {
     file,
     prompt,
     new URL(c.req.url).origin,
+    inputArtifact,
   );
   return c.json(outcome.body, outcome.http as 200);
 });

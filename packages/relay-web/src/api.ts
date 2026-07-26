@@ -101,6 +101,7 @@ export interface TurnOutcome {
   turn_id: string;
   status?: string;
   operation_id?: string;
+  artifacts?: ArtifactSummary[];
   result?: KernelResultPayload;
   translation?: {
     kind: string;
@@ -108,6 +109,44 @@ export interface TurnOutcome {
     supported_alternatives?: string[];
   };
   error?: { code: string; copy_id: string };
+}
+
+export interface ArtifactSummary {
+  id: string;
+  kind: string;
+  name: string;
+}
+
+export interface ArtifactListItem {
+  id: string;
+  project_id: string;
+  kind: string;
+  name: string;
+  byte_size: number;
+  retention_expires_at: string | null;
+  created_at: string;
+}
+
+export interface ArtifactDetail extends ArtifactListItem {
+  provenance: {
+    source_file_id: string;
+    source_file_sha256: string;
+    operation_id: string;
+    params: Record<string, unknown>;
+    params_hash: string;
+    runtime_versions: Record<string, string>;
+    kernel_image_digest: string;
+    session_id: string;
+    turn_id: string;
+    generated_at: string;
+    duration_ms: number;
+    derived_from_artifact_ids: string[];
+  };
+}
+
+export interface LineageNode {
+  artifact: ArtifactDetail;
+  derived_from: LineageNode[];
 }
 
 export interface DatasetPreviewPayload {
@@ -153,12 +192,20 @@ export const api = {
     request<{ session: SessionRecord; turns: TurnRecord[] }>(
       `/api/sessions/${id}`,
     ),
-  postTurn: (sessionId: string, prompt: string) =>
+  postTurn: (sessionId: string, prompt: string, inputArtifactId?: string) =>
     request<TurnOutcome>(`/api/sessions/${sessionId}/turns`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify(
+        inputArtifactId ? { prompt, input_artifact_id: inputArtifactId } : { prompt },
+      ),
     }),
+  listArtifacts: (projectId: string) =>
+    request<{ artifacts: ArtifactListItem[] }>(
+      `/api/projects/${projectId}/artifacts`,
+    ).then((r) => r.artifacts),
+  getArtifact: (id: string) => request<ArtifactDetail>(`/api/artifacts/${id}`),
+  getLineage: (id: string) => request<LineageNode>(`/api/artifacts/${id}/lineage`),
   getTurnResult: (turnId: string) =>
     request<KernelResultPayload>(`/api/turns/${turnId}/result`),
   getPreview: (fileId: string) =>
