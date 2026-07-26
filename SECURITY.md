@@ -41,7 +41,7 @@ itself, the app is wide open.
   gates: the edge policy and the backend.
 - **Documented deviation (Phase 19): the operator identity.** The spec
   assumes an Anthropic-internal operator; this demo's operator
-  authenticates as `trejootoniel@gmail.com`, and the first live-run
+  authenticates via OTP as `otoniel@grainpoolholdings.com`, and the first live-run
   attempt was correctly rejected by the backend gate
   (`ACCESS_DOMAIN_DENIED` — observed 2026-07-26, proof the second gate
   works even when the edge admits an identity). The accommodation is
