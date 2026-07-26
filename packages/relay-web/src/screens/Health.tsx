@@ -43,7 +43,9 @@ export function Health() {
                   <td>
                     <code>{check.value}</code>
                   </td>
-                  <td style={{ textAlign: "right" }}>{check.duration_ms} ms</td>
+                  <td style={{ textAlign: "right" }}>
+                    {t("health.duration", { ms: check.duration_ms })}
+                  </td>
                 </tr>
               ))}
             </tbody>

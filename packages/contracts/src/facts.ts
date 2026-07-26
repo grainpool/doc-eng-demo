@@ -91,6 +91,29 @@ export const TEMPLATED_FAMILIES: readonly TemplatedFamily[] = Object.freeze([
     },
   },
   {
+    // T4 is TEMPORAL: a release record is authoritative for WHEN something
+    // changed, never for a current value — so release claims live under
+    // their own keys and can never collide with a T1/T3 key's authority.
+    family: "release.<release_id>.changes",
+    tier: "T4_RELEASE",
+    valueType: "json",
+    owner: "product",
+    matches(key: string): boolean {
+      return /^release\.[a-z0-9_-]+\.changes$/.test(key);
+    },
+  },
+  {
+    // T5 records claim a fact key only where the record explicitly says so;
+    // the claim key itself is always the decision's own.
+    family: "decision.<decision_id>.record",
+    tier: "T5_HUMAN",
+    valueType: "json",
+    owner: "product",
+    matches(key: string): boolean {
+      return /^decision\.[a-z0-9_-]+\.record$/.test(key);
+    },
+  },
+  {
     family: "cli.command.<command_path>.summary",
     tier: "T2_CLI",
     valueType: "string",

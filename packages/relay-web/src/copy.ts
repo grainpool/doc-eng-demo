@@ -11,21 +11,27 @@ import files from "../../../estate/in-product-copy/files.json";
 import health from "../../../estate/in-product-copy/health.json";
 import sessionsCopy from "../../../estate/in-product-copy/sessions.json";
 import artifactsCopy from "../../../estate/in-product-copy/artifacts.json";
+import settingsCopy from "../../../estate/in-product-copy/settings.json";
 
 export interface CopyEntry {
   id: string;
   kind: string;
   text: string;
   surface_location: string;
+  references_facts: string[];
+  owner: string;
+  editorial_register: string;
+  interpolations: string[];
 }
 
-const ALL_ENTRIES: CopyEntry[] = [
+export const ALL_ENTRIES: CopyEntry[] = [
   ...errors.entries,
   ...projects.entries,
   ...files.entries,
   ...health.entries,
   ...sessionsCopy.entries,
   ...artifactsCopy.entries,
+  ...settingsCopy.entries,
 ];
 
 const BY_ID = new Map(ALL_ENTRIES.map((e) => [e.id, e]));

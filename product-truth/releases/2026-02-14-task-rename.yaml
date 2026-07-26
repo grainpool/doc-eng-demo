@@ -1,0 +1,12 @@
+id: rel_2026_02_14_task_rename
+version: "1.3.0"
+released_at: "2026-02-14T00:00:00Z"
+summary: "Terminology: 'Job' renamed to 'Task'"
+changes:
+  - fact_key: term.canonical.task
+    from: "Job"
+    to: "Task"
+    kind: term_renamed
+notes_md: |
+  User research showed "Job" read as batch/background work. "Task" is the
+  canonical term everywhere from this release on.

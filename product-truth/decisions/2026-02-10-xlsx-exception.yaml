@@ -1,0 +1,13 @@
+id: dec_xlsx_deliberate_exception
+decided_at: "2026-02-10T00:00:00Z"
+decided_by: "eng-platform"
+kind: deliberate_exception
+claims_fact_keys:
+  - support.file_type.xlsx
+statement: |
+  .xlsx stays UNSUPPORTED deliberately. Spreadsheet parsing brings formula
+  evaluation, multiple sheets, and styling semantics that conflict with the
+  bounded-operation model. Docs may state this as a decided limitation, not
+  a gap: the correct guidance is "export to CSV first".
+notes_md: |
+  Revisit only if the kernel gains a sheet-selection UI. Not before.

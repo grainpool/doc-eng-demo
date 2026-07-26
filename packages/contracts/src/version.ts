@@ -2,4 +2,4 @@
  * Kept in lockstep with package.json "version" (asserted by a test so the two
  * cannot drift). Snapshots report it as relay_contracts_version.
  */
-export const CONTRACTS_VERSION = "0.4.0" as const;
+export const CONTRACTS_VERSION = "0.5.0" as const;

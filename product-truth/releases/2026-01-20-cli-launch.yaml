@@ -1,0 +1,12 @@
+id: rel_2026_01_20_cli_launch
+version: "1.2.0"
+released_at: "2026-01-20T00:00:00Z"
+summary: "Analysis sessions available from the relay CLI"
+changes:
+  - fact_key: availability.feature.analysis_sessions.platform.cli
+    from: false
+    to: true
+    kind: availability_added
+notes_md: |
+  The `relay` CLI shipped with sessions support at launch. Web remains the
+  primary surface; the CLI targets scripted and CI usage.

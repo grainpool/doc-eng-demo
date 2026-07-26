@@ -1,0 +1,17 @@
+id: rel_2026_06_15_retention_and_chaining
+version: "1.6.0"
+released_at: "2026-06-15T00:00:00Z"
+summary: "Artifact retention extended to 30 days; CLI gains result chaining"
+changes:
+  - fact_key: retention.artifact.days
+    from: 7
+    to: 30
+    kind: retention_changed
+  - fact_key: cli.command.sessions.run.flags
+    from: null
+    to: "--input-artifact added"
+    kind: cli_changed
+notes_md: |
+  Retention moved from 7 to 30 days so a monthly reporting cycle can rerun
+  against prior artifacts. `relay sessions run` gained `--input-artifact`
+  for filter-then-analyze chains.

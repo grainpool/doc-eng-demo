@@ -1,0 +1,15 @@
+id: rel_2026_05_02_ios_launch
+version: "1.5.0"
+released_at: "2026-05-02T00:00:00Z"
+summary: "Analysis sessions announced for iOS"
+changes:
+  - fact_key: availability.feature.analysis_sessions.platform.ios
+    from: false
+    to: true
+    kind: availability_added
+notes_md: |
+  NOTE: this record deliberately contradicts current T3 config (iOS is
+  false today) — the launch was rolled back after release; see decision
+  dec_ios_rollback_tiebreak. T4 is temporal: this file is authoritative for
+  WHEN the announcement happened, never for the current value. This is the
+  standing CONTRADICTION fixture used by Phase 15.

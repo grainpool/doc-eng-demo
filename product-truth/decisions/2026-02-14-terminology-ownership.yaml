@@ -1,0 +1,15 @@
+id: dec_terminology_ownership
+decided_at: "2026-02-14T00:00:00Z"
+decided_by: "product"
+kind: editorial_ownership
+claims_fact_keys:
+  - term.canonical.task
+  - term.canonical.project
+  - term.canonical.artifact
+statement: |
+  product-content owns all terminology copy across every surface. Any
+  reconciliation touching a term.canonical.* projection escalates to
+  product-content rather than auto-patching, except pure mechanical renames
+  already recorded in a release.
+notes_md: |
+  Set alongside the Job→Task rename so future renames have one owner.

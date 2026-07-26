@@ -1,0 +1,14 @@
+id: dec_ios_rollback_tiebreak
+decided_at: "2026-05-20T00:00:00Z"
+decided_by: "product"
+kind: tie_break
+claims_fact_keys:
+  - availability.feature.analysis_sessions.platform.ios
+statement: |
+  TIE-BREAK between release rel_2026_05_02_ios_launch (announced iOS
+  availability) and current T3 config (ios: false): CONFIG WINS. The iOS
+  launch was rolled back on 2026-05-18 for kernel cold-start latency. The
+  release record is retained as history — T4 is temporal — and documentation
+  must state iOS as unavailable until config changes.
+notes_md: |
+  This is the standing resolution for the Phase-15 CONTRADICTION fixture.

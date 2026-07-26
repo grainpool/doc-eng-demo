@@ -1,0 +1,12 @@
+id: rel_2025_11_10_upload_limit_10mb
+version: "1.1.0"
+released_at: "2025-11-10T00:00:00Z"
+summary: "CSV upload limit raised from 5 MB to 10 MB"
+changes:
+  - fact_key: limit.upload.csv.max_bytes
+    from: 5242880
+    to: 10485760
+    kind: limit_increased
+notes_md: |
+  Larger exports from common BI tools kept hitting the 5 MB ceiling. The
+  streaming intake path made a 10 MB cap safe without buffering changes.

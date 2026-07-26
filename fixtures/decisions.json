@@ -1,0 +1,42 @@
+{
+  "decisions": [
+    {
+      "source_file": "product-truth/decisions/2026-02-10-xlsx-exception.yaml",
+      "id": "dec_xlsx_deliberate_exception",
+      "decided_at": "2026-02-10T00:00:00Z",
+      "decided_by": "eng-platform",
+      "kind": "deliberate_exception",
+      "claims_fact_keys": [
+        "support.file_type.xlsx"
+      ],
+      "statement": ".xlsx stays UNSUPPORTED deliberately. Spreadsheet parsing brings formula\nevaluation, multiple sheets, and styling semantics that conflict with the\nbounded-operation model. Docs may state this as a decided limitation, not\na gap: the correct guidance is \"export to CSV first\".\n",
+      "notes_md": "Revisit only if the kernel gains a sheet-selection UI. Not before.\n"
+    },
+    {
+      "source_file": "product-truth/decisions/2026-02-14-terminology-ownership.yaml",
+      "id": "dec_terminology_ownership",
+      "decided_at": "2026-02-14T00:00:00Z",
+      "decided_by": "product",
+      "kind": "editorial_ownership",
+      "claims_fact_keys": [
+        "term.canonical.task",
+        "term.canonical.project",
+        "term.canonical.artifact"
+      ],
+      "statement": "product-content owns all terminology copy across every surface. Any\nreconciliation touching a term.canonical.* projection escalates to\nproduct-content rather than auto-patching, except pure mechanical renames\nalready recorded in a release.\n",
+      "notes_md": "Set alongside the Job→Task rename so future renames have one owner.\n"
+    },
+    {
+      "source_file": "product-truth/decisions/2026-05-20-ios-rollback-tiebreak.yaml",
+      "id": "dec_ios_rollback_tiebreak",
+      "decided_at": "2026-05-20T00:00:00Z",
+      "decided_by": "product",
+      "kind": "tie_break",
+      "claims_fact_keys": [
+        "availability.feature.analysis_sessions.platform.ios"
+      ],
+      "statement": "TIE-BREAK between release rel_2026_05_02_ios_launch (announced iOS\navailability) and current T3 config (ios: false): CONFIG WINS. The iOS\nlaunch was rolled back on 2026-05-18 for kernel cold-start latency. The\nrelease record is retained as history — T4 is temporal — and documentation\nmust state iOS as unavailable until config changes.\n",
+      "notes_md": "This is the standing resolution for the Phase-15 CONTRADICTION fixture.\n"
+    }
+  ]
+}

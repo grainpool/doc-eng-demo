@@ -76,6 +76,22 @@ export {
 } from "./artifacts.js";
 export { zodToJsonSchema, zodToOutputFormatSchema } from "./json-schema.js";
 export {
+  COPY_KINDS,
+  EDITORIAL_REGISTERS,
+  CopyEntrySchema,
+  type CopyEntry,
+} from "./copy.js";
+export {
+  ACTION_CLASSES,
+  ActionClassSchema,
+  DEFECT_CLASSES,
+  DefectClassSchema,
+  SeededDefectSchema,
+  type ActionClass,
+  type DefectClass,
+  type SeededDefect,
+} from "./defects.js";
+export {
   CliIntrospectionSchema,
   CLI_EXIT_CODES,
   type CliIntrospection,

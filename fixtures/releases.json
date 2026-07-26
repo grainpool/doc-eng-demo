@@ -1,0 +1,106 @@
+{
+  "releases": [
+    {
+      "source_file": "product-truth/releases/2025-11-10-upload-limit-10mb.yaml",
+      "id": "rel_2025_11_10_upload_limit_10mb",
+      "version": "1.1.0",
+      "released_at": "2025-11-10T00:00:00Z",
+      "summary": "CSV upload limit raised from 5 MB to 10 MB",
+      "changes": [
+        {
+          "fact_key": "limit.upload.csv.max_bytes",
+          "from": 5242880,
+          "to": 10485760,
+          "kind": "limit_increased"
+        }
+      ],
+      "notes_md": "Larger exports from common BI tools kept hitting the 5 MB ceiling. The\nstreaming intake path made a 10 MB cap safe without buffering changes.\n"
+    },
+    {
+      "source_file": "product-truth/releases/2026-01-20-cli-launch.yaml",
+      "id": "rel_2026_01_20_cli_launch",
+      "version": "1.2.0",
+      "released_at": "2026-01-20T00:00:00Z",
+      "summary": "Analysis sessions available from the relay CLI",
+      "changes": [
+        {
+          "fact_key": "availability.feature.analysis_sessions.platform.cli",
+          "from": false,
+          "to": true,
+          "kind": "availability_added"
+        }
+      ],
+      "notes_md": "The `relay` CLI shipped with sessions support at launch. Web remains the\nprimary surface; the CLI targets scripted and CI usage.\n"
+    },
+    {
+      "source_file": "product-truth/releases/2026-02-14-task-rename.yaml",
+      "id": "rel_2026_02_14_task_rename",
+      "version": "1.3.0",
+      "released_at": "2026-02-14T00:00:00Z",
+      "summary": "Terminology: 'Job' renamed to 'Task'",
+      "changes": [
+        {
+          "fact_key": "term.canonical.task",
+          "from": "Job",
+          "to": "Task",
+          "kind": "term_renamed"
+        }
+      ],
+      "notes_md": "User research showed \"Job\" read as batch/background work. \"Task\" is the\ncanonical term everywhere from this release on.\n"
+    },
+    {
+      "source_file": "product-truth/releases/2026-03-30-distribution-tests.yaml",
+      "id": "rel_2026_03_30_distribution_tests",
+      "version": "1.4.0",
+      "released_at": "2026-03-30T00:00:00Z",
+      "summary": "Distribution testing added to the analysis kernel",
+      "changes": [
+        {
+          "fact_key": "analysis.operation.distribution_test.enabled",
+          "from": false,
+          "to": true,
+          "kind": "capability_added"
+        }
+      ],
+      "notes_md": "shapiro, normaltest, ttest_ind and mannwhitneyu land as one bounded\noperation. The operation catalog remains a closed enum.\n"
+    },
+    {
+      "source_file": "product-truth/releases/2026-05-02-ios-launch.yaml",
+      "id": "rel_2026_05_02_ios_launch",
+      "version": "1.5.0",
+      "released_at": "2026-05-02T00:00:00Z",
+      "summary": "Analysis sessions announced for iOS",
+      "changes": [
+        {
+          "fact_key": "availability.feature.analysis_sessions.platform.ios",
+          "from": false,
+          "to": true,
+          "kind": "availability_added"
+        }
+      ],
+      "notes_md": "NOTE: this record deliberately contradicts current T3 config (iOS is\nfalse today) — the launch was rolled back after release; see decision\ndec_ios_rollback_tiebreak. T4 is temporal: this file is authoritative for\nWHEN the announcement happened, never for the current value. This is the\nstanding CONTRADICTION fixture used by Phase 15.\n"
+    },
+    {
+      "source_file": "product-truth/releases/2026-06-15-retention-and-chaining.yaml",
+      "id": "rel_2026_06_15_retention_and_chaining",
+      "version": "1.6.0",
+      "released_at": "2026-06-15T00:00:00Z",
+      "summary": "Artifact retention extended to 30 days; CLI gains result chaining",
+      "changes": [
+        {
+          "fact_key": "retention.artifact.days",
+          "from": 7,
+          "to": 30,
+          "kind": "retention_changed"
+        },
+        {
+          "fact_key": "cli.command.sessions.run.flags",
+          "from": null,
+          "to": "--input-artifact added",
+          "kind": "cli_changed"
+        }
+      ],
+      "notes_md": "Retention moved from 7 to 30 days so a monthly reporting cycle can rerun\nagainst prior artifacts. `relay sessions run` gained `--input-artifact`\nfor filter-then-analyze chains.\n"
+    }
+  ]
+}

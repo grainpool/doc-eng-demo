@@ -33,17 +33,19 @@ describe("GET /api/product-truth", () => {
     // Real claims from the wired tiers (T0 needs the container — absent in
     // the pool, asserted against the deployed URL below).
     const tiers = new Set(body.facts.map((f) => f.tier));
-    expect(tiers).toEqual(new Set(["T1_SCHEMA", "T2_CLI", "T3_CONFIG"]));
-    expect(body.facts.length).toBeGreaterThanOrEqual(50);
+    expect(tiers).toEqual(
+      new Set(["T1_SCHEMA", "T2_CLI", "T3_CONFIG", "T4_RELEASE", "T5_HUMAN"]),
+    );
+    expect(body.facts.length).toBeGreaterThanOrEqual(60);
 
-    // Pending tiers are marked, not fabricated.
+    // T0 needs the container, absent in the pool; everything else is real.
     expect(body.tier_status).toEqual({
       T0_RUNTIME: "pending",
       T1_SCHEMA: "ok",
       T2_CLI: "ok",
       T3_CONFIG: "ok",
-      T4_RELEASE: "pending",
-      T5_HUMAN: "pending",
+      T4_RELEASE: "ok",
+      T5_HUMAN: "ok",
     });
 
     for (const fact of body.facts) {
@@ -60,7 +62,11 @@ describe("GET /api/product-truth", () => {
           ? /^kernel-image:[0-9a-f]{64}#.+$/
           : fact.tier === "T2_CLI"
             ? /^fixtures\/cli-introspection\.json#.+$/
-            : /^packages\/[a-z-]+\/src\/[a-z-]+\.ts#.+$/;
+            : fact.tier === "T4_RELEASE"
+              ? /^product-truth\/releases\/.+\.yaml#.+$/
+              : fact.tier === "T5_HUMAN"
+                ? /^product-truth\/decisions\/.+\.yaml#.+$/
+                : /^packages\/[a-z-]+\/src\/[a-z-]+\.ts#.+$/;
       expect(fact.locator, fact.key).toMatch(locatorPattern);
       expect(fact.confidence).toBe(1);
     }
@@ -68,6 +74,33 @@ describe("GET /api/product-truth", () => {
     // The central fact of the demo is present with the enforced value.
     const limit = body.facts.find((f) => f.key === "limit.upload.csv.max_bytes");
     expect(limit?.value).toBe(10485760);
+  });
+
+  it("a T4 record contradicting T3 does NOT change the reported current value", async () => {
+    const res = await SELF.fetch("https://example.com/api/product-truth");
+    const body = (await res.json()) as ProductTruthResponse;
+
+    // The 2026-05-02 iOS release deliberately says `to: true`…
+    const iosRelease = body.facts.find(
+      (f) => f.key === "release.2026_05_02_ios_launch.changes",
+    );
+    expect(iosRelease).toBeDefined();
+    const changes = (iosRelease?.value as {
+      changes: { fact_key: string; to: unknown }[];
+    }).changes;
+    expect(
+      changes.find(
+        (c) => c.fact_key === "availability.feature.analysis_sessions.platform.ios",
+      )?.to,
+    ).toBe(true);
+
+    // …and the CURRENT value stays what T3 config says: false. T4 is
+    // temporal, never a correction (contracts.md §9).
+    const current = body.facts.find(
+      (f) => f.key === "availability.feature.analysis_sessions.platform.ios",
+    );
+    expect(current?.tier).toBe("T3_CONFIG");
+    expect(current?.value).toBe(false);
   });
 });
 

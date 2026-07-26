@@ -1,0 +1,12 @@
+id: rel_2026_03_30_distribution_tests
+version: "1.4.0"
+released_at: "2026-03-30T00:00:00Z"
+summary: "Distribution testing added to the analysis kernel"
+changes:
+  - fact_key: analysis.operation.distribution_test.enabled
+    from: false
+    to: true
+    kind: capability_added
+notes_md: |
+  shapiro, normaltest, ttest_ind and mannwhitneyu land as one bounded
+  operation. The operation catalog remains a closed enum.

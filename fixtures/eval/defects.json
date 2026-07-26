@@ -1,0 +1,37 @@
+{
+  "defects": [
+    {
+      "id": "def_undeclared_upload_limit",
+      "class": "UNDECLARED_FACT_REF",
+      "doc_unit_id": "inproduct:in-product-copy/files.json#tooltip.upload_limit",
+      "fact_key": "limit.upload.csv.max_bytes",
+      "description": "Tooltip states 'Max 10 MB' without declaring limit.upload.csv.max_bytes in references_facts.",
+      "injection": null,
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "notes": "Phase-08 seed: lives in the real estate (invisible to readers, harmless in production); excluded from the copy-registry lint by id."
+    },
+    {
+      "id": "def_undeclared_row_limit",
+      "class": "UNDECLARED_FACT_REF",
+      "doc_unit_id": "inproduct:in-product-copy/files.json#tooltip.row_limit",
+      "fact_key": "limit.upload.csv.max_rows",
+      "description": "Tooltip states 'Up to 50,000 rows' without declaring limit.upload.csv.max_rows in references_facts.",
+      "injection": null,
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "notes": "Phase-08 seed: lives in the real estate; excluded from the copy-registry lint by id."
+    },
+    {
+      "id": "def_undeclared_upload_retention",
+      "class": "UNDECLARED_FACT_REF",
+      "doc_unit_id": "inproduct:in-product-copy/settings.json#settings.retention.uploads",
+      "fact_key": "retention.uploaded_file.days",
+      "description": "Setting description states '30 days' without declaring retention.uploaded_file.days in references_facts.",
+      "injection": null,
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "notes": "Phase-08 seed: lives in the real estate; excluded from the copy-registry lint by id."
+    }
+  ]
+}
