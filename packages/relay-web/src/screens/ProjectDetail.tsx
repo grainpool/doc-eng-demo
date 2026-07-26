@@ -6,6 +6,7 @@ import {
   humanBytes,
   type FileRecord,
   type Project,
+  type SessionRecord,
 } from "../api.js";
 import { t } from "../copy.js";
 
@@ -26,6 +27,8 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   const [uploading, setUploading] = useState(false);
   const [banner, setBanner] = useState<{ kind: "ok" | "error"; copyId: string } | null>(null);
   const [inputKey, setInputKey] = useState(0);
+  const [sessions, setSessions] = useState<SessionRecord[]>([]);
+  const [creatingSession, setCreatingSession] = useState<string | null>(null);
 
   useEffect(() => {
     api
@@ -34,7 +37,19 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
       .catch((e: unknown) => setProject({ phase: "error", copyId: faultCopyId(e) }));
     void fetchUploadLimitBytes().then(setLimitBytes).catch(() => setLimitBytes(null));
     loadFiles();
+    void api.listSessions(projectId).then(setSessions).catch(() => setSessions([]));
   }, [projectId]);
+
+  const analyze = (fileId: string) => {
+    setCreatingSession(fileId);
+    api
+      .createSession(projectId, fileId)
+      .then((session) => {
+        location.hash = `#/sessions/${session.id}`;
+      })
+      .catch((e: unknown) => setBanner({ kind: "error", copyId: faultCopyId(e) }))
+      .finally(() => setCreatingSession(null));
+  };
 
   const loadFiles = () => {
     setFilesState({ phase: "loading" });
@@ -123,6 +138,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                   <th>{t("files.table.rows")}</th>
                   <th>{t("files.table.columns")}</th>
                   <th>{t("files.table.uploaded")}</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -133,10 +149,34 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                     <td>{file.row_count}</td>
                     <td>{file.column_count}</td>
                     <td>{new Date(file.created_at).toLocaleString()}</td>
+                    <td>
+                      <button
+                        className="btn-secondary"
+                        disabled={creatingSession === file.id}
+                        onClick={() => analyze(file.id)}
+                      >
+                        {t("session.open")}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          )}
+
+          <h2>{t("session.list.heading")}</h2>
+          {sessions.length === 0 && <p className="empty">{t("session.list.empty")}</p>}
+          {sessions.length > 0 && (
+            <ul>
+              {sessions.map((session) => (
+                <li key={session.id}>
+                  <a href={`#/sessions/${session.id}`}>{session.title}</a>{" "}
+                  <span className="empty">
+                    {new Date(session.created_at).toLocaleString()}
+                  </span>
+                </li>
+              ))}
+            </ul>
           )}
         </>
       )}

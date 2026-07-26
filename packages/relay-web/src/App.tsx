@@ -3,6 +3,7 @@ import { t } from "./copy.js";
 import { ProjectList } from "./screens/ProjectList.js";
 import { ProjectDetail } from "./screens/ProjectDetail.js";
 import { Health } from "./screens/Health.js";
+import { Session } from "./screens/Session.js";
 
 function useHashRoute(): string {
   const [hash, setHash] = useState(location.hash);
@@ -17,9 +18,11 @@ function useHashRoute(): string {
 export function App() {
   const hash = useHashRoute();
   const projectMatch = /^#\/projects\/([a-z0-9_]+)$/.exec(hash);
+  const sessionMatch = /^#\/sessions\/([a-z0-9_]+)$/.exec(hash);
 
   let screen = <ProjectList />;
   if (projectMatch) screen = <ProjectDetail projectId={projectMatch[1] as string} />;
+  else if (sessionMatch) screen = <Session sessionId={sessionMatch[1] as string} />;
   else if (hash === "#/health") screen = <Health />;
 
   return (

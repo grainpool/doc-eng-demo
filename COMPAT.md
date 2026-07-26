@@ -154,6 +154,34 @@ wheels — no compilation during the image build.
   the pinned image locally (`docker run … pytest`) and on `python:3.12` + the same
   `requirements.txt` in CI's `kernel` job.
 
+## Phase 05 additions (2026-07-26)
+
+**The structured-outputs endpoint compiles schemas to a constrained-decoding grammar and accepts
+far less than full JSON Schema.** All observed live against `claude-opus-5`:
+
+1. `oneOf` rejected ("Schema type 'oneOf' is not supported") — zod emits it for discriminated
+   unions; `zodToJsonSchema` now rewrites `oneOf` → `anyOf` (equivalent here: a discriminated
+   union is mutually exclusive by construction).
+2. Open objects rejected ("'additionalProperties: object/true' is not supported") — every object
+   must be explicitly closed; the wrapper now stamps `additionalProperties: false`.
+3. Validation keywords rejected (`minimum`/`maximum` observed; length/item bounds presumed) —
+   `zodToOutputFormatSchema` prunes derived schemas to a structural whitelist (type, properties,
+   required, items, enum, const, anyOf, default, description). Dropped constraints are still
+   enforced by the Zod re-validation gate.
+4. Grammar size is a hard budget: a union embedding the eight per-op param schemas failed with
+   "The compiled grammar is too large"; even ONE wide all-optional params object failed with
+   "Schema is too complex". Final shape: `params` travels as a JSON-encoded STRING field;
+   `operation_id` stays a schema-enforced closed enum (the security property), and params are
+   parsed + validated Worker-side before any kernel call.
+5. **Non-streaming requests that fail grammar compilation can HANG instead of erroring** — the
+   connection sat open with zero bytes and died at ~60 s (some middlebox), while the same request
+   with `stream: true` returned the real "Schema is too complex" error in ~19 s. When debugging
+   structured-output 4xx-ish behavior, debug with streaming on.
+
+Observed translation cost/latency (12-row fixture, catalog + schema + preview in prompt):
+~2 420 input / ~100–150 output tokens, 1 call, ~3.6–4.8 s end-to-end per turn (kernel warm).
+Narration: streamed, ~4 s. Both write `model_call` rows (purpose, tokens, prompt hash).
+
 ## Development environment notes (Windows)
 
 - **`pnpm setup` is shadowed by pnpm's built-in `setup` command** (which configures `PNPM_HOME`

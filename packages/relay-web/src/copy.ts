@@ -9,6 +9,7 @@ import errors from "../../../estate/in-product-copy/errors.json";
 import projects from "../../../estate/in-product-copy/projects.json";
 import files from "../../../estate/in-product-copy/files.json";
 import health from "../../../estate/in-product-copy/health.json";
+import sessionsCopy from "../../../estate/in-product-copy/sessions.json";
 
 export interface CopyEntry {
   id: string;
@@ -22,6 +23,7 @@ const ALL_ENTRIES: CopyEntry[] = [
   ...projects.entries,
   ...files.entries,
   ...health.entries,
+  ...sessionsCopy.entries,
 ];
 
 const BY_ID = new Map(ALL_ENTRIES.map((e) => [e.id, e]));

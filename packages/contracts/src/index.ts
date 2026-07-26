@@ -64,5 +64,6 @@ export {
   type KernelResult,
 } from "./operations.js";
 export { PRODUCT_CONFIG, PLANS, PLATFORMS, type Plan, type Platform } from "./product-config.js";
-export { zodToJsonSchema } from "./json-schema.js";
+export { TranslationResultSchema, type TranslationResult } from "./translation.js";
+export { zodToJsonSchema, zodToOutputFormatSchema } from "./json-schema.js";
 export { CONTRACTS_VERSION } from "./version.js";

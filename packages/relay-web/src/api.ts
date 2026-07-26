@@ -57,6 +57,66 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
+export interface SessionRecord {
+  id: string;
+  project_id: string;
+  file_id: string | null;
+  title: string;
+  created_at: string;
+}
+
+export interface TurnRecord {
+  id: string;
+  session_id: string;
+  prompt: string;
+  operation_id: string | null;
+  params_json: string | null;
+  status: string;
+  error_code: string | null;
+  result_r2_key: string | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface KernelResultPayload {
+  operation_id: string;
+  scalar_result: Record<string, unknown> | null;
+  tables: {
+    name: string;
+    columns: string[];
+    rows: unknown[][];
+    truncated: boolean;
+  }[];
+  plots: {
+    name: string;
+    mime: string;
+    base64: string;
+    width: number;
+    height: number;
+  }[];
+  duration_ms: number;
+}
+
+export interface TurnOutcome {
+  turn_id: string;
+  status?: string;
+  operation_id?: string;
+  result?: KernelResultPayload;
+  translation?: {
+    kind: string;
+    reason?: string;
+    supported_alternatives?: string[];
+  };
+  error?: { code: string; copy_id: string };
+}
+
+export interface DatasetPreviewPayload {
+  columns: string[];
+  rows: string[][];
+  row_count: number | null;
+  column_count: number | null;
+}
+
 export const api = {
   listProjects: () =>
     request<{ projects: Project[] }>("/api/projects").then((r) => r.projects),
@@ -79,7 +139,47 @@ export const api = {
       body: form,
     });
   },
+  listSessions: (projectId: string) =>
+    request<{ sessions: SessionRecord[] }>(
+      `/api/projects/${projectId}/sessions`,
+    ).then((r) => r.sessions),
+  createSession: (projectId: string, fileId: string) =>
+    request<SessionRecord>(`/api/projects/${projectId}/sessions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ file_id: fileId }),
+    }),
+  getSession: (id: string) =>
+    request<{ session: SessionRecord; turns: TurnRecord[] }>(
+      `/api/sessions/${id}`,
+    ),
+  postTurn: (sessionId: string, prompt: string) =>
+    request<TurnOutcome>(`/api/sessions/${sessionId}/turns`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    }),
+  getTurnResult: (turnId: string) =>
+    request<KernelResultPayload>(`/api/turns/${turnId}/result`),
+  getPreview: (fileId: string) =>
+    request<DatasetPreviewPayload>(`/api/files/${fileId}/preview`),
 };
+
+/** Streams narration text chunks; calls onChunk as text arrives. */
+export async function streamNarration(
+  turnId: string,
+  onChunk: (text: string) => void,
+): Promise<void> {
+  const res = await fetch(`/api/turns/${turnId}/narration`, { method: "POST" });
+  if (!res.ok || !res.body) throw await toFault(res);
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    onChunk(decoder.decode(value, { stream: true }));
+  }
+}
 
 let truthPromise: Promise<number> | null = null;
 
