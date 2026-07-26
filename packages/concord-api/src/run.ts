@@ -33,7 +33,14 @@ import type { ConflictDraft, Evidence } from "@relay/contracts";
 import type { AllowedMutation } from "@relay/contracts";
 import { parseEstate } from "@concord/core";
 import cliIntrospection from "../../../fixtures/cli-introspection.json";
-import { ESTATE_FILES } from "./estate.generated.js";
+import { ESTATE_FILES, ESTATE_SHA } from "./estate.generated.js";
+import {
+  githubConfigured,
+  publishRun,
+  type GitHubEnv,
+  type GitHubFetch,
+  type PublishPatch,
+} from "./github.js";
 import { runModelExtraction } from "./model-extract.js";
 import {
   loadSpendState,
@@ -49,10 +56,11 @@ import {
  * impact leaves with a terminal disposition (invariant I10).
  */
 
-export interface RunEnv {
+export interface RunEnv extends GitHubEnv {
   concord_db: D1Database;
   RELAY_BASE_URL: string;
   ANTHROPIC_API_KEY?: string;
+  CONCORD_PUBLIC_URL?: string;
 }
 
 /** The minimal Messages surface — injectable in tests. */
@@ -72,6 +80,10 @@ export interface RunDeps {
   createMessage: ((params: Record<string, unknown>) => Promise<MessageLike>) | null;
   /** Injectable Relay HTTP (tests stub it; default is global fetch). */
   fetchJson?: (url: string) => Promise<unknown>;
+  /** ALL GitHub traffic (token minting included) — injectable so tests can
+   * spy on it and prove a refused path makes zero GitHub calls. Null →
+   * publish step reports "not configured". */
+  githubFetch?: GitHubFetch | null;
 }
 
 export interface RunOptions {
@@ -85,6 +97,9 @@ export interface RunOptions {
    * snapshot/estate — never to deployed Relay config. Validated by the
    * admin route before it reaches here. */
   mutation?: AllowedMutation;
+  /** Phase 19: open a real PR with the run's patches. Set only for live
+   * privileged runs — public/replay runs never touch GitHub. */
+  publish?: boolean;
 }
 
 /** Bounded fan-out (G9): never more than `limit` tasks in flight. */
@@ -628,6 +643,89 @@ export async function executeRun(
       falsified: toFalsify.length,
       exhausted,
     });
+
+    // ── Publish (Phase 19) — live privileged runs only. A GitHub failure
+    // must not fail the run: the step is recorded failed, the patch bodies
+    // stay queryable, and the run still completes (failure isolation).
+    if (options.publish) {
+      const ghFetch: GitHubFetch | null =
+        deps.githubFetch === null
+          ? null
+          : (deps.githubFetch ?? ((url, init) => fetch(url, init)));
+      if (!ghFetch || !githubConfigured(env)) {
+        await step(env, runId, "publish", { published: false, reason: "github not configured" });
+      } else {
+        try {
+          const contentByPath = new Map<string, PublishPatch>();
+          for (const patch of out.patches) {
+            contentByPath.set(patch.path, {
+              path: patch.path,
+              content: patch.after,
+              origin: "deterministic",
+              evidence: [],
+            });
+          }
+          // A model patch and a deterministic patch to the SAME file cannot
+          // compose here (the model's `after` was built from the original
+          // file) — keep the deterministic one and surface the skip.
+          const compositionConflicts: string[] = [];
+          for (const patch of modelPatches) {
+            if (contentByPath.has(patch.path)) {
+              compositionConflicts.push(patch.path);
+              continue;
+            }
+            contentByPath.set(patch.path, {
+              path: patch.path,
+              content: patch.after,
+              origin: patch.origin,
+              evidence: JSON.parse(patch.evidence_json) as PublishPatch["evidence"],
+            });
+          }
+          const escalations = impacts
+            .filter(
+              (i) =>
+                i.disposition === "escalated" ||
+                (i.patch_id === null &&
+                  (i.action === "EDITORIAL_REVIEW" || i.action === "UNRESOLVED_CONFLICT")),
+            )
+            .slice(0, 20)
+            .map((i) => ({
+              doc_unit_id: i.doc_unit_id,
+              action: i.action,
+              explanation: i.explanation,
+            }));
+          const result = await publishRun(env, ghFetch, {
+            runId,
+            estateSha: ESTATE_SHA,
+            patches: [...contentByPath.values()],
+            factDeltas: out.deltas.map((d) => ({
+              fact_key: d.fact_key,
+              from: d.from,
+              to: d.to,
+              tier: d.tier,
+              locator: d.locator,
+            })),
+            escalations,
+            inspectorUrl: `${env.CONCORD_PUBLIC_URL ?? "https://concord.otonieltrejo.com"}/?run=${runId}`,
+          });
+          await step(env, runId, "publish", {
+            ...result,
+            composition_conflicts: compositionConflicts,
+          });
+          if (result.published) {
+            await env.concord_db
+              .prepare("UPDATE audit_log SET pr_url = ? WHERE run_id = ?")
+              .bind(result.pr_url, runId)
+              .run();
+          }
+        } catch (e) {
+          await step(env, runId, "publish", {
+            published: false,
+            reason: e instanceof Error ? e.message.slice(0, 200) : "publish failed",
+          });
+        }
+      }
+    }
 
     const finalStatus = exhausted ? "partial" : "completed";
     await env.concord_db

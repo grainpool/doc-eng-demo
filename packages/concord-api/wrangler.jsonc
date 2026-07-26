@@ -15,6 +15,9 @@
     "run_worker_first": ["/api/*"]
   },
   "observability": { "enabled": true },
+  // Phase 19 cleanup (security.md §8): hourly; closes PRs and deletes
+  // concord/run-* branches older than 48h. Idempotent.
+  "triggers": { "crons": ["17 * * * *"] },
   "queues": {
     // One producer (the API), one consumer (this worker's queue handler):
     // a run makes 5–15 model calls; consumers get 15 min of CPU
@@ -31,7 +34,12 @@
     "ACCESS_TEAM_DOMAIN": "grainpool.cloudflareaccess.com",
     "ACCESS_AUD": "be136ff79ded93a44ad0b615f810999d6128adcfbf86112a2e9daab09b599278",
     // The ONLY Relay surface Concord touches (CONTRACTS-FROZEN.md §1).
-    "RELAY_BASE_URL": "https://relay.otonieltrejo.com"
+    "RELAY_BASE_URL": "https://relay.otonieltrejo.com",
+    // Phase 19: the estate repo the App is installed on. Not a secret —
+    // the secrets (GITHUB_APP_ID, GITHUB_INSTALLATION_ID,
+    // GITHUB_APP_PRIVATE_KEY) go in via `wrangler secret put` only.
+    "GITHUB_REPO": "grainpool/doc-eng-demo-estate",
+    "CONCORD_PUBLIC_URL": "https://concord.otonieltrejo.com"
   },
   "d1_databases": [
     {

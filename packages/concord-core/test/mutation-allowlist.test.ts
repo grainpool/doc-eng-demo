@@ -62,7 +62,7 @@ describe("fact mutation allowlist (§4.1 — nine keys, closed values)", () => {
 describe("doc-body mutations (§4.2 — MDX is executable)", () => {
   it("only ids in editable-units.json are writable", () => {
     const verdict = validateMutation(
-      { kind: "doc_body", doc_unit_id: "generated:generated/availability-matrix.mdx#page", body: "x" },
+      { kind: "doc_body", doc_unit_id: "generated:docs-mintlify/generated/availability-matrix.mdx#page", body: "x" },
       EDITABLE,
     );
     expect(verdict).toMatchObject({ ok: false, code: "MUTATION_NOT_ALLOWED" });

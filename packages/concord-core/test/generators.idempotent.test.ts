@@ -69,7 +69,7 @@ describe("generators (I8: idempotent, pure)", () => {
 
   it("hand-editing a generated file yields the warning AND an overwrite", () => {
     const files = readEstate().map((f) =>
-      f.path === "generated/availability-matrix.mdx"
+      f.path === "docs-mintlify/generated/availability-matrix.mdx"
         ? { ...f, content: f.content.replace("## Limits", "## Limits (edited by hand)") }
         : f,
     );
@@ -77,9 +77,9 @@ describe("generators (I8: idempotent, pure)", () => {
     expect(warnings.length).toBe(1);
     expect(warnings[0]).toMatchObject({
       kind: "generated_file_hand_edited",
-      path: "generated/availability-matrix.mdx",
+      path: "docs-mintlify/generated/availability-matrix.mdx",
     });
-    const overwrite = diffs.find((d) => d.path === "generated/availability-matrix.mdx");
+    const overwrite = diffs.find((d) => d.path === "docs-mintlify/generated/availability-matrix.mdx");
     expect(overwrite).toBeDefined();
     expect(overwrite!.after).toContain("## Limits");
     expect(overwrite!.after).not.toContain("edited by hand");
@@ -118,7 +118,7 @@ describe("generators (I8: idempotent, pure)", () => {
     );
     const { diffs, warnings } = runGenerators(previous, current, inputs());
     expect(warnings).toEqual([]);
-    const regen = diffs.find((d) => d.path === "generated/plan-gating.mdx");
+    const regen = diffs.find((d) => d.path === "docs-mintlify/generated/plan-gating.mdx");
     expect(regen).toBeDefined();
     expect(regen!.after).toContain("| connector_drive | pro |");
   });

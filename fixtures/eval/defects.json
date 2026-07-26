@@ -78,7 +78,7 @@
     {
       "id": "def_stale_generated_matrix_limit",
       "class": "STALE_VALUE",
-      "doc_unit_id": "generated:generated/availability-matrix.mdx#page",
+      "doc_unit_id": "generated:docs-mintlify/generated/availability-matrix.mdx#page",
       "fact_key": "limit.upload.csv.max_bytes",
       "description": "Generated matrix cell carries a superseded raw-byte value.",
       "injection": {
@@ -120,7 +120,7 @@
     {
       "id": "def_wrong_platform_generated_matrix",
       "class": "WRONG_PLATFORM",
-      "doc_unit_id": "generated:generated/availability-matrix.mdx#page",
+      "doc_unit_id": "generated:docs-mintlify/generated/availability-matrix.mdx#page",
       "fact_key": "availability.feature.analysis_sessions.platform.ios",
       "description": "Generated availability matrix flips the iOS cell to true.",
       "injection": {
@@ -327,7 +327,7 @@
     {
       "id": "def_false_raw_bytes_cell",
       "class": "STALE_VALUE",
-      "doc_unit_id": "generated:generated/availability-matrix.mdx#page",
+      "doc_unit_id": "generated:docs-mintlify/generated/availability-matrix.mdx#page",
       "fact_key": "limit.upload.csv.max_bytes",
       "description": "The matrix renders 10485760 raw bytes while prose says '10 MB' — an unusual unit, the same normalized value.",
       "injection": null,
@@ -360,7 +360,7 @@
     {
       "id": "def_conflict_t4_ios_contradiction",
       "class": "CONTRADICTION",
-      "doc_unit_id": "generated:generated/availability-matrix.mdx#page",
+      "doc_unit_id": "generated:docs-mintlify/generated/availability-matrix.mdx#page",
       "fact_key": "availability.feature.analysis_sessions.platform.ios",
       "description": "T4 release rel_2026_05_02_ios_launch asserts iOS enablement (to: true) while T3 config denies it (ios: false) — the standing temporal contradiction in the CLEAN truth. Concord must escalate UNRESOLVED_CONFLICT with owner and information gap, never pick a side.",
       "injection": null,
@@ -466,7 +466,7 @@
     {
       "id": "def_false_matrix_dash_cells",
       "class": "WRONG_PLATFORM",
-      "doc_unit_id": "generated:generated/availability-matrix.mdx#page",
+      "doc_unit_id": "generated:docs-mintlify/generated/availability-matrix.mdx#page",
       "fact_key": "availability.feature.connector_drive.platform.web",
       "description": "NEGATIVE CONTROL: the matrix's '—' cells (connector_drive on ios/android/cli) claim nothing; only declared cells project. A finding here is a false positive.",
       "injection": null,

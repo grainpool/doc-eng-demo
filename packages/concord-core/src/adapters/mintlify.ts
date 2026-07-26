@@ -61,6 +61,10 @@ export const mintlifyAdapter: SurfaceAdapter = {
           `mount prefix in adapter input: ${file.path} — ids must be estate-relative (I15)`,
         );
       }
+      // docs-mintlify/generated/** belongs to the generated adapter; the
+      // globs overlap because the generated surface lives inside the
+      // Mintlify tree (the PR allowlist only covers docs-mintlify/**).
+      if (file.path.startsWith("docs-mintlify/generated/")) continue;
       if (!file.path.endsWith(".mdx")) continue;
       const parsed = matter(file.content);
       const frontmatter = parsed.data as Record<string, unknown>;

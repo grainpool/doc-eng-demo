@@ -1,8 +1,8 @@
 import type { Generator } from "./types.js";
 
 /**
- * Structured metadata fragment referenced from docs.json via `$ref`
- * (`navigation-generated.json`): the navigation group for generated pages.
+ * Structured metadata fragment referenced from navigation.json via `$ref`
+ * (`generated/navigation.json`): the navigation group for generated pages.
  * JSON cannot carry an MDX comment; the marker rides in a `_concord` field
  * (Mintlify ignores unknown keys).
  */
@@ -16,7 +16,7 @@ export const navigationGenerator: Generator = {
     };
     return [
       {
-        path: "docs-mintlify/navigation-generated.json",
+        path: "docs-mintlify/generated/navigation.json",
         content: `${JSON.stringify(fragment, null, 2)}\n`,
       },
     ];

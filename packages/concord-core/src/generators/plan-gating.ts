@@ -30,6 +30,6 @@ a feature available on \`free\` is available on every plan above it.
 |---|---|
 ${rows.join("\n")}
 `;
-    return [{ path: "generated/plan-gating.mdx", content }];
+    return [{ path: "docs-mintlify/generated/plan-gating.mdx", content }];
   },
 };

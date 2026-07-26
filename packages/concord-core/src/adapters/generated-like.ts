@@ -72,7 +72,7 @@ export const releaseAdapter = makeGeneratedAdapter(
 
 export const generatedAdapter = makeGeneratedAdapter(
   "generated",
-  ["generated/**/*.mdx"],
+  ["docs-mintlify/generated/**/*.mdx"],
   "agent",
   "technical_reference",
 );

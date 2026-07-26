@@ -1,14 +1,14 @@
 [
   {
-    "id": "generated:generated/availability-matrix.mdx#page",
-    "path": "generated/availability-matrix.mdx",
+    "id": "generated:docs-mintlify/generated/availability-matrix.mdx#page",
+    "path": "docs-mintlify/generated/availability-matrix.mdx",
     "anchor": "page",
     "title": "Availability & limits matrix",
     "generated": true
   },
   {
-    "id": "generated:generated/plan-gating.mdx#page",
-    "path": "generated/plan-gating.mdx",
+    "id": "generated:docs-mintlify/generated/plan-gating.mdx#page",
+    "path": "docs-mintlify/generated/plan-gating.mdx",
     "anchor": "page",
     "title": "Plan gating",
     "generated": true

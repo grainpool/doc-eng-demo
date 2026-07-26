@@ -239,3 +239,24 @@ Narration: streamed, ~4 s. Both write `model_call` rows (purpose, tokens, prompt
   AFTER a write completes (second batch of a >5 fan-out, or a later run within the TTL). Cache-read
   verification therefore uses the 10-unit model-extraction fan-out (two batches), not a rerun —
   a rerun with no delta makes zero calls by design.
+
+## Phase 19 additions
+
+- **GitHub App private keys download as PKCS#1** (header `BEGIN RSA PRIVATE KEY` — five-dash armor omitted for the secret scan); Workers'
+  WebCrypto (and therefore jose `importPKCS8`) only imports PKCS#8. Convert before `wrangler secret
+  put`: `node -e "crypto.createPrivateKey(pem).export({type:'pkcs8',format:'pem'})"`. The failure
+  mode is a runtime import error on first publish, not at secret-put time.
+- **A repository ruleset with `ref_name.include: ["~ALL"]` blocks the entire publish lifecycle**,
+  not just `main`: branch *creation* from an existing SHA still succeeds (201), but any commit to
+  the new branch is `409 Repository rule violations found` and deletion is `422 Cannot delete this
+  branch`. The `pull_request` + `deletion` rules must be scoped to `~DEFAULT_BRANCH` for
+  `concord/run-*` branches to be writable and reapable. Found by live verification before writing
+  the publish path — the create-then-cannot-delete combination would have orphaned a ref per run.
+- **Estate blobs carried CRLF in five files**, and a `git checkout` round-trip on Windows
+  (autocrlf) re-materialized LF files as CRLF — either way byte-exact comparison against generator
+  output (hand-edit detection) breaks. Fixed durably: `.gitattributes` with `* text eol=lf` in the
+  estate plus a one-time renormalization commit. Line endings are load-bearing wherever content is
+  hash- or byte-compared.
+- **PowerShell 5.1 `Get-Content` reads BOM-less UTF-8 as ANSI** — a read-replace-write of source
+  files corrupted em-dashes into mojibake (`â€”`) that only surfaced as test failures on marker
+  strings. Bulk text substitutions on repo files are done with node, never PowerShell cmdlets.

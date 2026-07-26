@@ -48,6 +48,6 @@ ${marker("availability.feature.*, limit.upload.csv.max_bytes, support.file_type.
 |---|${PLATFORMS.map(() => "---|").join("")}
 ${featureRows.join("\n")}
 `;
-    return [{ path: "generated/availability-matrix.mdx", content }];
+    return [{ path: "docs-mintlify/generated/availability-matrix.mdx", content }];
   },
 };

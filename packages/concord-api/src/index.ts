@@ -9,6 +9,7 @@ import {
 import { validateMutation } from "@concord/core";
 import editableUnits from "../../../fixtures/changelab/editable-units.json";
 import { assembleChangeLabRun } from "./changelab.js";
+import { cleanupStaleRuns, githubConfigured } from "./github.js";
 import { requireAccessIdentity, type AccessIdentity } from "./middleware/access.js";
 import { REPLAY_RUNS } from "./runs.generated.js";
 import { executeRun, type MessageLike, type RunDeps, type RunEnv, type RunOptions } from "./run.js";
@@ -129,7 +130,9 @@ app.post("/api/admin/changelab", async (c) => {
     return c.json({ error: "RATE_LIMITED", detail: "≤ 5 live runs per identity per hour" }, 429);
   }
   const runId = newId("run");
-  const options: RunOptions = { ai: true, mutation: parsed.data.mutation };
+  // publish: live privileged runs open a real PR (Phase 19); public and
+  // replay paths never touch GitHub.
+  const options: RunOptions = { ai: true, mutation: parsed.data.mutation, publish: true };
   await c.env.concord_db
     .prepare("INSERT INTO run (id, started_at, status, mode, mutation_json) VALUES (?, ?, 'queued', 'live', ?)")
     .bind(runId, new Date().toISOString(), auditBase.mutation)
@@ -333,6 +336,25 @@ export default {
       const deps = message.body.options.ai ? realDeps(env) : { createMessage: null };
       await executeRun(env, deps, message.body.run_id, message.body.options);
       message.ack();
+    }
+  },
+  // Phase 19 cleanup cron (security.md §8): close PRs and delete
+  // concord/run-* branches older than 48h. Idempotent; a failed pass is
+  // retried on the next tick, so errors are logged (statuses only) and
+  // never thrown.
+  async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
+    if (!githubConfigured(env)) return;
+    try {
+      const report = await cleanupStaleRuns(env, (url, init) => fetch(url, init));
+      console.log(
+        `cleanup: scanned=${report.scanned} closed_prs=${report.closed_prs} ` +
+          `deleted_branches=${report.deleted_branches} errors=${report.errors.length}`,
+      );
+      for (const error of report.errors) console.log(`cleanup error: ${error}`);
+    } catch (e) {
+      console.log(
+        `cleanup failed: ${e instanceof Error ? e.message.slice(0, 200) : "unknown"}`,
+      );
     }
   },
 };
