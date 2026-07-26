@@ -127,13 +127,18 @@ function checkKernel(env: Env): Promise<HealthCheck> {
     // The startup egress probe (security.md §3 instrument): surfaced here so
     // the open-egress platform fact (COMPAT.md Phase 04) stays observable
     // rather than buried — "open:http_200" is the honest current state.
-    let egressProbe: unknown = "unavailable";
+    let egressProbe = "unavailable";
     try {
       const healthRes = await container.fetch("http://kernel/health", {
         signal: AbortSignal.timeout(10_000),
       });
       if (healthRes.ok) {
-        egressProbe = ((await healthRes.json()) as { egress_probe?: unknown }).egress_probe;
+        const probe = ((await healthRes.json()) as {
+          egress_probe?: { target?: string; result?: string };
+        }).egress_probe;
+        if (probe?.result) {
+          egressProbe = `${probe.result} (${probe.target ?? "unknown target"})`;
+        }
       }
     } catch {
       // versions succeeded; a probe-read failure should not fail the check

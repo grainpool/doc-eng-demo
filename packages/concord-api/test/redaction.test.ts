@@ -60,7 +60,8 @@ describe("redaction (security.md §6)", () => {
     expect(out.completion).toBe("[redacted]");
     const nested = out.nested as Record<string, unknown>;
     expect(nested.cookie).toBe("[redacted]");
-    expect((nested.deeper as Record<string, unknown>[])[0].client_secret).toBe("[redacted]");
+    const deeper = nested.deeper as Record<string, unknown>[];
+    expect(deeper[0]?.client_secret).toBe("[redacted]");
   });
 
   it("operational fields survive; emitted line contains no secret", () => {
