@@ -59,7 +59,23 @@ export default tseslint.config(
   {
     files: ["scripts/**/*.mjs", "packages/*/scripts/**/*.mjs"],
     languageOptions: {
-      globals: { process: "readonly", console: "readonly", fetch: "readonly" },
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        fetch: "readonly",
+        setTimeout: "readonly",
+      },
+    },
+  },
+  {
+    // Browser scripts served as static assets (concord-web).
+    files: ["packages/concord-web/public/**/*.js"],
+    languageOptions: {
+      globals: { document: "readonly", window: "readonly", fetch: "readonly" },
+    },
+    rules: {
+      // renderChangeLabRun is the page entry point, referenced from HTML.
+      "@typescript-eslint/no-unused-vars": "off",
     },
   },
 );
