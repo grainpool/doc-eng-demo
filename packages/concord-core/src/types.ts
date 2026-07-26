@@ -85,6 +85,8 @@ export const FindingSchema = z.object({
   doc_unit_id: z.string().nullable(),
   projection_id: z.string().nullable(),
   detail: z.string(),
+  /** The fact's owner from the registry — who an escalation would name. */
+  owner: z.string().nullable(),
 });
 export type Finding = z.infer<typeof FindingSchema>;
 
@@ -107,5 +109,27 @@ export const ImpactSchema = z.object({
   action: ActionClassSchema,
   classification_rule: z.number().int(),
   explanation: z.string(),
+  /**
+   * Phase 13: nothing is silently dropped (AP6). Deterministic patches are
+   * "proposed"; AI-bucket and conflict impacts are "unresolved" until
+   * Phases 14/15; equal values are "no_action".
+   */
+  disposition: z.enum([
+    "applied",
+    "proposed",
+    "escalated",
+    "unresolved",
+    "suppressed",
+    "no_action",
+    "abandoned_budget",
+  ]),
 });
 export type Impact = z.infer<typeof ImpactSchema>;
+
+/** Run-level warnings — documented behavior, surfaced in the report UI. */
+export const WarningSchema = z.object({
+  kind: z.enum(["generated_file_hand_edited"]),
+  path: z.string(),
+  detail: z.string(),
+});
+export type Warning = z.infer<typeof WarningSchema>;

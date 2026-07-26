@@ -13,6 +13,8 @@ import {
   type FactProjection,
   type Finding,
 } from "@concord/core";
+import { CliIntrospectionSchema } from "@relay/contracts";
+import cliIntrospection from "../../../fixtures/cli-introspection.json";
 import { ESTATE_FILES } from "./estate.generated.js";
 import { runModelExtraction } from "./model-extract.js";
 
@@ -94,6 +96,7 @@ app.post("/api/runs", async (c) => {
       current,
       files: ESTATE_FILES,
       detectedAt: startedAt,
+      cli: CliIntrospectionSchema.parse(cliIntrospection),
     });
     await step(c.env, runId, "pipeline", {
       deltas: out.deltas.length,
@@ -102,6 +105,8 @@ app.post("/api/runs", async (c) => {
       impacts: out.impacts.length,
       patches: out.patches.length,
       findings: out.findings.length,
+      warnings: out.warnings.length,
+      generated_paths: out.generated_paths,
       refusals: out.refusals,
     });
 
@@ -180,11 +185,10 @@ app.post("/api/runs", async (c) => {
       statements.push(
         c.env.concord_db
           .prepare(
-            "INSERT INTO finding (id, run_id, kind, fact_key, doc_unit_id, projection_id, detail, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO finding (id, run_id, kind, fact_key, doc_unit_id, projection_id, detail, owner, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
           )
           .bind(
-            // Findings are not a contract object (ID_PREFIXES is frozen);
-            // they get a local prefix until Phase 13 formalizes them.
+            // Findings are not a contract object (ID_PREFIXES is frozen).
             `fnd_${crypto.randomUUID()}`,
             runId,
             finding.kind,
@@ -192,6 +196,7 @@ app.post("/api/runs", async (c) => {
             finding.doc_unit_id,
             finding.projection_id,
             finding.detail,
+            finding.owner,
             startedAt,
           ),
       );
@@ -214,7 +219,7 @@ app.post("/api/runs", async (c) => {
       statements.push(
         c.env.concord_db
           .prepare(
-            "INSERT INTO impact (id, run_id, fact_key, delta_json, doc_unit_id, projection_id, action, classification_rule, explanation, patch_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO impact (id, run_id, fact_key, delta_json, doc_unit_id, projection_id, action, classification_rule, explanation, disposition, patch_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
           )
           .bind(
             newId("imp"),
@@ -226,8 +231,18 @@ app.post("/api/runs", async (c) => {
             impact.action,
             impact.classification_rule,
             impact.explanation,
+            impact.disposition,
             (unit && patchIds.get(unit.path)) ?? null,
           ),
+      );
+    }
+    for (const warning of out.warnings) {
+      statements.push(
+        c.env.concord_db
+          .prepare(
+            "INSERT INTO run_warning (id, run_id, kind, path, detail, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+          )
+          .bind(`wrn_${crypto.randomUUID()}`, runId, warning.kind, warning.path, warning.detail, startedAt),
       );
     }
     await batchAll(c.env, statements);
@@ -244,6 +259,7 @@ app.post("/api/runs", async (c) => {
       impacts: out.impacts.length,
       patches: out.patches.length,
       findings: allFindings.length,
+      warnings: out.warnings.length,
       refusals: out.refusals.length,
     });
   } catch (e) {
@@ -265,7 +281,7 @@ app.get("/api/public/runs/:id", async (c) => {
     .bind(runId)
     .first();
   if (!run) return c.json({ error: "not_found" }, 404);
-  const [steps, impacts, patches, findings] = await Promise.all([
+  const [steps, impacts, patches, findings, warnings] = await Promise.all([
     c.env.concord_db
       .prepare("SELECT step, detail_json, created_at FROM run_step WHERE run_id = ? ORDER BY created_at")
       .bind(runId)
@@ -279,7 +295,11 @@ app.get("/api/public/runs/:id", async (c) => {
       .bind(runId)
       .all(),
     c.env.concord_db
-      .prepare("SELECT kind, fact_key, doc_unit_id, projection_id, detail FROM finding WHERE run_id = ?")
+      .prepare("SELECT kind, fact_key, doc_unit_id, projection_id, detail, owner FROM finding WHERE run_id = ?")
+      .bind(runId)
+      .all(),
+    c.env.concord_db
+      .prepare("SELECT kind, path, detail FROM run_warning WHERE run_id = ?")
       .bind(runId)
       .all(),
   ]);
@@ -289,6 +309,7 @@ app.get("/api/public/runs/:id", async (c) => {
     impacts: impacts.results,
     patches: patches.results,
     findings: findings.results,
+    warnings: warnings.results,
   });
 });
 

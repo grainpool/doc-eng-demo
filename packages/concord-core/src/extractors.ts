@@ -180,7 +180,10 @@ interface TermSpec {
   variants: string[];
 }
 
-export function termSpecsFromFacts(facts: readonly FactClaim[]): TermSpec[] {
+export function termSpecsFromFacts(
+  facts: readonly FactClaim[],
+  priorTerms?: ReadonlyMap<string, string>,
+): TermSpec[] {
   const canonicals = new Map<string, string>();
   for (const fact of facts) {
     if (fact.key.startsWith("term.canonical.") && typeof fact.value === "string") {
@@ -200,78 +203,121 @@ export function termSpecsFromFacts(facts: readonly FactClaim[]): TermSpec[] {
       }
     }
   }
-  return [...canonicals.entries()].map(([factKey, canonical]) => ({
-    factKey,
-    canonical,
-    variants: variants.get(factKey) ?? [],
-  }));
+  return [...canonicals.entries()].map(([factKey, canonical]) => {
+    const fromHistory = variants.get(factKey) ?? [];
+    // Terminology closure (Phase 13): a just-renamed fact's PREVIOUS value
+    // is a known variant even before a release record exists for it.
+    const prior = priorTerms?.get(factKey);
+    const all =
+      prior !== undefined && prior !== canonical && !fromHistory.includes(prior)
+        ? [prior, ...fromHistory]
+        : fromHistory;
+    return { factKey, canonical, variants: all.filter((v) => v !== canonical) };
+  });
+}
+
+/** Spans of markdown link TARGETS (the URL half) within a body. */
+function linkTargetSpans(body: string): { start: number; end: number }[] {
+  const spans: { start: number; end: number }[] = [];
+  for (const match of body.matchAll(/\]\(([^)\s]+)\)/g)) {
+    const start = match.index + 2;
+    spans.push({ start, end: start + (match[1] as string).length });
+  }
+  return spans;
 }
 
 function wordOccurrence(
   body: string,
   word: string,
+  excluded: { start: number; end: number }[] = [],
 ): { index: number; text: string } | null {
   // Capitalized whole-word match (plural allowed): product nouns, not prose
   // coincidences ("the task at hand" stays out; "Task" and "Tasks" count).
   const re = new RegExp(`(?<![A-Za-z0-9])${word}(s)?(?![A-Za-z0-9])`, "g");
-  const match = re.exec(body);
-  return match ? { index: match.index, text: match[0] } : null;
+  for (const match of body.matchAll(re)) {
+    const end = match.index + match[0].length;
+    if (excluded.some((s) => match.index < s.end && end > s.start)) continue;
+    return { index: match.index, text: match[0] };
+  }
+  return null;
+}
+
+/** Does the term (as a slug or word) occur in a URL, anchor, or heading? */
+function editorialOccurrence(
+  unit: DocUnit,
+  words: string[],
+): string | null {
+  for (const word of words) {
+    const slug = slugify(word);
+    if (unit.anchor?.includes(slug)) return word;
+    for (const span of linkTargetSpans(unit.body)) {
+      const target = unit.body.slice(span.start, span.end).toLowerCase();
+      if (target.includes(slug)) return word;
+    }
+    if (wordOccurrence(unit.title, word) !== null) return word;
+  }
+  return null;
 }
 
 export function extractTermOccurrences(
   units: DocUnit[],
   facts: readonly FactClaim[],
   detectedAt: string,
+  priorTerms?: ReadonlyMap<string, string>,
 ): FactProjection[] {
-  const specs = termSpecsFromFacts(facts);
+  const specs = termSpecsFromFacts(facts, priorTerms);
   const projections: FactProjection[] = [];
   for (const unit of units) {
+    // Release/changelog content QUOTES history ("'Job' renamed to 'Task'").
+    // T4 is temporal: an old term there is a record, not a current-term
+    // assertion — extracting it would flag every historical rename forever.
+    if (
+      unit.editorial_register === "release_note" ||
+      /(^|\/)(changelog\.mdx|release-notes\/)/.test(unit.path)
+    ) {
+      continue;
+    }
+    const excluded = linkTargetSpans(unit.body);
     for (const spec of specs) {
-      // Variants first: drift is the signal worth projecting.
+      const words = [...spec.variants, spec.canonical]; // drift first
+      // PROSE occurrence (body text, never inside a link target): variants
+      // first — drift is the signal worth projecting.
       let hit: { index: number; text: string } | null = null;
-      for (const variant of spec.variants) {
-        hit = wordOccurrence(unit.body, variant);
+      for (const word of words) {
+        hit = wordOccurrence(unit.body, word, excluded);
         if (hit) break;
       }
-      let span: { start: number; end: number } | null = null;
-      let asserted: string | null = null;
       if (hit) {
-        span = { start: hit.index, end: hit.index + hit.text.length };
-        asserted = hit.text;
-      } else {
-        const canonicalHit = wordOccurrence(unit.body, spec.canonical);
-        if (canonicalHit) {
-          span = {
-            start: canonicalHit.index,
-            end: canonicalHit.index + canonicalHit.text.length,
-          };
-          asserted = canonicalHit.text;
-        } else {
-          // Headings and anchors count too (spec §12) — span-less.
-          const inTitle = [spec.canonical, ...spec.variants].find(
-            (w) => wordOccurrence(unit.title, w) !== null,
-          );
-          const inAnchor = [spec.canonical, ...spec.variants].find(
-            (w) => unit.anchor?.includes(slugify(w)) ?? false,
-          );
-          const found = inTitle ?? inAnchor;
-          if (!found) continue;
-          asserted =
-            wordOccurrence(unit.title, found)?.text ??
-            found;
-        }
+        projections.push({
+          id: projId(unit.id, spec.factKey, "term_occurrence"),
+          fact_key: spec.factKey,
+          doc_unit_id: unit.id,
+          mode: unit.generated ? "generated" : "derived_prose",
+          asserted_value: hit.text,
+          span: { start: hit.index, end: hit.index + hit.text.length },
+          extractor: "term_occurrence",
+          confidence: 0.9,
+          detected_at: detectedAt,
+        });
       }
-      projections.push({
-        id: projId(unit.id, spec.factKey, "term_occurrence"),
-        fact_key: spec.factKey,
-        doc_unit_id: unit.id,
-        mode: unit.generated ? "generated" : "derived_prose",
-        asserted_value: asserted,
-        span,
-        extractor: "term_occurrence",
-        confidence: 0.9,
-        detected_at: detectedAt,
-      });
+      // EDITORIAL occurrence — URLs, anchors, headings (terminology closure,
+      // Phase 13): rewriting these breaks inbound links, so the projection
+      // is editorial-mode and rule 5 routes a rename to EDITORIAL_REVIEW,
+      // never a deterministic rewrite (validation.md §7).
+      const editorialWord = editorialOccurrence(unit, words);
+      if (editorialWord !== null) {
+        projections.push({
+          id: `${projId(unit.id, spec.factKey, "term_occurrence")}:anchor`,
+          fact_key: spec.factKey,
+          doc_unit_id: unit.id,
+          mode: "editorial",
+          asserted_value: wordOccurrence(unit.title, editorialWord)?.text ?? editorialWord,
+          span: null,
+          extractor: "term_occurrence",
+          confidence: 0.9,
+          detected_at: detectedAt,
+        });
+      }
     }
   }
   return projections;
@@ -378,6 +424,10 @@ export function normalizeProjections(
       text: String(projection.asserted_value),
       reason: `normalization unknown (${normalized.reason}) — downgraded to derived_prose`,
     });
+    // Editorial stays editorial — the downgrade only strips mechanical modes.
+    if (projection.mode === "editorial") {
+      return { ...projection, normalized_value: null };
+    }
     return { ...projection, mode: "derived_prose" as const, normalized_value: null };
   });
   return { projections: out, refusals };
@@ -387,7 +437,11 @@ export function normalizeProjections(
 export function dedupeProjections(projections: FactProjection[]): FactProjection[] {
   const byKey = new Map<string, FactProjection>();
   for (const projection of projections) {
-    const key = `${projection.doc_unit_id} ${projection.fact_key}`;
+    // Editorial-mode occurrences (anchors/URLs/headings) are a distinct
+    // representation from prose — both survive for the same (unit, fact).
+    const key = `${projection.doc_unit_id} ${projection.fact_key}${
+      projection.mode === "editorial" ? " editorial" : ""
+    }`;
     const existing = byKey.get(key);
     if (
       !existing ||
@@ -404,13 +458,15 @@ export function runExtractors(
   units: DocUnit[],
   facts: readonly FactClaim[],
   detectedAt: string,
+  priorTerms?: ReadonlyMap<string, string>,
+  previousFacts?: readonly FactClaim[],
 ): ExtractionOutput {
   const deterministic: FactProjection[] = [
     ...extractDeclaredReferences(units, detectedAt),
     ...extractFrontmatterFields(units, detectedAt),
     ...extractGeneratedMarkers(units, detectedAt),
     ...extractAvailabilityTables(units, detectedAt),
-    ...extractTermOccurrences(units, facts, detectedAt),
+    ...extractTermOccurrences(units, facts, detectedAt, priorTerms),
   ];
   const claimedSpans = new Map<string, { start: number; end: number }[]>();
   for (const projection of deterministic) {
@@ -420,7 +476,21 @@ export function runExtractors(
       projection.span,
     ]);
   }
-  const numeric = extractNumericPatterns(units, facts, claimedSpans, detectedAt);
+  // A stale rendering matches a fact's PREVIOUS value — without this, a
+  // just-changed fact's outdated renderings would stop projecting exactly
+  // when they matter most. (Key,value) pairs already current are not
+  // duplicated; the ambiguity refusal applies across the union.
+  const previousOnly = (previousFacts ?? []).filter(
+    (p) =>
+      typeof p.value === "number" &&
+      !facts.some((f) => f.key === p.key && f.value === p.value),
+  );
+  const numeric = extractNumericPatterns(
+    units,
+    [...facts, ...previousOnly],
+    claimedSpans,
+    detectedAt,
+  );
   const deduped = dedupeProjections([...deterministic, ...numeric.projections]);
   const normalized = normalizeProjections(deduped);
   return {

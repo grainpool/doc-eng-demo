@@ -45,3 +45,23 @@ Ideas noted during a phase and deliberately not built in it (constraints.md AP11
 - `model_extraction` fan-out is capped at 10 units/run (`MODEL_EXTRACTION_MAX_UNITS`), prioritizing
   nothing in particular; a signal-based ranking (units containing digits/platform words) would spend
   the budget better.
+
+## From Phase 13
+
+- Impact→patch linkage in concord_db is still BY PATH (Phase 10 shape): an
+  EDITORIAL_REVIEW impact on a unit whose file also got a deterministic patch
+  shows that patch id. Phase 14 should link patches per impact (`impact_ids`
+  on the Patch record, per contracts.md §14) and null it for non-regen impacts.
+- Hand-edit detection cannot distinguish "hand-edited" from "regen proposed
+  but never applied" once the previous snapshot catches up (both differ from
+  generator output for current AND previous facts). The warning text says so;
+  the ambiguity disappears in Phase 17 when regen patches are actually
+  applied via PR.
+- numeric_pattern also matches PREVIOUS-snapshot values so stale renderings
+  keep projecting mid-change. Values older than one snapshot are still
+  invisible to it; the eval (Phase 16) will show whether one-snapshot memory
+  is enough for the STALE_* defect classes.
+- The cli-docs and cli-reference pages are generated from the introspection
+  FIXTURE. If the fixture and the live `relay introspect --json` drift, CI's
+  staleness gate catches it in repo 1, but Concord itself never verifies —
+  consider a T2-vs-fixture freshness check in Phase 15's conflict machinery.

@@ -63,6 +63,48 @@
     "generated": true
   },
   {
+    "id": "mintlify:docs-mintlify/changelog.mdx#v160-2026-06-15",
+    "path": "docs-mintlify/changelog.mdx",
+    "anchor": "v160-2026-06-15",
+    "title": "v1.6.0 — 2026-06-15",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/changelog.mdx#v150-2026-05-02",
+    "path": "docs-mintlify/changelog.mdx",
+    "anchor": "v150-2026-05-02",
+    "title": "v1.5.0 — 2026-05-02",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/changelog.mdx#v140-2026-03-30",
+    "path": "docs-mintlify/changelog.mdx",
+    "anchor": "v140-2026-03-30",
+    "title": "v1.4.0 — 2026-03-30",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/changelog.mdx#v130-2026-02-14",
+    "path": "docs-mintlify/changelog.mdx",
+    "anchor": "v130-2026-02-14",
+    "title": "v1.3.0 — 2026-02-14",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/changelog.mdx#v120-2026-01-20",
+    "path": "docs-mintlify/changelog.mdx",
+    "anchor": "v120-2026-01-20",
+    "title": "v1.2.0 — 2026-01-20",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/changelog.mdx#v110-2025-11-10",
+    "path": "docs-mintlify/changelog.mdx",
+    "anchor": "v110-2025-11-10",
+    "title": "v1.1.0 — 2025-11-10",
+    "generated": true
+  },
+  {
     "id": "mintlify:docs-mintlify/cli-overview.mdx#intro",
     "path": "docs-mintlify/cli-overview.mdx",
     "anchor": "intro",
@@ -95,6 +137,160 @@
     "path": "docs-mintlify/cli-reference.mdx",
     "anchor": "intro",
     "title": "CLI reference",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#exit-codes",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "exit-codes",
+    "title": "Exit codes",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#relay",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "relay",
+    "title": "relay",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#projects",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "projects",
+    "title": "projects",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#projects-list",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "projects-list",
+    "title": "projects list",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#projects-create",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "projects-create",
+    "title": "projects create",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#projects-show",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "projects-show",
+    "title": "projects show",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#files",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "files",
+    "title": "files",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#files-list",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "files-list",
+    "title": "files list",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#files-upload",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "files-upload",
+    "title": "files upload",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#files-show",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "files-show",
+    "title": "files show",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#sessions",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "sessions",
+    "title": "sessions",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#sessions-list",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "sessions-list",
+    "title": "sessions list",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#sessions-create",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "sessions-create",
+    "title": "sessions create",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#sessions-run",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "sessions-run",
+    "title": "sessions run",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#artifacts",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "artifacts",
+    "title": "artifacts",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#artifacts-list",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "artifacts-list",
+    "title": "artifacts list",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#artifacts-show",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "artifacts-show",
+    "title": "artifacts show",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#artifacts-download",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "artifacts-download",
+    "title": "artifacts download",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#config",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "config",
+    "title": "config",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#config-show",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "config-show",
+    "title": "config show",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#config-status",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "config-status",
+    "title": "config status",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#introspect",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "introspect",
+    "title": "introspect",
     "generated": true
   },
   {

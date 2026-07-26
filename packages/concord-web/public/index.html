@@ -35,23 +35,32 @@ async function load(id) {
   if (!res.ok) { out.innerHTML = "<p>run not found</p>"; return; }
   const data = await res.json();
   const patchById = Object.fromEntries((data.patches ?? []).map(p => [p.id, p]));
+  const ORDER = ["DETERMINISTIC_REGEN", "GROUNDED_PATCH", "EDITORIAL_REVIEW", "UNRESOLVED_CONFLICT", "NO_ACTION"];
+  const groups = ORDER.map(action => [action, (data.impacts ?? []).filter(i => i.action === action)])
+    .filter(([, list]) => list.length > 0);
   out.innerHTML =
     "<h2>" + esc(data.run.id) + " — " + esc(data.run.status) + "</h2>" +
     "<p class='muted'>started " + esc(data.run.started_at) + "</p>" +
-    (data.impacts ?? []).map(impact => {
-      const patch = impact.patch_id ? patchById[impact.patch_id] : null;
-      return "<div class='impact'>" +
-        "<div><span class='action " + esc(impact.action) + "'>" + esc(impact.action) + "</span>" +
-        " <span class='muted'>(rule " + esc(impact.classification_rule) + ")</span></div>" +
-        "<div><code>" + esc(impact.fact_key) + "</code> → <code>" + esc(impact.doc_unit_id) + "</code></div>" +
-        "<div class='muted'>Δ " + esc(impact.delta_json) + "</div>" +
-        "<p>" + esc(impact.explanation) + "</p>" +
-        (patch ? "<pre>" + esc(patch.unified) + "</pre>" : "") +
-        "</div>";
-    }).join("") +
+    (data.warnings ?? []).map(w =>
+      "<div class='impact' style='border-color:#b35900'><b>⚠ " + esc(w.kind) + "</b> <code>" + esc(w.path) + "</code>" +
+      "<p class='muted'>" + esc(w.detail) + "</p></div>").join("") +
+    groups.map(([action, impacts]) =>
+      "<h3><span class='action " + esc(action) + "'>" + esc(action) + "</span> (" + impacts.length + ")</h3>" +
+      impacts.map(impact => {
+        const patch = impact.patch_id ? patchById[impact.patch_id] : null;
+        return "<div class='impact'>" +
+          "<div><span class='muted'>rule " + esc(impact.classification_rule) +
+          " · disposition " + esc(impact.disposition ?? "—") + "</span></div>" +
+          "<div><code>" + esc(impact.fact_key) + "</code> → <code>" + esc(impact.doc_unit_id) + "</code></div>" +
+          "<div class='muted'>Δ " + esc(impact.delta_json) + "</div>" +
+          "<p>" + esc(impact.explanation) + "</p>" +
+          (patch ? "<pre>" + esc(patch.unified) + "</pre>" : "") +
+          "</div>";
+      }).join("")).join("") +
     ((data.findings ?? []).length
       ? "<h3>Findings (" + data.findings.length + ")</h3>" + data.findings.map(f =>
           "<div class='impact'><b>" + esc(f.kind) + "</b> <code>" + esc(f.fact_key) + "</code>" +
+          (f.owner ? " <span class='muted'>owner " + esc(f.owner) + "</span>" : "") +
           "<p class='muted'>" + esc(f.detail) + "</p></div>").join("")
       : "") +
     "<h3>Steps</h3><pre>" + esc(JSON.stringify(data.steps, null, 2)) + "</pre>";

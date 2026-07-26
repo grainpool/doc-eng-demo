@@ -42,6 +42,7 @@ export function consistencyFindings(
         fact_key: projection.fact_key,
         doc_unit_id: projection.doc_unit_id,
         projection_id: projection.id,
+        owner: entry.owner,
         detail:
           `asserts ${JSON.stringify(projection.asserted_value)} ` +
           `(normalized ${JSON.stringify(projection.normalized_value)}) but ` +
@@ -68,6 +69,7 @@ export function undocumentedFactFindings(
       fact_key: fact.key,
       doc_unit_id: null,
       projection_id: null,
+      owner: matchFactKey(fact.key)?.owner ?? null,
       detail: `no documentation surface projects ${fact.key} (${fact.tier}, value ${JSON.stringify(fact.value)})`,
     });
   }
@@ -84,6 +86,7 @@ export function authorityConflictFindings(facts: readonly FactClaim[]): Finding[
         fact_key: conflict.fact_key,
         doc_unit_id: null,
         projection_id: null,
+        owner: matchFactKey(conflict.fact_key)?.owner ?? null,
         detail: conflict.detail,
       });
     }

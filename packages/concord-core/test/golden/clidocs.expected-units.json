@@ -1,9 +1,58 @@
 [
   {
+    "id": "clidocs:cli-docs/artifacts.md#page",
+    "path": "cli-docs/artifacts.md",
+    "anchor": "page",
+    "title": "relay artifacts",
+    "generated": true
+  },
+  {
+    "id": "clidocs:cli-docs/config.md#page",
+    "path": "cli-docs/config.md",
+    "anchor": "page",
+    "title": "relay config",
+    "generated": true
+  },
+  {
+    "id": "clidocs:cli-docs/files.md#page",
+    "path": "cli-docs/files.md",
+    "anchor": "page",
+    "title": "relay files",
+    "generated": true
+  },
+  {
+    "id": "clidocs:cli-docs/introspect.md#page",
+    "path": "cli-docs/introspect.md",
+    "anchor": "page",
+    "title": "relay introspect",
+    "generated": true
+  },
+  {
+    "id": "clidocs:cli-docs/projects.md#page",
+    "path": "cli-docs/projects.md",
+    "anchor": "page",
+    "title": "relay projects",
+    "generated": true
+  },
+  {
     "id": "clidocs:cli-docs/README.md#page",
     "path": "cli-docs/README.md",
     "anchor": "page",
     "title": "relay CLI reference (generated)",
+    "generated": true
+  },
+  {
+    "id": "clidocs:cli-docs/relay.md#page",
+    "path": "cli-docs/relay.md",
+    "anchor": "page",
+    "title": "relay (root command)",
+    "generated": true
+  },
+  {
+    "id": "clidocs:cli-docs/sessions.md#page",
+    "path": "cli-docs/sessions.md",
+    "anchor": "page",
+    "title": "relay sessions",
     "generated": true
   }
 ]

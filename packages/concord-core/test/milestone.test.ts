@@ -65,7 +65,23 @@ describe("milestone: limit change → two impacts, correct and explained", () =>
         locator: "packages/relay-api/src/limits.ts#LIMIT_UPLOAD_CSV_MAX_BYTES",
       },
     ]);
-    expect(out.impacts.length).toBe(2);
+    // Phase 13 (full §6.1 table): the two mechanical substitutions are
+    // joined by the frontmatter facts field (span-less mechanical → rule 5,
+    // a human-owned unit) and the undeclared tooltip's stale "10 MB"
+    // (numeric_pattern on the PREVIOUS value → rule 4, grounded).
+    expect(out.impacts.length).toBe(4);
+    const actions = out.impacts.map((i) => i.action).sort();
+    expect(actions).toEqual([
+      "DETERMINISTIC_REGEN",
+      "DETERMINISTIC_REGEN",
+      "EDITORIAL_REVIEW",
+      "GROUNDED_PATCH",
+    ]);
+    // AI-bucket impacts are recorded, not invoked (AP6/G16).
+    for (const i of out.impacts) {
+      if (i.action === "DETERMINISTIC_REGEN") expect(i.disposition).toBe("proposed");
+      else expect(i.disposition).toBe("unresolved");
+    }
     const byUnit = new Map(out.impacts.map((i) => [i.doc_unit_id, i]));
     const mintlify = byUnit.get("mintlify:docs-mintlify/supported-files.mdx#size-limits");
     const inproduct = byUnit.get("inproduct:in-product-copy/files.json#uploader.limit_note");
@@ -100,7 +116,7 @@ describe("milestone: limit change → two impacts, correct and explained", () =>
     expect(json.after.replace("25 MB", "10 MB")).toBe(json.before);
   });
 
-  it("rerunning with no change produces two NO_ACTION impacts, not zero", () => {
+  it("rerunning with the regen applied settles the mechanical impacts to NO_ACTION", () => {
     const out = runPipeline({ ...INPUT, previous: INPUT.current });
     // No delta at all → no impacts is wrong; the projections still exist and
     // the *changed-then-settled* case must show NO_ACTION. Model it as the
@@ -111,11 +127,13 @@ describe("milestone: limit change → two impacts, correct and explained", () =>
       return patch ? { path: f.path, content: patch.after } : f;
     });
     const rerun = runPipeline({ ...INPUT, files: applied });
-    expect(rerun.impacts.length).toBe(2);
-    for (const impact of rerun.impacts) {
-      expect(impact.action).toBe("NO_ACTION");
-      expect(impact.classification_rule).toBe(6);
-    }
+    expect(rerun.impacts.length).toBe(4);
+    const settled = rerun.impacts.filter((i) => i.action === "NO_ACTION");
+    expect(settled.length).toBe(2); // the two applied substitutions
+    for (const impact of settled) expect(impact.classification_rule).toBe(6);
+    // The AI-bucket impacts persist until Phase 14 resolves them.
+    expect(rerun.impacts.filter((i) => i.action === "GROUNDED_PATCH").length).toBe(1);
+    expect(rerun.impacts.filter((i) => i.action === "EDITORIAL_REVIEW").length).toBe(1);
     expect(rerun.patches.length).toBe(0);
     // And with genuinely no delta, there are no impacts to report.
     expect(out.deltas.length).toBe(0);
@@ -139,7 +157,9 @@ describe("milestone: limit change → two impacts, correct and explained", () =>
       files: FILES,
       detectedAt: INPUT.detectedAt,
     });
-    // The estate already says 10 MB — both impacts are NO_ACTION (rule 6).
+    // The estate already says 10 MB — every VALUE impact is NO_ACTION
+    // (rule 6); the frontmatter "10240 KB" also equals it after
+    // normalization. Nothing needs a patch.
     expect(rerun.impacts.every((i) => i.action === "NO_ACTION")).toBe(true);
     expect(rerun.patches.length).toBe(0);
   });

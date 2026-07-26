@@ -5,5 +5,12 @@
     "anchor": "page",
     "title": "Availability & limits matrix",
     "generated": true
+  },
+  {
+    "id": "generated:generated/plan-gating.mdx#page",
+    "path": "generated/plan-gating.mdx",
+    "anchor": "page",
+    "title": "Plan gating",
+    "generated": true
   }
 ]

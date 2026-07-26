@@ -4,6 +4,7 @@ export {
   FactProjectionSchema,
   FindingSchema,
   ImpactSchema,
+  WarningSchema,
   type DocUnit,
   type FileDiff,
   type FactProjection,
@@ -11,6 +12,7 @@ export {
   type Finding,
   type Impact,
   type SurfaceAdapter,
+  type Warning,
 } from "./types.js";
 export { mintlifyAdapter, slugify } from "./adapters/mintlify.js";
 export { inproductAdapter } from "./adapters/inproduct.js";
@@ -56,7 +58,23 @@ export {
   undocumentedFactFindings,
   authorityConflictFindings,
 } from "./consistency.js";
-export { classify, type Classification } from "./classify.js";
+export {
+  classify,
+  dispositionFor,
+  type Classification,
+  type ClassifyContext,
+} from "./classify.js";
+export {
+  GENERATORS,
+  generateAll,
+  runGenerators,
+  type GeneratorRunOutput,
+} from "./generators/index.js";
+export type {
+  Generator,
+  GeneratorInputs,
+  GeneratedFile,
+} from "./generators/types.js";
 export { detectDeltas, runPipeline, type PipelineInput, type PipelineOutput } from "./pipeline.js";
 export {
   parseValue,
