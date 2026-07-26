@@ -260,3 +260,17 @@ Narration: streamed, ~4 s. Both write `model_call` rows (purpose, tokens, prompt
 - **PowerShell 5.1 `Get-Content` reads BOM-less UTF-8 as ANSI** — a read-replace-write of source
   files corrupted em-dashes into mojibake (`â€”`) that only surfaced as test failures on marker
   strings. Bulk text substitutions on repo files are done with node, never PowerShell cmdlets.
+
+## Phase 20 additions
+
+- **Windows MAX_PATH breaks a deep-path clone before any project code runs.** A fresh clone under
+  a long temp path (~250 chars) failed at `vitest` startup with
+  `ERR_PACKAGE_IMPORT_NOT_DEFINED: "#module-evaluator"` — Node cannot read the package.json that
+  defines the subpath import once the resolved path crosses 260 characters, and reports it as a
+  missing definition rather than a path error. The same commit installs and tests cleanly from a
+  short path. Diagnosed during the Phase-20 reproducibility exercise; clone near the drive root on
+  Windows, or enable long paths.
+- **A fresh clone had no `relay-cli/dist`, so its tests failed 11/11**: the exit-code and
+  introspection-parity suites execute the bundled CLI, which only existed locally because earlier
+  builds had produced it. Fixed with a `pretest` build script rather than by reordering the
+  README, so the dependency holds however the suite is invoked.

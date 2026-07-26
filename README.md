@@ -77,7 +77,9 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 ```
 
 Requires Node 22+, pnpm 9+, and Docker Desktop (only for deploying the analysis-kernel container;
-tests and local dev do not need it). `pnpm dev` starts the Relay app locally; the Concord inspector
+tests and local dev do not need it). **On Windows, clone near the drive root** (`C:\dev\…`): a deep
+path pushes `node_modules` past MAX_PATH and vitest fails to start with a misleading
+`ERR_PACKAGE_IMPORT_NOT_DEFINED` (COMPAT.md). `pnpm dev` starts the Relay app locally; the Concord inspector
 is served by `concord-api` (`npx wrangler dev` in `packages/concord-api`). Deployed behavior that
 differs from documentation is recorded in [COMPAT.md](COMPAT.md) — that file is the project's
 observed-platform-reality journal and worth reading first when something disagrees with you.

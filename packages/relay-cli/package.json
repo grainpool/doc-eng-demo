@@ -9,7 +9,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "esbuild src/bin.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/bin.js --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\"",
-    "introspect": "node dist/bin.js introspect --json",
+    "introspect": "pnpm run build && node dist/bin.js introspect --json",
+    "pretest": "pnpm run build",
     "test": "vitest run"
   },
   "dependencies": {
