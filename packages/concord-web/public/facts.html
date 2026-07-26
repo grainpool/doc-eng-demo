@@ -23,7 +23,11 @@
   .proj .head { display: flex; gap: .8rem; flex-wrap: wrap; align-items: baseline; }
   .surface { font-weight: 700; }
   .conf { color: #1a7f37; } .conf.low { color: #b35900; }
-  .muted { color: #666; font-size: .9em; }
+  .muted { color: #595959; font-size: .9em; }
+  :focus-visible { outline: 3px solid #0b5fff; outline-offset: 2px; }
+  .state { border: 1px solid #ddd; border-left: 4px solid #999; border-radius: 6px; padding: .75rem 1rem; margin: 1rem 0; }
+  .state.error { border-left-color: #b3261e; }
+  .state.loading { border-left-color: #0b5fff; }
   .asserted { font-size: 1.05em; margin: .4rem 0; }
   .finding { border-left: 4px solid #b30000; padding: .5rem .8rem; background: #fff5f5; margin: .5rem 0; }
   .conflict { border-left: 4px solid #b35900; padding: .5rem .8rem; background: #fffaf0; margin: .5rem 0; }
@@ -39,8 +43,18 @@ const main = document.getElementById("main");
 function esc(s) { const d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; }
 
 async function loadList() {
-  const res = await fetch("/api/public/facts");
-  if (!res.ok) { main.innerHTML = "<p>No completed run yet — start one from the run report page.</p>"; return; }
+  main.innerHTML = "<div class='state loading'>Loading the fact graph…</div>";
+  let res;
+  try {
+    res = await fetch("/api/public/facts");
+  } catch {
+    main.innerHTML = "<div class='state error'><b>Could not reach the API.</b> Check your connection and reload.</div>";
+    return;
+  }
+  if (!res.ok) {
+    main.innerHTML = "<div class='state'><b>No completed run yet</b><p class='muted'>The fact graph is built from a run. Start one from the <a href='/'>run report page</a>, or watch a recorded run on the <a href='/changelab.html'>Change Lab</a>.</p></div>";
+    return;
+  }
   const data = await res.json();
   const facts = data.facts.filter(f => f.tier !== "T4_RELEASE" && f.tier !== "T5_HUMAN")
     .sort((a, b) => b.projection_count - a.projection_count || (a.key < b.key ? -1 : 1));
@@ -59,8 +73,19 @@ async function select(btn) {
   for (const b of nav.querySelectorAll("button")) b.classList.remove("sel");
   btn.classList.add("sel");
   const key = btn.dataset.key;
-  const res = await fetch("/api/public/facts/" + encodeURIComponent(key));
-  if (!res.ok) { main.innerHTML = "<p>not found</p>"; return; }
+  main.innerHTML = "<div class='state loading'>Loading <code>" + esc(key) + "</code>…</div>";
+  let res;
+  try {
+    res = await fetch("/api/public/facts/" + encodeURIComponent(key));
+  } catch {
+    main.innerHTML = "<div class='state error'><b>Could not reach the API.</b> Try again.</div>";
+    return;
+  }
+  if (!res.ok) {
+    main.innerHTML = "<div class='state error'><b>No record for <code>" + esc(key) + "</code></b>" +
+      "<p class='muted'>This fact has no projections in the latest run.</p></div>";
+    return;
+  }
   const data = await res.json();
   const arb = data.arbitration;
   const auth = arb && arb.authoritative;

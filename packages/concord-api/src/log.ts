@@ -1,6 +1,9 @@
 /**
- * Structured JSON logger with the redaction rules from security.md §6.
- * One object per line; every line carries request_id.
+ * Structured JSON logger with the redaction rules from security.md §6 —
+ * the concord-api twin of relay-api/src/log.ts (each Worker owns its copy;
+ * completeness is enforced by test/redaction.test.ts). Never logged:
+ * API keys, GitHub App key material or installation tokens, Cf-Access
+ * header values / JWTs, prompt or completion text, presigned URLs.
  */
 
 const SECRET_VALUE_PATTERNS: RegExp[] = [
@@ -23,7 +26,6 @@ const DENIED_KEY_PATTERNS: RegExp[] = [
   /token/i,
   /private[_-]?key/i,
   /presigned/i,
-  // dataset capability-URL signature (kernel/presign.ts)
   /^sig$/i,
   /^prompt$/i,
   /^completion$/i,
@@ -37,7 +39,7 @@ export function redactString(value: string): string {
   return out;
 }
 
-function redactValue(value: unknown): unknown {
+export function redactValue(value: unknown): unknown {
   if (typeof value === "string") return redactString(value);
   if (Array.isArray(value)) return value.map(redactValue);
   if (value !== null && typeof value === "object") {
@@ -52,12 +54,7 @@ function redactValue(value: unknown): unknown {
   return value;
 }
 
-export interface LogFields {
-  request_id: string;
-  [key: string]: unknown;
-}
-
-export function log(event: string, fields: LogFields): void {
+export function log(event: string, fields: Record<string, unknown>): void {
   const entry = {
     ts: new Date().toISOString(),
     event,

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-26T05:47:35.806Z",
+  "generated_at": "2026-07-26T22:34:55.903Z",
   "corpus_size": 36,
   "matching_rule": "location (doc_unit_id | fact_key | file path) AND fixed per-class signal mapping; new-vs-baseline event diffing; see cli/eval.ts header",
   "metrics": {
@@ -704,7 +704,7 @@
     "mean": 0.25,
     "spread": 0,
     "model_calls": 12,
-    "cost_usd": 0.0573,
+    "cost_usd": 0.0551,
     "per_candidate": [
       {
         "defect": "def_wrong_platform_generated_matrix",
@@ -724,7 +724,7 @@
       {
         "defect": "def_term_drift_inproduct",
         "suppressed_runs": 3,
-        "sample_refutation": "The passage is a two-word UI label (\"Run Job\") with no context establishing that \"Job\" refers to the same concept as the canonical \"Task\" term; \"job\" is a plausibly distinct entity (e.g., a run/background job), so this is an unsupported term-matching inference rather than a demonstrated inconsistent value."
+        "sample_refutation": "The passage is a two-word UI label (\"Run Job\") with no context showing that \"Job\" refers to the entity governed by terminology.task; \"job\" is plausibly a distinct concept (e.g., a job run/execution), so this is not an assertion that the canonical task term is \"Job\"."
       }
     ]
   }

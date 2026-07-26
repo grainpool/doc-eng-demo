@@ -13,26 +13,55 @@
   .DETERMINISTIC_REGEN { color: #1a7f37; }
   .NO_ACTION { color: #6a737d; }
   .UNRESOLVED_CONFLICT, .EDITORIAL_REVIEW { color: #b35900; }
-  .muted { color: #666; font-size: .9em; }
+  .muted { color: #595959; font-size: .9em; }
   input { padding: .4rem; width: 24rem; max-width: 100%; }
   button { padding: .4rem .8rem; }
+  input, button { font: inherit; }
+  :focus-visible { outline: 3px solid #0b5fff; outline-offset: 2px; }
+  .state { border: 1px solid #ddd; border-left: 4px solid #999; border-radius: 6px; padding: 1rem; margin: 1rem 0; }
+  .state.error { border-left-color: #b3261e; }
+  .state.loading { border-left-color: #0b5fff; }
+  @media (max-width: 640px) {
+    body { margin: 1rem auto; }
+    input { width: 100%; }
+    p:has(> input) { display: flex; flex-wrap: wrap; gap: .5rem; }
+  }
 </style>
 </head>
 <body>
 <h1>Concord run report</h1>
 <p class="muted">Paste a run id, or start a run against the live Relay product truth. See also the <a href="/changelab.html">Change Lab</a>, <a href="/facts.html">fact-graph explorer</a>, and <a href="/failures.html">what the system gets wrong</a>.</p>
 <p>
+  <label for="runId">Run id</label>
   <input id="runId" placeholder="run_…" />
   <button id="load">Load</button>
   <button id="start">Start new run</button>
 </p>
-<div id="out"></div>
+<div id="out" role="status" aria-live="polite"></div>
 <script>
 const out = document.getElementById("out");
 function esc(s) { const d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; }
 async function load(id) {
-  const res = await fetch("/api/public/runs/" + encodeURIComponent(id));
-  if (!res.ok) { out.innerHTML = "<p>run not found</p>"; return; }
+  if (!id) {
+    out.innerHTML = "<div class='state'><b>Enter a run id</b><p class='muted'>Paste an id like <code>run_01ky…</code>, or press <b>Start new run</b> to make one against live product truth.</p></div>";
+    return;
+  }
+  out.innerHTML = "<div class='state loading'>Loading run " + esc(id) + "…</div>";
+  let res;
+  try {
+    res = await fetch("/api/public/runs/" + encodeURIComponent(id));
+  } catch {
+    out.innerHTML = "<div class='state error'><b>Could not reach the API</b><p class='muted'>Check your connection and try again.</p></div>";
+    return;
+  }
+  if (res.status === 404) {
+    out.innerHTML = "<div class='state error'><b>No run with that id</b><p class='muted'>Run ids look like <code>run_01ky…</code>. Recorded runs are on the <a href='/changelab.html'>Change Lab</a>.</p></div>";
+    return;
+  }
+  if (!res.ok) {
+    out.innerHTML = "<div class='state error'><b>The API returned " + esc(res.status) + "</b><p class='muted'>Try again in a moment.</p></div>";
+    return;
+  }
   const data = await res.json();
   const patchById = Object.fromEntries((data.patches ?? []).map(p => [p.id, p]));
   const REPO1 = "https://github.com/grainpool/doc-eng-demo/blob/main/";

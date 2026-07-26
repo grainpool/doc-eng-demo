@@ -10,6 +10,7 @@ import { validateMutation } from "@concord/core";
 import editableUnits from "../../../fixtures/changelab/editable-units.json";
 import { assembleChangeLabRun } from "./changelab.js";
 import { cleanupStaleRuns, githubConfigured } from "./github.js";
+import { log } from "./log.js";
 import { requireAccessIdentity, type AccessIdentity } from "./middleware/access.js";
 import { REPLAY_RUNS } from "./runs.generated.js";
 import { executeRun, type MessageLike, type RunDeps, type RunEnv, type RunOptions } from "./run.js";
@@ -328,6 +329,56 @@ app.get("/api/public/facts/:key", async (c) => {
   });
 });
 
+/** Per-dependency health (validation.md §9). Versions and probe results
+ * only — no environment values, no secrets (§8 Secrets). */
+app.get("/api/health", async (c) => {
+  const started = Date.now();
+  const timed = async (fn: () => Promise<string>): Promise<{ ok: boolean; value: string; duration_ms: number }> => {
+    const t0 = Date.now();
+    try {
+      return { ok: true, value: await fn(), duration_ms: Date.now() - t0 };
+    } catch (e) {
+      return {
+        ok: false,
+        value: e instanceof Error ? e.message.slice(0, 120) : "failed",
+        duration_ms: Date.now() - t0,
+      };
+    }
+  };
+  const { CONTRACTS_VERSION } = await import("@relay/contracts");
+  const { ESTATE_FILES, ESTATE_SHA } = await import("./estate.generated.js");
+  const checks = {
+    d1: await timed(async () => {
+      const row = await c.env.concord_db.prepare("SELECT COUNT(*) AS n FROM run").first<{ n: number }>();
+      return `run rows: ${row?.n ?? 0}`;
+    }),
+    worker_assets: await timed(async () => {
+      const res = await c.env.ASSETS.fetch(new Request("https://assets.local/index.html"));
+      return `index.html ${res.status}`;
+    }),
+    relay: await timed(async () => {
+      const res = await fetch(`${c.env.RELAY_BASE_URL}/api/product-truth`);
+      return `product-truth ${res.status}`;
+    }),
+    queue: { ok: true, value: c.env.RUN_QUEUE ? "bound" : "inline fallback", duration_ms: 0 },
+    github: { ok: true, value: githubConfigured(c.env) ? "configured" : "not configured", duration_ms: 0 },
+    replay: { ok: REPLAY_RUNS.length > 0, value: `${REPLAY_RUNS.length} recordings`, duration_ms: 0 },
+    estate: { ok: true, value: `${ESTATE_FILES.length} files @ ${ESTATE_SHA.slice(0, 7)}`, duration_ms: 0 },
+    contracts: { ok: true, value: CONTRACTS_VERSION, duration_ms: 0 },
+  };
+  const allOk = Object.values(checks).every((check) => check.ok);
+  return c.json(
+    {
+      request_id: crypto.randomUUID(),
+      generated_at: new Date().toISOString(),
+      all_ok: allOk,
+      checks,
+      duration_ms: Date.now() - started,
+    },
+    allOk ? 200 : 503,
+  );
+});
+
 export default {
   fetch: app.fetch,
   async queue(batch: MessageBatch<QueuedRun>, env: Env): Promise<void> {
@@ -346,15 +397,12 @@ export default {
     if (!githubConfigured(env)) return;
     try {
       const report = await cleanupStaleRuns(env, (url, init) => fetch(url, init));
-      console.log(
-        `cleanup: scanned=${report.scanned} closed_prs=${report.closed_prs} ` +
-          `deleted_branches=${report.deleted_branches} errors=${report.errors.length}`,
-      );
-      for (const error of report.errors) console.log(`cleanup error: ${error}`);
+      log("cleanup", { request_id: crypto.randomUUID(), ...report });
     } catch (e) {
-      console.log(
-        `cleanup failed: ${e instanceof Error ? e.message.slice(0, 200) : "unknown"}`,
-      );
+      log("cleanup_failed", {
+        request_id: crypto.randomUUID(),
+        reason: e instanceof Error ? e.message.slice(0, 200) : "unknown",
+      });
     }
   },
 };

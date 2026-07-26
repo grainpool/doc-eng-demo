@@ -1,6 +1,6 @@
 # Eval report — Concord seeded-defect harness
 
-Generated 2026-07-26T05:47:35.806Z · corpus 36 defects (5 negative controls)
+Generated 2026-07-26T22:34:55.903Z · corpus 36 defects (5 negative controls)
 
 ## Metrics (validation.md §6)
 
@@ -58,6 +58,6 @@ none
 
 This run is fully deterministic (no model calls); scores are identical across runs by construction. Model-assisted stats (falsification) are produced by eval:model (N=3) and merged below when present.
 
-Model leg (EVAL_MODEL=1, N=3): 4 non-deterministic finding(s) falsified per run; suppression rates [0.25,0.25,0.25] → mean 0.25, spread 0; 12 model calls, est. $0.0573.
+Model leg (EVAL_MODEL=1, N=3): 4 non-deterministic finding(s) falsified per run; suppression rates [0.25,0.25,0.25] → mean 0.25, spread 0; 12 model calls, est. $0.0551.
 
 Baseline (clean estate): 9 findings (0 broken refs), 2 standing conflicts, 0 warnings.

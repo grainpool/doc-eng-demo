@@ -124,6 +124,20 @@ function checkKernel(env: Env): Promise<HealthCheck> {
     }
     const versions = (await res.json()) as KernelVersions;
     const ok = typeof versions.pandas === "string" && versions.pandas.length > 0;
+    // The startup egress probe (security.md §3 instrument): surfaced here so
+    // the open-egress platform fact (COMPAT.md Phase 04) stays observable
+    // rather than buried — "open:http_200" is the honest current state.
+    let egressProbe: unknown = "unavailable";
+    try {
+      const healthRes = await container.fetch("http://kernel/health", {
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (healthRes.ok) {
+        egressProbe = ((await healthRes.json()) as { egress_probe?: unknown }).egress_probe;
+      }
+    } catch {
+      // versions succeeded; a probe-read failure should not fail the check
+    }
     return {
       ok,
       value: versions.pandas ?? "missing_pandas_version",
@@ -134,6 +148,7 @@ function checkKernel(env: Env): Promise<HealthCheck> {
         statsmodels: versions.statsmodels,
         matplotlib: versions.matplotlib,
         image_digest: versions.image_digest,
+        egress_probe: egressProbe,
       },
     };
   });

@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "deploy": "vite build && wrangler deploy --config dist/relay_api/wrangler.json",
+    "build": "vite build && node ../../scripts/scrub-dist-secrets.mjs",
+    "deploy": "pnpm run build && wrangler deploy --config dist/relay_api/wrangler.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

@@ -160,6 +160,27 @@ describe("run dispositions (I10)", () => {
     expect(calls!.n).toBe(1);
   });
 
+  it("forcing the per-DAY spend cap closes the gate the same way (partial + budget_exhausted, zero calls)", async () => {
+    await seedPreviousSnapshot();
+    const runId = await newQueuedRun();
+    const deps: RunDeps = { createMessage: async () => stubMessage(), fetchJson: stubFetchJson };
+    // A zero daily cap means the gate is already closed when the run starts —
+    // the UTC-day aggregate over model_call rows has nowhere to go but over.
+    await executeRun(env, deps, runId, { dailyCapUsd: 0 });
+
+    const run = await env.concord_db
+      .prepare("SELECT status, reason FROM run WHERE id = ?")
+      .bind(runId)
+      .first<{ status: string; reason: string | null }>();
+    expect(run?.status).toBe("partial");
+    expect(run?.reason).toBe("budget_exhausted");
+    const calls = await env.concord_db
+      .prepare("SELECT COUNT(*) AS n FROM model_call WHERE run_id = ?")
+      .bind(runId)
+      .first<{ n: number }>();
+    expect(calls!.n).toBe(0); // the gate closed BEFORE any call
+  });
+
   it("a model refusal reroutes the impact to EDITORIAL_REVIEW / escalated (nothing dropped)", async () => {
     await seedPreviousSnapshot();
     const runId = await newQueuedRun();

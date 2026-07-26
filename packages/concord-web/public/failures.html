@@ -14,7 +14,7 @@
 </head>
 <body>
 <h1>What the system gets wrong</h1>
-<p class="muted">Generated from <code>eval-report.json</code> (2026-07-26T05:47:35.806Z), corpus 36 seeded defects.
+<p class="muted">Generated from <code>eval-report.json</code> (2026-07-26T22:34:55.903Z), corpus 36 seeded defects.
 This page is a deliverable, not an apology: the misses below are kept in the fixture deliberately (constraints.md AP7).
 See the <a href="/">run report</a> and <a href="/facts.html">fact explorer</a>.</p>
 
@@ -73,7 +73,7 @@ See the <a href="/">run report</a> and <a href="/facts.html">fact explorer</a>.<
 
 <h2>Falsifier behavior (model leg)</h2>
 <p>N=3 over 4 non-deterministic findings: mean suppression 0.25, spread 0. Notably, the falsifier consistently suppressed the seeded <code>def_term_drift_inproduct</code> defect ("Run Job" button label) as ambiguous — a REAL defect lost to falsifier aggressiveness:</p>
-<div class="miss"><b>def_term_drift_inproduct</b><p class="muted">The passage is a two-word UI label ("Run Job") with no context establishing that "Job" refers to the same concept as the canonical "Task" term; "job" is a plausibly distinct entity (e.g., a run/background job), so this is an unsupported term-matching inference rather than a demonstrated inconsistent value.</p>
+<div class="miss"><b>def_term_drift_inproduct</b><p class="muted">The passage is a two-word UI label ("Run Job") with no context showing that "Job" refers to the entity governed by terminology.task; "job" is plausibly a distinct concept (e.g., a job run/execution), so this is not an assertion that the canonical task term is "Job".</p>
 <p>The refutation is reasonable on its own terms — a two-word label lacks context — which is exactly the cost of defaulting to refuted under uncertainty. The deterministic detection still catches this defect; the suppression only bites where the deterministic path is silent.</p></div>
 </body>
 </html>

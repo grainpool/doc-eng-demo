@@ -209,3 +209,130 @@ asserts a refused write makes **zero** GitHub calls.
 - A cron-triggered cleanup (hourly) closes PRs and deletes
   `concord/run-*` branches older than 48 hours; idempotent, safe to run
   repeatedly.
+
+## Verified security properties (Phase 20 — validation.md §8, executed 2026-07-27)
+
+Every line was **run, not read**. ✔ = observed passing · ✖ = observed failing (reported, with
+compensating controls) · ⛔ = operator-configured, verified against the dashboard/account or
+recorded as awaiting operator confirmation.
+
+**Secrets**
+- ✔ A repo-wide grep for the Anthropic key prefix hits only the redaction pattern, the
+  secret-scanner itself, a test assertion, and spec text. No key material.
+- ✔ Built bundles: the concord-api worker bundle's only PEM-shaped string is jose's own parser
+  constant; the relay worker bundle's only token-shaped strings are the redaction regexes; client
+  bundles contain no secret and no ANTHROPIC references beyond a health-page display label.
+  **Finding fixed during verification:** the Cloudflare Vite plugin copied `.dev.vars` (a real key)
+  into `dist/` — gitignored and never uploaded, but now scrubbed by a post-build step
+  (`scripts/scrub-dist-secrets.mjs`), verified by rebuild.
+- ✔ `/api/health` (both Workers) and `/api/public/*` return probe results, versions, and ids —
+  no environment values.
+- ✔ Error responses are coded shapes (`{error:{code, copy_id}}` / `{"error":"code"}`): no stack
+  traces, file paths, or config values observed on 404s, malformed JSON, or bad params.
+- ✔ Pre-commit scan: a file planted with a fake Anthropic-prefixed key was blocked at commit
+  ("Anthropic API key pattern found… commit blocked"), and it fired twice more organically during
+  the build (a PEM-armor doc line and a sentinel string were both refused).
+
+**Access / authorization**
+- ✔ All six rejection cases re-run LIVE against the deployed Worker on the workers.dev host, which
+  bypasses edge Access — the reason backend verification exists: missing header →
+  `403 ACCESS_MISSING_ASSERTION`; self-signed, wrong `aud`, wrong `iss`, and expired forged JWTs →
+  `403 ACCESS_INVALID_ASSERTION` (for forged tokens the signature fails first; the per-cause
+  distinctions are proven by the correctly-signed test matrix).
+- ✔ The valid-signature wrong-identity case was observed live on 2026-07-26: a genuine Access token
+  the edge had admitted was rejected `ACCESS_DOMAIN_DENIED` by the backend — the second gate
+  demonstrably works on its own.
+- ✔ `DEMO_ADMIN_ENABLED` unset → admin routes 404 (test-verified; re-checked live after the final
+  public deploy, which leaves it unset).
+- ✔ No dev-auth bypass in the built bundles (grep of built output for skip/bypass branches finds
+  none, alongside the source-level grep test).
+- ⛔ Access policy uses "Emails ending in", with one-time PIN as a *login method* rather than an
+  Include rule — **operator-verified in the Zero Trust dashboard**. The middleware passing does not
+  prove this: its independent re-check would mask a wide-open policy, which is exactly why this line
+  requires the dashboard.
+
+**Code execution / SSRF**
+- ✔ No `eval`, `new Function`, `child_process`, or process `exec` in any Worker or the kernel: all
+  `exec(` hits are `RegExp.exec`, and the only `execFileSync` is a build-time script reading the
+  submodule SHA, which never ships.
+- ✔ No endpoint accepts a URL to fetch — every `fetch()` target in both Workers is code-derived
+  (config vars, fixed API hosts, service bindings).
+- ✖ **Kernel outbound fetch to a non-R2 host does NOT fail.** Cloudflare Containers currently have
+  no per-container egress policy (COMPAT.md, Phase 04): the hardcoded startup probe observes
+  `open:http_200` to an external host. That observation is now surfaced in `/api/health` as
+  `kernel.detail.egress_probe` so it stays visible instead of being assumed away. Compensating
+  controls, all tested: the kernel accepts no URL from any request (its only fetch is the
+  Worker-signed `DatasetRef`, host-pinned via `RELAY_DATASET_HOST`), it sha256-verifies the dataset
+  before parsing, and it enforces `max_bytes` on read. Reported as a platform limitation rather than
+  softened into a pass.
+- ✔ `filter_rows` operators are a closed enum, and no `DataFrame.query()` or `pd.eval` exists
+  anywhere in the kernel (asserted by `tests/test_no_code_surface.py`).
+- ✔ Unknown `operation_id` → 404 with no side effect (`test_unknown_operation_is_404`).
+
+**Repository writes**
+- ✔ Every denylist class is rejected and the denylist is checked before the allowlist — a path in
+  BOTH lists is denied (asserted). Every traversal variant is rejected individually: `..`,
+  URL-encoded `%2e%2e`, absolute, drive-letter, backslash, NUL/control characters, NFD unicode.
+- ✔ The estate repo contains no `.github/` entry at all (`git ls-files` count: 0).
+- ⛔ Repo 1 has no App installation — verified against the App's own installation list:
+  `/installation/repositories` returns exactly one repository (`grainpool/doc-eng-demo-estate`), and
+  a token-authenticated write attempt against repo 1 returned
+  `403 Resource not accessible by integration`.
+- ⛔ Branch protection on estate `main`: verified by attempting a direct push with a live
+  installation token — `409 Repository rule violations found. Changes must be made through a pull
+  request.` Re-verified after the ruleset was rescoped from `~ALL` to the default branch.
+- ⛔ App permissions: the minted installation token reports exactly
+  `{"contents":"write","metadata":"read","pull_requests":"write"}` — nothing more.
+- ⛔ Concord's App is the only installation we control holding `Contents: write`. Confirming that
+  Mintlify's app (expected, from Phase 11) holds read-only scopes requires the repository's
+  installations settings page — the API endpoint is not available to an operator token, so this is
+  **awaiting operator confirmation**.
+- ✔ No patch, diff, or PR in any recorded run targets a path outside the estate repo (12 paths
+  scanned across the five recordings; 0 outside).
+- ✔ An eval run leaves `estate/` git-clean — defects are injected in memory only (checked after the
+  final eval run).
+- ✔ Installation tokens are repository-scoped (observed in the mint response) and never returned in
+  a response: tests scan every result, response body, and recorded row for the token sentinel and
+  PEM markers.
+
+**Spend / abuse**
+- ✔ Public routes make zero model calls — verified in the live database, not only in tests: every
+  `model_call` row joins to a `mode='live'` run, except the pre-Phase-18 admin recording sessions in
+  the 2026-07-26 05:00–06:22 window. The public path receives a null model client by construction
+  (I11 test).
+- ✔ Per-run call cap forced (`maxCallsPerRun: 1`) → run `partial`, reason `budget_exhausted`,
+  exactly one call recorded, and starved impacts remain visible as `unresolved`.
+- ✔ Per-day spend cap forced (`dailyCapUsd: 0`) → `partial` + `budget_exhausted` with **zero**
+  calls: the gate closes before the first call rather than after it.
+- ✔ Per-identity hourly limit (5) → 429; one concurrent live run → 409 naming the in-flight run id
+  (observed live during Phase 18); admin body cap → 413 over 16 KB.
+- ⛔ Zero Trust seat count and billing notification: **awaiting operator confirmation** — record the
+  current count here; seat 51 converts the entire count to ~$7/user/month (≈ $357/mo, §5 above).
+  This is the one cost in the design with no code-side counterpart at all.
+- ⛔ An Anthropic Console org-level spend limit: **awaiting operator confirmation**. It is the floor
+  beneath the in-app $5/UTC-day cap — the app cap is a product behaviour, the console limit is the
+  backstop under it.
+
+**Logging**
+- ✔ No `Cf-Access-*` header value can reach a log line: denied-key redaction plus JWT-shape value
+  redaction, enforced by `concord-api/test/redaction.test.ts`. That test also covers `ghs_`
+  installation tokens — a gap found and fixed during this pass.
+- ✔ Prompts are logged as hashes (`model_call.prompt_hash`; `prompt` and `completion` are denied
+  keys). Presigned URLs are denied keys (`presigned`, `sig`).
+- ✔ `audit_log` records every admin action (observed live: the rejected-mutation, the no-op, and the
+  publishing run all present), and the public view redacts identity to the domain (observed:
+  `identity_domain: "@grainpoolholdings.com"`).
+
+## Operator-configured controls — real, but not enforced by code
+
+These live in dashboards. They can be changed or lost without a failing test, which is why each has
+a code-side counterpart wherever one is possible, and why re-verification means re-observing rather
+than re-reading this file.
+
+| Control | Where it lives | Code-side counterpart |
+|---|---|---|
+| Access application + email Include rule | Cloudflare Zero Trust | Independent domain/allowlist re-check in the middleware — proven live when the edge admitted an identity the backend refused |
+| Branch protection on estate `main` | GitHub repo settings | None possible; verified by attempted direct push (409) — re-verify by attempt |
+| App scope: three permissions, single-repo installation | GitHub App settings | Path allowlist/denylist checked twice, repository-scoped tokens, zero-GitHub-calls-on-refusal test |
+| Zero Trust seat / billing notification | Cloudflare billing | None possible — seats are consumed at the edge before any request reaches code |
+| Anthropic Console org spend limit | Anthropic Console | The in-app per-run and per-day caps, both forced in tests, sit above it |

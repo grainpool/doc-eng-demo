@@ -1,0 +1,69 @@
+# EVALUATION.md — methodology, numbers, and failures
+
+The committed [eval-report.md](eval-report.md) / [eval-report.json](eval-report.json) are the
+current results; this document explains how they are produced and what they mean. The failures are
+analyzed defect-by-defect on the public
+[failures page](https://concord.otonieltrejo.com/failures.html), which is generated from the report
+(`packages/concord-core/cli/gen-failures.ts`) — specific real misses, not generic caveats.
+
+## Methodology
+
+- **Corpus**: 36 seeded defects across 12 classes, plus 5 negative controls (clean passages that
+  must NOT be flagged) — `fixtures/eval/defects.json`. Classes cover stale values, wrong platform
+  claims, term drift, broken references, undeclared fact references, contradictions, duplicate
+  guidance, missing prerequisites, unsupported claims, IA problems, stale CLI docs, and stale
+  in-product copy.
+- **Injection is in-memory only** (invariant I17): each defect is applied to the parsed estate
+  files inside the eval process; `estate/` stays git-clean — verified after every run.
+- **Baseline diffing**: the clean estate already yields standing findings (9 at last run). A defect
+  counts as detected only if it produces a *new* event relative to the baseline, matched by
+  location (doc_unit_id | fact_key | file path) AND a fixed per-class signal mapping — no fuzzy
+  credit.
+- **Determinism**: the deterministic leg makes zero model calls and scores identically across runs
+  by construction. The model leg (`EVAL_MODEL=1`, N=3) exercises falsification and reports
+  suppression stability across repeats.
+
+## Current numbers (2026-07-26 run, corpus 36)
+
+| Metric | Value | Gate |
+|---|---|---|
+| Detection precision | 0.882 | investigate < 0.75 |
+| Detection recall (overall) | 0.484 | investigate < 0.70 — see analysis |
+| False-positive rate | 0.0 | investigate > 0.20 |
+| Remediation correctness | 1.0 (over 3 patches) | report |
+| Escalation appropriateness | 0.286 | investigate < 0.80 — see analysis |
+| **Unsafe autofix count** | **0** | **hard gate: must be 0 — PASS** |
+| **Provenance completeness** | **1.0** | **hard gate: must be 1.0 — PASS** |
+
+Model leg: 4 non-deterministic findings falsified per run; suppression rate 0.25 with zero spread
+across N=3; 12 model calls ≈ $0.057.
+
+## Reading the recall number honestly
+
+Overall recall 0.484 is a composite of two very different populations:
+
+**What the fact graph models** — mechanical/structural drift — scores where it should:
+broken refs 3/3, stale in-product copy 1/1, term drift 3/4, undeclared fact refs 2/3,
+contradictions 2/3.
+
+**What would require editorial judgment or capabilities that deliberately do not exist** scores 0,
+and each zero is analyzed as an *expected miss*: duplicate-guidance detection would need a
+similarity detector that was ruled out; missing-prerequisite detection would need procedure
+modeling; unsupported claims (SOC 2, encryption) have no fact key by definition — which is
+precisely why they are unsupported and why the correct response is editorial review, not detection
+by a system that only trusts declared truth. The escalation-appropriateness number is low for the
+same reason: most expected escalations belong to classes the pipeline cannot see at all, so they
+never reach the escalation stage.
+
+The design priority is stated in [ARCHITECTURE.md](ARCHITECTURE.md): precision over recall. A
+documentation robot that is wrong 1 time in 3 gets turned off; one that flags 48% of everything and
+is right 88% of the time (with **zero** unreviewed content changes) gets trusted with a PR button.
+
+## Reproducing
+
+```sh
+cd packages/concord-core
+pnpm eval                 # deterministic leg — writes eval-report.{md,json} at repo root
+EVAL_MODEL=1 pnpm eval    # adds the N=3 falsification leg (needs ANTHROPIC_API_KEY in .dev.vars)
+pnpm eval:failures-page   # regenerates the public failures page from the report
+```

@@ -16,6 +16,11 @@ const ALLOWLIST = new Set([
   "scripts/secret-scan.mjs",
   "packages/relay-api/src/log.ts",
   "packages/relay-api/test/health.test.ts",
+  // The concord-api twin of the redaction list (Phase 20). Note what is NOT
+  // here: documentation. A doc that needs the exemption is a doc that could
+  // later carry a real key — SECURITY.md describes the patterns in prose
+  // instead, and the redaction TEST assembles its samples from fragments.
+  "packages/concord-api/src/log.ts",
 ]);
 
 const stagedFiles = execFileSync(

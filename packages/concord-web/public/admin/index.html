@@ -7,9 +7,22 @@
 <style>
   body { font-family: ui-sans-serif, system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #222; }
   code, pre { font-family: ui-monospace, monospace; background: #f4f4f0; }
-  .muted { color: #666; }
-  select, textarea, button { font: inherit; padding: .4rem .6rem; }
+  .muted { color: #595959; }
+  select, textarea, button, input { font: inherit; padding: .4rem .6rem; }
   textarea { width: 100%; min-height: 8rem; }
+  :focus-visible { outline: 3px solid #0b5fff; outline-offset: 2px; }
+  fieldset { border: 1px solid #ddd; border-radius: 6px; padding: 1rem 1.25rem; margin: 1.5rem 0; }
+  legend { font-weight: 700; padding: 0 .4rem; }
+  label { display: inline-block; margin-right: .4rem; }
+  .state { border: 1px solid #ddd; border-left: 4px solid #999; border-radius: 6px; padding: .75rem 1rem; margin: 1rem 0; }
+  .state.error { border-left-color: #b3261e; }
+  .state.loading { border-left-color: #0b5fff; }
+  .primary { background: #1a3d1a; color: #fff; border: 1px solid #1a3d1a; border-radius: 4px; }
+  .primary:disabled { background: #6a736a; border-color: #6a736a; cursor: not-allowed; }
+  @media (max-width: 640px) {
+    body { margin: 1rem auto; }
+    select, .primary { width: 100%; margin-bottom: .5rem; }
+  }
 </style>
 </head>
 <body>
@@ -18,16 +31,37 @@
 Mutations apply to a working copy, run through the REAL pipeline, and render through the same renderer as the public replay.
 Every action lands in the audit log under your Access email.</p>
 
-<h3>Fact mutation (nine allowlisted keys, closed values)</h3>
-<p><select id="factKey"></select> → <select id="factValue"></select>
-<button id="runFact">Run live</button></p>
+<fieldset>
+  <legend>1 · Change a product fact → docs get patched</legend>
+  <p class="muted">Flips one of nine allowlisted facts to a closed value in a working copy. The pipeline
+  finds every place the docs state the old value and proposes patches — and a validated patch set opens
+  a <b>real pull request</b> on the estate repo.</p>
+  <p>
+    <label for="factKey">Fact key</label>
+    <select id="factKey"></select>
+    <label for="factValue">New value</label>
+    <select id="factValue"></select>
+    <button id="runFact" class="primary">Run live — patch the docs</button>
+  </p>
+</fieldset>
 
-<h3>Doc-body mutation (editable units only)</h3>
-<p><select id="docUnit"></select></p>
-<textarea id="docBody" placeholder="New body (≤ 8192 bytes, no MDX expressions/JSX outside Note/Warning/Info/Tip)"></textarea>
-<p><button id="runDoc">Run live</button></p>
+<fieldset>
+  <legend>2 · Change a doc's text → drift gets detected</legend>
+  <p class="muted">Edits one editable unit's body while product truth stays put — the mirror image of the
+  first form. The pipeline reports drift findings, attributes an owner, and the adversarial falsifier
+  suppresses the false positives. <b>No pull request:</b> this path detects, it does not patch.</p>
+  <p>
+    <label for="docUnit">Doc unit</label>
+    <select id="docUnit"></select>
+  </p>
+  <p>
+    <label for="docBody">Replacement body</label><br />
+    <textarea id="docBody" placeholder="New body (≤ 8192 bytes, no MDX expressions/JSX outside Note/Warning/Info/Tip)"></textarea>
+  </p>
+  <p><button id="runDoc" class="primary">Run live — detect drift</button></p>
+</fieldset>
 
-<div id="status"></div>
+<div id="status" role="status" aria-live="polite"></div>
 <div id="stage"></div>
 <script src="/changelab-render.js"></script>
 <script>
@@ -66,32 +100,83 @@ function refreshValues() {
 factKey.onchange = refreshValues; refreshValues();
 document.getElementById("docUnit").innerHTML = EDITABLE.map(u => "<option>" + u + "</option>").join("");
 
+const buttons = () => [document.getElementById("runFact"), document.getElementById("runDoc")];
+const REJECTIONS = {
+  MUTATION_NOT_ALLOWED: "That fact key or value is not on the allowlist.",
+  LIVE_RUN_IN_FLIGHT: "Another live run is still going — one at a time. Wait for it to finish.",
+  RATE_LIMITED: "Five live runs per hour per identity. Try again shortly.",
+  BODY_TOO_LARGE: "The request body exceeded 16 KB.",
+  ACCESS_DOMAIN_DENIED: "Your Access identity is not permitted on this surface.",
+};
+function setState(kind, html) {
+  statusEl.innerHTML = "<div class='state " + kind + "'>" + html + "</div>";
+}
 async function live(mutation) {
-  statusEl.textContent = "starting live run…";
+  buttons().forEach(b => { b.disabled = true; });
+  setState("loading", "Starting live run…");
   stageEl.innerHTML = "";
-  const res = await fetch("/api/admin/changelab", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ mode: "live", idempotency_key: "ui-" + Date.now(), mutation }),
-  });
-  const body = await res.json();
-  if (!res.ok) { statusEl.textContent = "rejected: " + JSON.stringify(body); return; }
-  statusEl.textContent = "run " + body.run_id + " queued…";
-  for (let i = 0; i < 120; i++) {
-    await new Promise(r => setTimeout(r, 3000));
-    const check = await fetch("/api/public/runs/" + body.run_id);
-    if (!check.ok) continue;
-    const data = await check.json();
-    statusEl.textContent = "run " + body.run_id + " — " + data.run.status;
-    if (["completed", "failed", "partial"].includes(data.run.status)) break;
+  try {
+    let res, body;
+    try {
+      res = await fetch("/api/admin/changelab", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ mode: "live", idempotency_key: "ui-" + Date.now(), mutation }),
+      });
+      body = await res.json();
+    } catch {
+      setState("error", "<b>Could not reach the API.</b> Check your connection and try again.");
+      return;
+    }
+    if (!res.ok) {
+      const explain = REJECTIONS[body.error] ?? "";
+      setState("error",
+        "<b>Rejected: " + (body.error ?? res.status) + "</b>" +
+        (explain ? "<p class='muted'>" + explain + "</p>" : "") +
+        (body.detail ? "<p class='muted'>" + body.detail + "</p>" : "") +
+        (body.in_flight_run_id ? "<p class='muted'>In-flight run: <code>" + body.in_flight_run_id + "</code></p>" : ""));
+      return;
+    }
+    let status = "queued";
+    for (let i = 0; i < 120; i++) {
+      setState("loading", "Run <code>" + body.run_id + "</code> — " + status + "…");
+      await new Promise(r => setTimeout(r, 3000));
+      const check = await fetch("/api/public/runs/" + body.run_id);
+      if (!check.ok) continue;
+      const data = await check.json();
+      status = data.run.status;
+      if (["completed", "failed", "partial"].includes(status)) break;
+    }
+    const verbose = await fetch("/api/public/runs/" + body.run_id + "?verbose=1");
+    if (!verbose.ok) {
+      setState("error", "Run <code>" + body.run_id + "</code> finished (" + status + ") but its record could not be loaded.");
+      return;
+    }
+    const record = await verbose.json();
+    const publish = (record.steps ?? []).find(s => s.step === "publish");
+    let detail = {};
+    try { detail = publish ? JSON.parse(publish.detail_json ?? publish.detail ?? "{}") : {}; } catch { /* shape varies */ }
+    setState(status === "failed" ? "error" : "",
+      "Run <code>" + body.run_id + "</code> — <b>" + status + "</b>" +
+      (detail.pr_url
+        ? " · <a href='" + detail.pr_url + "'>pull request opened</a>"
+        : detail.reason ? " · publish: " + detail.reason : "") +
+      " · <a href='/?run=" + body.run_id + "'>open in the run inspector</a>");
+    stageEl.innerHTML = renderChangeLabRun(record);
+  } finally {
+    buttons().forEach(b => { b.disabled = false; });
   }
-  const verbose = await fetch("/api/public/runs/" + body.run_id + "?verbose=1");
-  if (verbose.ok) stageEl.innerHTML = renderChangeLabRun(await verbose.json());
 }
 document.getElementById("runFact").onclick = () =>
   live({ kind: "fact_value", fact_key: factKey.value, value: JSON.parse(factValue.value) });
-document.getElementById("runDoc").onclick = () =>
-  live({ kind: "doc_body", doc_unit_id: document.getElementById("docUnit").value, body: document.getElementById("docBody").value });
+document.getElementById("runDoc").onclick = () => {
+  const body = document.getElementById("docBody").value;
+  if (!body.trim()) {
+    setState("error", "<b>Enter a replacement body first.</b><p class='muted'>This form edits a doc unit's text; an empty body has nothing to detect.</p>");
+    return;
+  }
+  live({ kind: "doc_body", doc_unit_id: document.getElementById("docUnit").value, body });
+};
 </script>
 </body>
 </html>

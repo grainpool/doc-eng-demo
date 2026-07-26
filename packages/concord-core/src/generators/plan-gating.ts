@@ -17,6 +17,7 @@ export const planGatingGenerator: Generator = {
     );
     const content = `---
 title: "Plan gating"
+description: "Machine-generated table of the minimum plan each Relay feature requires, derived from plan.feature.* product-truth facts."
 generated: true
 owner: "concord"
 ---

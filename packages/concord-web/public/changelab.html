@@ -7,7 +7,11 @@
 <style>
   body { font-family: ui-sans-serif, system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #222; }
   code, pre { font-family: ui-monospace, monospace; background: #f4f4f0; }
-  .muted { color: #666; }
+  .muted { color: #595959; }
+  :focus-visible { outline: 3px solid #0b5fff; outline-offset: 2px; }
+  .state { border: 1px solid #ddd; border-left: 4px solid #999; border-radius: 6px; padding: .75rem 1rem; margin: 1rem 0; }
+  .state.error { border-left-color: #b3261e; }
+  .state.loading { border-left-color: #0b5fff; }
   .card { border: 1px solid #ddd; border-radius: 8px; padding: .8rem 1rem; cursor: pointer; flex: 1; min-width: 15rem; }
   .card:hover { background: #f8fafc; }
   .card.sel { border-color: #556b2f; background: #f6f8f2; }
@@ -49,17 +53,27 @@ async function load() {
 async function select(card) {
   for (const c of picker.querySelectorAll(".card")) c.classList.remove("sel");
   card.classList.add("sel");
-  stage.innerHTML = "<p class='muted'>loading replay…</p>";
-  const res = await fetch("/api/public/changelab/replay", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      mode: "replay",
-      idempotency_key: "replay-" + card.dataset.s,
-      mutation: { kind: "fact_value", fact_key: card.dataset.k, value: JSON.parse(decodeURIComponent(card.dataset.v)) },
-    }),
-  });
-  if (!res.ok) { stage.innerHTML = "<p>replay unavailable</p>"; return; }
+  stage.innerHTML = "<div class='state loading'>Loading replay…</div>";
+  let res;
+  try {
+    res = await fetch("/api/public/changelab/replay", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        mode: "replay",
+        idempotency_key: "replay-" + card.dataset.s,
+        mutation: { kind: "fact_value", fact_key: card.dataset.k, value: JSON.parse(decodeURIComponent(card.dataset.v)) },
+      }),
+    });
+  } catch {
+    stage.innerHTML = "<div class='state error'><b>Could not reach the API.</b> Check your connection and pick a scenario again.</div>";
+    return;
+  }
+  if (!res.ok) {
+    stage.innerHTML = "<div class='state error'><b>Replay unavailable (" + res.status + ")</b>" +
+      "<p class='muted'>These are recordings of real runs; if this persists the recordings did not ship with this deploy.</p></div>";
+    return;
+  }
   stage.innerHTML = renderChangeLabRun(await res.json());
 }
 load();

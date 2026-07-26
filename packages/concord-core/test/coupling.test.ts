@@ -40,7 +40,8 @@ describe("coupling (I13)", () => {
           if (
             literal.startsWith("/api/runs") ||
             literal.startsWith("/api/public") ||
-            literal.startsWith("/api/admin") // Concord's own admin surface (Phase 14)
+            literal.startsWith("/api/admin") || // Concord's own admin surface (Phase 14)
+            literal === "/api/health" // Concord's own health route (Phase 20, validation.md §9)
           ) {
             continue;
           }

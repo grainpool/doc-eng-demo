@@ -28,6 +28,7 @@ export const availabilityMatrixGenerator: Generator = {
     const maxRows = factValue(facts, "limit.upload.csv.max_rows");
     const content = `---
 title: "Availability & limits matrix"
+description: "Machine-generated matrix of feature availability per platform and the current upload limits, derived from Relay's product-truth facts."
 generated: true
 owner: "concord"
 ---
