@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "test": "pnpm -r run test",
     "build": "pnpm -r run build",
+    "cli:introspect": "node scripts/capture-cli-introspection.mjs",
     "dev": "pnpm --filter relay-web dev",
     "deploy:relay": "pnpm --filter relay-web run deploy",
     "deploy:kernel": "pnpm --filter relay-web run deploy"

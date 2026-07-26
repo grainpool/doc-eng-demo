@@ -32,6 +32,12 @@ jobs:
       # client assets, and the deployed-URL health test needs no secrets.
       - run: pnpm build
 
+      # T2 staleness gate: regenerate the CLI introspection fixture from the
+      # freshly built CLI and fail if the committed copy drifted.
+      - run: pnpm cli:introspect
+
+      - run: git diff --exit-code fixtures/
+
       - run: pnpm test
 
   kernel:

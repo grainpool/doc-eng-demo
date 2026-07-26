@@ -1,0 +1,943 @@
+{
+  "cli_version": "0.1.0",
+  "generated_at": "1970-01-01T00:00:00.000Z",
+  "commands": [
+    {
+      "path": "relay",
+      "summary": "Relay — bounded data analysis from your terminal.",
+      "usage": "Usage: relay [options] [command]\n\nRelay — bounded data analysis from your terminal.\n\nOptions:\n  -V, --version         output the version number\n  --json                print machine-readable JSON instead of tables\n  --api-url <url>       Relay API base URL (default:\n                        \"https://relay.otonieltrejo.com\")\n  --token <token>       bearer token for privileged deployments\n  --no-color            disable ANSI colors\n  --verbose             log every HTTP request to stderr\n  -h, --help            display help for command\n\nCommands:\n  projects              Work with projects\n  files                 Work with uploaded files\n  sessions              Run analysis sessions\n  artifacts             Inspect and download artifacts\n  config                Inspect CLI configuration and API health\n  introspect [options]  Emit the machine-readable CLI surface\n  help [command]        display help for command\n\nExamples:\n  $ relay projects list\n  $ relay sessions run ses_01abc \"which columns correlate?\"\n\n",
+      "flags": [
+        {
+          "name": "--version",
+          "alias": "-V",
+          "type": "boolean",
+          "required": false,
+          "default": null,
+          "description": "output the version number"
+        },
+        {
+          "name": "--json",
+          "alias": null,
+          "type": "boolean",
+          "required": false,
+          "default": null,
+          "description": "print machine-readable JSON instead of tables"
+        },
+        {
+          "name": "--api-url",
+          "alias": null,
+          "type": "string",
+          "required": false,
+          "default": "https://relay.otonieltrejo.com",
+          "description": "Relay API base URL"
+        },
+        {
+          "name": "--token",
+          "alias": null,
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "bearer token for privileged deployments"
+        },
+        {
+          "name": "--no-color",
+          "alias": null,
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "disable ANSI colors"
+        },
+        {
+          "name": "--verbose",
+          "alias": null,
+          "type": "boolean",
+          "required": false,
+          "default": null,
+          "description": "log every HTTP request to stderr"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay projects list",
+        "relay sessions run ses_01abc \"which columns correlate?\""
+      ]
+    },
+    {
+      "path": "projects",
+      "summary": "Work with projects",
+      "usage": "Usage: relay projects [options] [command]\n\nList, create, and inspect Relay projects.\n\nOptions:\n  -h, --help        display help for command\n\nCommands:\n  list              List all projects\n  create [options]  Create a project\n  show <projectId>  Show one project\n  help [command]    display help for command\n\nExamples:\n  $ relay projects list\n  $ relay projects create --name \"Q3 data\"\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay projects list",
+        "relay projects create --name \"Q3 data\""
+      ]
+    },
+    {
+      "path": "projects list",
+      "summary": "List all projects",
+      "usage": "Usage: relay projects list [options]\n\nList every project visible to this Relay deployment.\n\nOptions:\n  -h, --help  display help for command\n\nExamples:\n  $ relay projects list\n  $ relay projects list --json\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay projects list",
+        "relay projects list --json"
+      ]
+    },
+    {
+      "path": "projects create",
+      "summary": "Create a project",
+      "usage": "Usage: relay projects create [options]\n\nCreate a new project.\n\nOptions:\n  --name <name>         project name\n  --description <text>  optional description\n  -h, --help            display help for command\n\nExamples:\n  $ relay projects create --name \"Q3 data\" --description \"Quarterly export\"\n\n",
+      "flags": [
+        {
+          "name": "--name",
+          "alias": null,
+          "type": "string",
+          "required": true,
+          "default": null,
+          "description": "project name"
+        },
+        {
+          "name": "--description",
+          "alias": null,
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "optional description"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay projects create --name \"Q3 data\" --description \"Quarterly export\""
+      ]
+    },
+    {
+      "path": "projects show",
+      "summary": "Show one project",
+      "usage": "Usage: relay projects show [options] <projectId>\n\nShow a single project by id.\n\nArguments:\n  projectId   project id (prj_…)\n\nOptions:\n  -h, --help  display help for command\n\nExamples:\n  $ relay projects show prj_01abc\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay projects show prj_01abc"
+      ]
+    },
+    {
+      "path": "files",
+      "summary": "Work with uploaded files",
+      "usage": "Usage: relay files [options] [command]\n\nList, upload, and inspect a project's data files.\n\nOptions:\n  -h, --help                 display help for command\n\nCommands:\n  list <projectId>           List a project's files\n  upload <projectId> <path>  Upload a CSV or TSV file\n  show <fileId>              Show one file\n  help [command]             display help for command\n\nExamples:\n  $ relay files list prj_01abc\n  $ relay files upload prj_01abc ./data.csv\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay files list prj_01abc",
+        "relay files upload prj_01abc ./data.csv"
+      ]
+    },
+    {
+      "path": "files list",
+      "summary": "List a project's files",
+      "usage": "Usage: relay files list [options] <projectId>\n\nList the files uploaded to a project.\n\nArguments:\n  projectId   project id (prj_…)\n\nOptions:\n  -h, --help  display help for command\n\nExamples:\n  $ relay files list prj_01abc\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay files list prj_01abc"
+      ]
+    },
+    {
+      "path": "files upload",
+      "summary": "Upload a CSV or TSV file",
+      "usage": "Usage: relay files upload [options] <projectId> <path>\n\nUpload a local .csv or .tsv file to a project.\n\nArguments:\n  projectId   project id (prj_…)\n  path        path to a local .csv/.tsv file\n\nOptions:\n  -h, --help  display help for command\n\nExamples:\n  $ relay files upload prj_01abc ./sales.csv\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay files upload prj_01abc ./sales.csv"
+      ]
+    },
+    {
+      "path": "files show",
+      "summary": "Show one file",
+      "usage": "Usage: relay files show [options] <fileId>\n\nShow a single uploaded file by id, including its sha256.\n\nArguments:\n  fileId      file id (fil_…)\n\nOptions:\n  -h, --help  display help for command\n\nExamples:\n  $ relay files show fil_01abc\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay files show fil_01abc"
+      ]
+    },
+    {
+      "path": "sessions",
+      "summary": "Run analysis sessions",
+      "usage": "Usage: relay sessions [options] [command]\n\nCreate analysis sessions and ask questions in plain language.\n\nOptions:\n  -h, --help                          display help for command\n\nCommands:\n  list <projectId>                    List a project's sessions\n  create [options] <projectId>        Create a session bound to a file\n  run [options] <sessionId> <prompt>  Ask a question in plain language\n  help [command]                      display help for command\n\nExamples:\n  $ relay sessions create prj_01abc --file fil_01abc\n  $ relay sessions run ses_01abc \"which columns correlate?\"\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay sessions create prj_01abc --file fil_01abc",
+        "relay sessions run ses_01abc \"which columns correlate?\""
+      ]
+    },
+    {
+      "path": "sessions list",
+      "summary": "List a project's sessions",
+      "usage": "Usage: relay sessions list [options] <projectId>\n\nList the analysis sessions of a project.\n\nArguments:\n  projectId   project id (prj_…)\n\nOptions:\n  -h, --help  display help for command\n\nExamples:\n  $ relay sessions list prj_01abc\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay sessions list prj_01abc"
+      ]
+    },
+    {
+      "path": "sessions create",
+      "summary": "Create a session bound to a file",
+      "usage": "Usage: relay sessions create [options] <projectId>\n\nCreate an analysis session for one project file.\n\nArguments:\n  projectId        project id (prj_…)\n\nOptions:\n  --file <fileId>  file id the session analyzes\n  --title <title>  session title\n  -h, --help       display help for command\n\nExamples:\n  $ relay sessions create prj_01abc --file fil_01abc\n\n",
+      "flags": [
+        {
+          "name": "--file",
+          "alias": null,
+          "type": "string",
+          "required": true,
+          "default": null,
+          "description": "file id the session analyzes"
+        },
+        {
+          "name": "--title",
+          "alias": null,
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "session title"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay sessions create prj_01abc --file fil_01abc"
+      ]
+    },
+    {
+      "path": "sessions run",
+      "summary": "Ask a question in plain language",
+      "usage": "Usage: relay sessions run [options] <sessionId> <prompt>\n\nSend a natural-language prompt to a session. The prompt is translated to ONE\nbounded analysis operation (or refused); the kernel never runs model-authored\ncode.\n\nArguments:\n  sessionId                      session id (ses_…)\n  prompt                         the question, quoted\n\nOptions:\n  --input-artifact <artifactId>  run on a previous derived table instead of the\n                                 file\n  -h, --help                     display help for command\n\nExamples:\n  $ relay sessions run ses_01abc \"which columns correlate?\"\n  $ relay sessions run ses_01abc \"correlate these\" --input-artifact art_01abc\n\n",
+      "flags": [
+        {
+          "name": "--input-artifact",
+          "alias": null,
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "run on a previous derived table instead of the file"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay sessions run ses_01abc \"which columns correlate?\"",
+        "relay sessions run ses_01abc \"correlate these\" --input-artifact art_01abc"
+      ]
+    },
+    {
+      "path": "artifacts",
+      "summary": "Inspect and download artifacts",
+      "usage": "Usage: relay artifacts [options] [command]\n\nEvery analysis output is a durable artifact with full provenance.\n\nOptions:\n  -h, --help                       display help for command\n\nCommands:\n  list <projectId>                 List a project's artifacts\n  show <artifactId>                Show an artifact with its provenance\n  download [options] <artifactId>  Download an artifact\n  help [command]                   display help for command\n\nExamples:\n  $ relay artifacts list prj_01abc\n  $ relay artifacts download art_01abc\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay artifacts list prj_01abc",
+        "relay artifacts download art_01abc"
+      ]
+    },
+    {
+      "path": "artifacts list",
+      "summary": "List a project's artifacts",
+      "usage": "Usage: relay artifacts list [options] <projectId>\n\nList the artifacts of a project.\n\nArguments:\n  projectId   project id (prj_…)\n\nOptions:\n  -h, --help  display help for command\n\nExamples:\n  $ relay artifacts list prj_01abc\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay artifacts list prj_01abc"
+      ]
+    },
+    {
+      "path": "artifacts show",
+      "summary": "Show an artifact with its provenance",
+      "usage": "Usage: relay artifacts show [options] <artifactId>\n\nShow one artifact: source file, operation, params, runtime versions, timing,\nlineage.\n\nArguments:\n  artifactId  artifact id (art_…)\n\nOptions:\n  -h, --help  display help for command\n\nExamples:\n  $ relay artifacts show art_01abc\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay artifacts show art_01abc"
+      ]
+    },
+    {
+      "path": "artifacts download",
+      "summary": "Download an artifact",
+      "usage": "Usage: relay artifacts download [options] <artifactId>\n\nDownload an artifact's bytes to a local file.\n\nArguments:\n  artifactId    artifact id (art_…)\n\nOptions:\n  --out <path>  output path (defaults to the artifact filename)\n  -h, --help    display help for command\n\nExamples:\n  $ relay artifacts download art_01abc --out ./correlation.csv\n\n",
+      "flags": [
+        {
+          "name": "--out",
+          "alias": null,
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "output path (defaults to the artifact filename)"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay artifacts download art_01abc --out ./correlation.csv"
+      ]
+    },
+    {
+      "path": "config",
+      "summary": "Inspect CLI configuration and API health",
+      "usage": "Usage: relay config [options] [command]\n\nShow the resolved CLI configuration and check the Relay API.\n\nOptions:\n  -h, --help      display help for command\n\nCommands:\n  show            Show resolved configuration\n  status          Check the Relay API health\n  help [command]  display help for command\n\nExamples:\n  $ relay config show\n  $ relay config status\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay config show",
+        "relay config status"
+      ]
+    },
+    {
+      "path": "config show",
+      "summary": "Show resolved configuration",
+      "usage": "Usage: relay config show [options]\n\nShow the API URL and whether a token is set (never the token itself).\n\nOptions:\n  -h, --help  display help for command\n\nExamples:\n  $ relay config show\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay config show"
+      ]
+    },
+    {
+      "path": "config status",
+      "summary": "Check the Relay API health",
+      "usage": "Usage: relay config status [options]\n\nCall GET /api/health and summarize the five checks.\n\nOptions:\n  -h, --help  display help for command\n\nExamples:\n  $ relay config status\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay config status"
+      ]
+    },
+    {
+      "path": "introspect",
+      "summary": "Emit the machine-readable CLI surface",
+      "usage": "Usage: relay introspect [options]\n\nWalk the live command tree and emit every command's path, summary, usage, flags,\nexit codes, and examples. This output is the T2_CLI authority source; it is\nderived, never authored.\n\nOptions:\n  --json      emit JSON (the only supported format)\n  -h, --help  display help for command\n\nExamples:\n  $ relay introspect --json\n\n",
+      "flags": [
+        {
+          "name": "--json",
+          "alias": null,
+          "type": "boolean",
+          "required": false,
+          "default": null,
+          "description": "emit JSON (the only supported format)"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay introspect --json"
+      ]
+    }
+  ]
+}

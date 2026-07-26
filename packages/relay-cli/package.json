@@ -4,15 +4,23 @@
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "relay": "./src/index.ts"
+    "relay": "./dist/bin.js"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "esbuild src/bin.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/bin.js --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\"",
+    "introspect": "node dist/bin.js introspect --json",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@relay/contracts": "workspace:*"
+    "@relay/contracts": "workspace:*",
+    "commander": "^14",
+    "zod": "^4"
   },
   "devDependencies": {
-    "typescript": "^5.7.0"
+    "@types/node": "^26.1.1",
+    "esbuild": "^0.28.1",
+    "typescript": "^5.7.0",
+    "vitest": "^4"
   }
 }

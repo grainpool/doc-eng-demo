@@ -30,16 +30,17 @@ describe("GET /api/product-truth", () => {
     const parsed = ProductTruthSnapshotSchema.safeParse(body);
     expect(parsed.success).toBe(true);
 
-    // Real claims from the two wired tiers.
+    // Real claims from the wired tiers (T0 needs the container — absent in
+    // the pool, asserted against the deployed URL below).
     const tiers = new Set(body.facts.map((f) => f.tier));
-    expect(tiers).toEqual(new Set(["T1_SCHEMA", "T3_CONFIG"]));
-    expect(body.facts.length).toBeGreaterThanOrEqual(15);
+    expect(tiers).toEqual(new Set(["T1_SCHEMA", "T2_CLI", "T3_CONFIG"]));
+    expect(body.facts.length).toBeGreaterThanOrEqual(50);
 
     // Pending tiers are marked, not fabricated.
     expect(body.tier_status).toEqual({
       T0_RUNTIME: "pending",
       T1_SCHEMA: "ok",
-      T2_CLI: "pending",
+      T2_CLI: "ok",
       T3_CONFIG: "ok",
       T4_RELEASE: "pending",
       T5_HUMAN: "pending",
@@ -51,13 +52,16 @@ describe("GET /api/product-truth", () => {
       expect(entry, `unregistered fact key ${fact.key}`).not.toBeNull();
       expect(entry?.tier).toBe(fact.tier);
 
-      // Every locator is non-empty and plausibly resolvable: repo-file#anchor
-      // for code-sourced tiers; kernel-image digest for T0 (Phase 04).
-      expect(fact.locator).toMatch(
+      // Every locator is non-empty and plausibly resolvable, per tier:
+      // repo-file#anchor for code-sourced tiers, kernel-image digest for T0,
+      // the committed introspection fixture for T2.
+      const locatorPattern =
         fact.tier === "T0_RUNTIME"
           ? /^kernel-image:[0-9a-f]{64}#.+$/
-          : /^packages\/[a-z-]+\/src\/[a-z-]+\.ts#.+$/,
-      );
+          : fact.tier === "T2_CLI"
+            ? /^fixtures\/cli-introspection\.json#.+$/
+            : /^packages\/[a-z-]+\/src\/[a-z-]+\.ts#.+$/;
+      expect(fact.locator, fact.key).toMatch(locatorPattern);
       expect(fact.confidence).toBe(1);
     }
 

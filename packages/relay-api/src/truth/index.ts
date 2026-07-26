@@ -8,8 +8,9 @@ import {
 import type { Env } from "../env.js";
 import { t0Runtime } from "./t0-runtime.js";
 import { t1Schema } from "./t1-schema.js";
+import { t2Cli } from "./t2-cli.js";
 import { t3Config } from "./t3-config.js";
-import { t2Cli, t4Release, t5Human } from "./pending.js";
+import { t4Release, t5Human } from "./pending.js";
 import type { TierResolver } from "./types.js";
 
 const RESOLVERS: readonly TierResolver[] = [

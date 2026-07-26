@@ -75,4 +75,9 @@ export {
   type Artifact,
 } from "./artifacts.js";
 export { zodToJsonSchema, zodToOutputFormatSchema } from "./json-schema.js";
+export {
+  CliIntrospectionSchema,
+  CLI_EXIT_CODES,
+  type CliIntrospection,
+} from "./cli.js";
 export { CONTRACTS_VERSION } from "./version.js";
