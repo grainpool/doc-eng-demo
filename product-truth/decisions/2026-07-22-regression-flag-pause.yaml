@@ -1,0 +1,15 @@
+id: dec_regression_flag_pause
+decided_at: "2026-07-22T00:00:00Z"
+decided_by: "product"
+kind: deliberate_exception
+claims_fact_keys:
+  - flag.analysis.regression_enabled
+statement: |
+  Linear regression should be PAUSED for the next release while the
+  statistics review of coefficient reporting is open. Docs should stop
+  recommending it until the review closes.
+notes_md: |
+  Phase-15 ambiguous_ownership fixture, record B of two — deliberately
+  opposes dec_regression_flag_keep on the same key. Neither record
+  supersedes the other; that is the point. Concord escalates to the
+  fact owner and resolves nothing.

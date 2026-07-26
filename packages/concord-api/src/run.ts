@@ -7,6 +7,13 @@ import {
 } from "@relay/contracts";
 import {
   EDITORIAL_SYSTEM_PROMPT,
+  FALSIFIER_OUTPUT_SCHEMA,
+  FALSIFIER_SYSTEM_PROMPT,
+  buildFalsifierPrompt,
+  insufficientEvidenceConflict,
+  needsFalsification,
+  parseFalsifierResponse,
+  proposalForFinding,
   PATCH_PROPOSAL_OUTPUT_SCHEMA,
   PATCH_SYSTEM_PROMPT,
   buildPatchUserPrompt,
@@ -22,6 +29,7 @@ import {
   type Finding,
   type Impact,
 } from "@concord/core";
+import type { ConflictDraft, Evidence } from "@relay/contracts";
 import cliIntrospection from "../../../fixtures/cli-introspection.json";
 import { ESTATE_FILES } from "./estate.generated.js";
 import { runModelExtraction } from "./model-extract.js";
@@ -96,6 +104,7 @@ interface ImpactRecord extends Impact {
   id: string;
   resolution_note: string | null;
   patch_id: string | null;
+  conflict_id: string | null;
 }
 
 interface ModelPatchRow {
@@ -240,11 +249,19 @@ export async function executeRun(
     }
 
     // Assign ids; impacts become mutable records the AI phase resolves.
+    // Conflicts (Phase 15): snapshot-derived ones from the pipeline, plus
+    // insufficient_evidence events from patch validation as they occur.
+    const conflicts: (ConflictDraft & { id: string })[] = out.conflicts.map((c) => ({
+      ...c,
+      id: newId("cfl"),
+    }));
+    const conflictIdByKey = new Map(conflicts.map((c) => [c.fact_key, c.id]));
     const impacts: ImpactRecord[] = out.impacts.map((impact) => ({
       ...impact,
       id: newId("imp"),
       resolution_note: null,
       patch_id: null,
+      conflict_id: conflictIdByKey.get(impact.fact_key) ?? null,
     }));
     const unitById = new Map(out.units.map((u) => [u.id, u]));
     const fileByPath = new Map(ESTATE_FILES.map((f) => [f.path, f.content]));
@@ -255,8 +272,8 @@ export async function executeRun(
     // GROUNDED_PATCH path first, then EDITORIAL_REVIEW drafts — both in
     // batches of ≤ 5 concurrent (G9), every call behind the spend gate.
     const aiWork = [
-      ...impacts.filter((i) => i.action === "GROUNDED_PATCH"),
-      ...impacts.filter((i) => i.action === "EDITORIAL_REVIEW"),
+      ...impacts.filter((i) => i.action === "GROUNDED_PATCH" && i.conflict_id === null),
+      ...impacts.filter((i) => i.action === "EDITORIAL_REVIEW" && i.conflict_id === null),
     ];
     if (deps.createMessage && aiWork.length > 0) {
       await mapConcurrent(aiWork, 5, async (impact) => {
@@ -328,6 +345,16 @@ export async function executeRun(
         if (!verdict.ok && !draftAcceptable) {
           if (verdict.reclassify_to) {
             impact.action = verdict.reclassify_to;
+            // Gate (a): the required evidence cannot be resolved — that is
+            // an insufficient_evidence conflict, recorded and attached.
+            const badLocator =
+              proposal.evidence.find(
+                (e) => !current.facts.some((f) => f.key === e.fact_key && f.locator === e.locator),
+              )?.locator ?? "(unknown locator)";
+            const draft = insufficientEvidenceConflict(impact.fact_key, badLocator, current.facts);
+            const conflictId = newId("cfl");
+            conflicts.push({ ...draft, id: conflictId });
+            impact.conflict_id = conflictId;
           } else if (verdict.force_editorial) {
             impact.action = "EDITORIAL_REVIEW";
           }
@@ -376,6 +403,83 @@ export async function executeRun(
     const modelFindings: Finding[] =
       modelProjections.length > 0 ? consistencyFindings(current.facts, modelProjections) : [];
 
+    // ── Adversarial verification (Phase 15, architecture §6.2) ──────────
+    // Every non-deterministic finding faces a FALSIFIER — a separate call
+    // with no shared context, defaulting to refuted under uncertainty. A
+    // refuted finding is recorded suppressed WITH its refutation text.
+    interface VerifiedFinding extends Finding {
+      disposition: "active" | "suppressed";
+      refutation: string | null;
+      proposal_json: string | null;
+    }
+    const projectionsById = new Map(
+      [...out.projections, ...modelProjections].map((p) => [p.id, p]),
+    );
+    const unitByIdForDoc = new Map(out.units.map((u) => [u.id, u]));
+    const allRawFindings = [...out.findings, ...modelFindings];
+    const verifiedFindings: VerifiedFinding[] = [];
+    const toFalsify: { finding: Finding; index: number }[] = [];
+    for (const finding of allRawFindings) {
+      const record: VerifiedFinding = {
+        ...finding,
+        disposition: "active",
+        refutation: null,
+        proposal_json: null,
+      };
+      verifiedFindings.push(record);
+      if (deps.createMessage && needsFalsification(finding, projectionsById)) {
+        toFalsify.push({ finding, index: verifiedFindings.length - 1 });
+      }
+    }
+    if (toFalsify.length > 0) {
+      await mapConcurrent(toFalsify, 5, async ({ finding, index }) => {
+        const record = verifiedFindings[index] as VerifiedFinding;
+        const projection = projectionsById.get(finding.projection_id ?? "");
+        const truthClaim = current.facts.find((f) => f.key === finding.fact_key);
+        if (!projection || !truthClaim) return;
+        const truth: Evidence = {
+          fact_key: truthClaim.key,
+          tier: truthClaim.tier,
+          locator: truthClaim.locator,
+          value: truthClaim.value,
+          observed_at: truthClaim.observed_at,
+        };
+        const proposal = proposalForFinding(finding, projection, truth);
+        record.proposal_json = JSON.stringify(proposal);
+        const passage = unitByIdForDoc.get(finding.doc_unit_id ?? "")?.body ?? "";
+        const message = await guardedCall(env, deps, spend, runId, "falsifier", {
+          model: MODEL_ID,
+          max_tokens: 1024,
+          thinking: { type: "adaptive" },
+          output_config: {
+            effort: "low",
+            format: { type: "json_schema", schema: FALSIFIER_OUTPUT_SCHEMA },
+          },
+          system: [
+            { type: "text", text: FALSIFIER_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+          ],
+          messages: [{ role: "user", content: buildFalsifierPrompt(proposal, passage) }],
+        });
+        if (message === "exhausted" || message === null) {
+          exhausted = exhausted || message === "exhausted";
+          // Unverified under budget pressure → suppressed under uncertainty.
+          record.disposition = "suppressed";
+          record.refutation = "falsification budget exhausted — suppressed under uncertainty";
+          return;
+        }
+        if (message.stop_reason === "refusal") {
+          record.disposition = "suppressed";
+          record.refutation = "falsifier refused — suppressed under uncertainty";
+          return;
+        }
+        const verdict = parseFalsifierResponse(textOf(message));
+        if (verdict.refuted) {
+          record.disposition = "suppressed";
+          record.refutation = verdict.refutation;
+        }
+      });
+    }
+
     // ── Persist everything ──────────────────────────────────────────────
     const statements: D1PreparedStatement[] = [];
     for (const unit of out.units) {
@@ -401,13 +505,22 @@ export async function executeRun(
           ),
       );
     }
-    for (const finding of [...out.findings, ...modelFindings]) {
+    for (const finding of verifiedFindings) {
       statements.push(
         env.concord_db
           .prepare(
-            "INSERT INTO finding (id, run_id, kind, fact_key, doc_unit_id, projection_id, detail, owner, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO finding (id, run_id, kind, fact_key, doc_unit_id, projection_id, detail, owner, disposition, refutation, proposal_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
           )
-          .bind(`fnd_${crypto.randomUUID()}`, runId, finding.kind, finding.fact_key, finding.doc_unit_id, finding.projection_id, finding.detail, finding.owner, startedAt),
+          .bind(`fnd_${crypto.randomUUID()}`, runId, finding.kind, finding.fact_key, finding.doc_unit_id, finding.projection_id, finding.detail, finding.owner, finding.disposition, finding.refutation, finding.proposal_json, startedAt),
+      );
+    }
+    for (const conflict of conflicts) {
+      statements.push(
+        env.concord_db
+          .prepare(
+            "INSERT INTO conflict (id, run_id, fact_key, kind, claims_json, missing_information_json, likely_owner, suggested_question, resolution) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)",
+          )
+          .bind(conflict.id, runId, conflict.fact_key, conflict.kind, JSON.stringify(conflict.claims), JSON.stringify(conflict.missing_information), conflict.likely_owner, conflict.suggested_question),
       );
     }
     for (const warning of out.warnings) {
@@ -455,12 +568,12 @@ export async function executeRun(
       statements.push(
         env.concord_db
           .prepare(
-            "INSERT INTO impact (id, run_id, fact_key, delta_json, doc_unit_id, projection_id, action, classification_rule, explanation, disposition, resolution_note, patch_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO impact (id, run_id, fact_key, delta_json, doc_unit_id, projection_id, action, classification_rule, explanation, disposition, resolution_note, patch_id, conflict_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
           )
           .bind(
             impact.id, runId, impact.fact_key, JSON.stringify(impact.delta), impact.doc_unit_id,
             impact.projection_id, impact.action, impact.classification_rule, impact.explanation,
-            impact.disposition, impact.resolution_note, patchId,
+            impact.disposition, impact.resolution_note, patchId, impact.conflict_id,
           ),
       );
     }
@@ -469,6 +582,10 @@ export async function executeRun(
       impacts: impacts.length,
       model_patches: modelPatches.length,
       model_calls: spend.callsThisRun,
+      conflicts: conflicts.length,
+      findings_active: verifiedFindings.filter((f) => f.disposition === "active").length,
+      findings_suppressed: verifiedFindings.filter((f) => f.disposition === "suppressed").length,
+      falsified: toFalsify.length,
       exhausted,
     });
 

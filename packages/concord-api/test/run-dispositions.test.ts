@@ -113,6 +113,16 @@ describe("run dispositions (I10)", () => {
       expect(patch.requires_review).toBe(1); // gate (c): structural
       expect(JSON.parse(patch.evidence_json).length).toBeGreaterThanOrEqual(1); // I6
     }
+    // Phase 15: non-deterministic findings faced the falsifier; with a
+    // stub that cannot produce a valid falsifier verdict, uncertainty
+    // suppresses — retained WITH refutation text, never deleted (AP6).
+    const suppressed = await env.concord_db
+      .prepare("SELECT disposition, refutation FROM finding WHERE run_id = ? AND disposition = 'suppressed'")
+      .bind(runId)
+      .all<{ disposition: string; refutation: string | null }>();
+    expect(suppressed.results.length).toBeGreaterThanOrEqual(1);
+    for (const f of suppressed.results) expect(f.refutation).toBeTruthy();
+
     // Spend attribution exists for every call.
     const calls = await env.concord_db
       .prepare("SELECT COUNT(*) AS n, SUM(cost_usd) AS cost FROM model_call WHERE run_id = ?")

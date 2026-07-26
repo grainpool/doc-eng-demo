@@ -39,6 +39,21 @@ export {
   type ExtractionRefusal,
 } from "./extractors.js";
 export {
+  detectConflicts,
+  circularReferences,
+  insufficientEvidenceConflict,
+} from "./conflicts.js";
+export {
+  needsFalsification,
+  proposalForFinding,
+  FALSIFIER_SYSTEM_PROMPT,
+  FALSIFIER_OUTPUT_SCHEMA,
+  buildFalsifierPrompt,
+  parseFalsifierResponse,
+  type Proposal,
+  type FalsifierVerdict,
+} from "./falsify.js";
+export {
   pathAllowlisted,
   bodyContentSafe,
   validatePatch,

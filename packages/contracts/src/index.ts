@@ -111,4 +111,13 @@ export {
   type PatchValidation,
   type RunStatus,
 } from "./patches.js";
+export {
+  CONFLICT_KINDS,
+  ConflictKindSchema,
+  ConflictSchema,
+  ConflictDraftSchema,
+  type Conflict,
+  type ConflictKind,
+  type ConflictDraft,
+} from "./conflicts.js";
 export { CONTRACTS_VERSION } from "./version.js";

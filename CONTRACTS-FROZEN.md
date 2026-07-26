@@ -1,7 +1,7 @@
 # CONTRACTS-FROZEN — what Concord may rely on
 
 Frozen 2026-07-26 at `@relay/contracts` **1.0.0**, git tag `relay-contracts-v1`.
-Current version **1.1.0** (see the change log in §5).
+Current version **1.2.0** (see the change log in §5).
 Relay is a FIXTURE from here on. Concord (Phases 10+) is built against exactly
 this surface and nothing else.
 
@@ -46,7 +46,7 @@ generator reads.
 
 ## 4. The `@relay/contracts` version
 
-**1.1.0.** `relay_contracts_version` in every snapshot reports the current version.
+**1.2.0.** `relay_contracts_version` in every snapshot reports the current version.
 
 ## 5. The change rule
 
@@ -64,3 +64,6 @@ copy entries do not require a bump; anything Concord parses does.
   `PatchOriginSchema`, `PatchValidationSchema`, `RunStatusSchema`
   (`queued|running|completed|failed|partial`), per contracts.md §14. Nothing
   existing changed shape; the two frozen HTTP endpoints are untouched.
+- 2026-07-26 — 1.2.0 — ADDITIVE (Phase 15): `conflicts.ts` — `ConflictSchema`
+  (five kinds, claims ≥ 2 verbatim, `resolution: z.null()` — the type system
+  forbids Concord from resolving, invariant I7), per contracts.md §15.

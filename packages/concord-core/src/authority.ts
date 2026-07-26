@@ -146,6 +146,24 @@ export function arbitrate(key: string, claims: readonly TierClaim[]): Arbitratio
     // override. (Compared after arbitrating the authoritative claim below.)
   }
 
+  // Two T5 records explicitly claiming the SAME key with different
+  // positions is unresolvable by design — wherever the key's authority
+  // lives. Concord escalates; it never picks between humans.
+  if (result.human_claims.length >= 2) {
+    const [first, ...rest] = result.human_claims;
+    for (const other of rest) {
+      if (JSON.stringify(first!.value) !== JSON.stringify(other.value)) {
+        result.conflicts.push({
+          fact_key: key,
+          kind: "t5_double_claim",
+          authoritative_tier: entry.tier,
+          claim: other,
+          detail: `two T5 records (${first!.source}, ${other.source}) claim ${key} with different positions — unresolvable by design`,
+        });
+      }
+    }
+  }
+
   // Second pass for non-authoritative, non-T4/T5 tiers: disagreement check.
   if (result.authoritative) {
     const authClaim = result.authoritative;

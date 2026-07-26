@@ -79,3 +79,19 @@ Ideas noted during a phase and deliberately not built in it (constraints.md AP11
   cleanly); Phase 17 should make the consumer resume-aware.
 - The daily spend cap is shared with model_extraction and both AI paths;
   there is no per-purpose budget split. Phase 20's audit may want one.
+
+## From Phase 15
+
+- temporal_contradiction deliberately ignores "value moved beyond the last
+  release" (current matches neither from nor to). That is a MISSING RELEASE
+  RECORD, which deserves its own lighter finding kind in Phase 20's audit —
+  blocking reconciliation for it would freeze every fast-moving fact.
+- The standing iOS contradiction and the competing regression-flag decisions
+  now emit conflicts on EVERY run by design (the escalation demo). If the
+  noise bothers later phases, the fix is a human ConflictResolution record
+  (new record type), never widening Conflict.resolution (I7).
+- Falsification currently covers inconsistent_value findings from sub-1.0
+  extractors and model candidates. Grounded-patch proposals get their
+  falsification pass in the §14 validation.falsification field — wiring the
+  falsifier into the patch path is a natural Phase 16 hardening if eval
+  shows unsafe autofixes.

@@ -37,6 +37,30 @@
       ],
       "statement": "TIE-BREAK between release rel_2026_05_02_ios_launch (announced iOS\navailability) and current T3 config (ios: false): CONFIG WINS. The iOS\nlaunch was rolled back on 2026-05-18 for kernel cold-start latency. The\nrelease record is retained as history — T4 is temporal — and documentation\nmust state iOS as unavailable until config changes.\n",
       "notes_md": "This is the standing resolution for the Phase-15 CONTRADICTION fixture.\n"
+    },
+    {
+      "source_file": "product-truth/decisions/2026-07-18-regression-flag-keep.yaml",
+      "id": "dec_regression_flag_keep",
+      "decided_at": "2026-07-18T00:00:00Z",
+      "decided_by": "eng-analysis",
+      "kind": "deliberate_exception",
+      "claims_fact_keys": [
+        "flag.analysis.regression_enabled"
+      ],
+      "statement": "Linear regression stays ENABLED. The operation is bounded, well-tested,\nand used by the CLI examples; disabling it would orphan documented\nworkflows.\n",
+      "notes_md": "Phase-15 ambiguous_ownership fixture, record A of two — this and\ndec_regression_flag_pause deliberately claim the same key with opposing\npositions. Concord must escalate, never tie-break (invariant I7).\n"
+    },
+    {
+      "source_file": "product-truth/decisions/2026-07-22-regression-flag-pause.yaml",
+      "id": "dec_regression_flag_pause",
+      "decided_at": "2026-07-22T00:00:00Z",
+      "decided_by": "product",
+      "kind": "deliberate_exception",
+      "claims_fact_keys": [
+        "flag.analysis.regression_enabled"
+      ],
+      "statement": "Linear regression should be PAUSED for the next release while the\nstatistics review of coefficient reporting is open. Docs should stop\nrecommending it until the review closes.\n",
+      "notes_md": "Phase-15 ambiguous_ownership fixture, record B of two — deliberately\nopposes dec_regression_flag_keep on the same key. Neither record\nsupersedes the other; that is the point. Concord escalates to the\nfact owner and resolves nothing.\n"
     }
   ]
 }

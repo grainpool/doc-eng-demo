@@ -1,4 +1,4 @@
-import type { CliIntrospection, ProductTruthSnapshot } from "@relay/contracts";
+import type { CliIntrospection, ConflictDraft, ProductTruthSnapshot } from "@relay/contracts";
 import { classify, dispositionFor } from "./classify.js";
 import { runExtractors, type ExtractionRefusal } from "./extractors.js";
 import {
@@ -7,6 +7,7 @@ import {
   undocumentedFactFindings,
 } from "./consistency.js";
 import { arbitrateAll, type Arbitration } from "./authority.js";
+import { detectConflicts } from "./conflicts.js";
 import { runGenerators } from "./generators/index.js";
 import { parseEstate } from "./select.js";
 import { makeDiff } from "./diff.js";
@@ -55,6 +56,8 @@ export interface PipelineOutput {
   refusals: ExtractionRefusal[];
   warnings: Warning[];
   generated_paths: string[];
+  /** Phase 15: escalations. A conflict blocks every impact on its key. */
+  conflicts: ConflictDraft[];
 }
 
 /** DETECT: diff two snapshots on authoritative current-value tiers. */
@@ -193,6 +196,12 @@ export function runPipeline(input: PipelineInput): PipelineOutput {
     ...authorityConflictFindings(input.current.facts),
   ];
 
+  // Conflicts (Phase 15): detected before classification; a conflict on a
+  // fact key blocks every impact on that key in this run (disposition
+  // unresolved, conflict attached by the caller). Concord never resolves.
+  const conflicts = detectConflicts(input.current.facts, units);
+  const conflictedKeys = new Set(conflicts.map((c) => c.fact_key));
+
   // Deterministic generators (Phase 13) with hand-edit detection.
   const generated = input.cli
     ? runGenerators(input.previous.facts, input.current.facts, {
@@ -223,6 +232,7 @@ export function runPipeline(input: PipelineInput): PipelineOutput {
         unit,
         arbitration: arbitrations.get(delta.fact_key) ?? null,
       });
+      const blocked = conflictedKeys.has(delta.fact_key);
       impacts.push({
         fact_key: delta.fact_key,
         delta: { from: delta.from, to: delta.to, kind: delta.kind },
@@ -230,9 +240,14 @@ export function runPipeline(input: PipelineInput): PipelineOutput {
         projection_id: projection.id,
         action,
         classification_rule: rule,
-        explanation: explain(projection, delta, unit, action),
-        disposition: dispositionFor(action),
+        explanation:
+          explain(projection, delta, unit, action) +
+          (blocked
+            ? " BLOCKED: a conflict on this fact key blocks every impact on it this run — see the attached conflict."
+            : ""),
+        disposition: blocked ? "unresolved" : dispositionFor(action),
       });
+      if (blocked) continue; // no patch while the key is conflicted
 
       // Patch generation: rule 2 regen is the generator's diff (seeded in
       // afterByPath); rule 3 is a mechanical span substitution applied on
@@ -275,5 +290,6 @@ export function runPipeline(input: PipelineInput): PipelineOutput {
     refusals,
     warnings: generated.warnings,
     generated_paths: generated.paths,
+    conflicts,
   };
 }

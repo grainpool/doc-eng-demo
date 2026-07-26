@@ -85,12 +85,42 @@ async function load(id) {
           patchBlock(patch) +
           "</div>";
       }).join("")).join("") +
-    ((data.findings ?? []).length
-      ? "<h3>Findings (" + data.findings.length + ")</h3>" + data.findings.map(f =>
-          "<div class='impact'><b>" + esc(f.kind) + "</b> <code>" + esc(f.fact_key) + "</code>" +
-          (f.owner ? " <span class='muted'>owner " + esc(f.owner) + "</span>" : "") +
-          "<p class='muted'>" + esc(f.detail) + "</p></div>").join("")
+    ((data.conflicts ?? []).length
+      ? "<h3>Escalations — conflicts (" + data.conflicts.length + ")</h3>" +
+        "<p class='muted'>Concord never resolves a conflict. Each names its owner, what is missing, and the question to ask.</p>" +
+        data.conflicts.map(c => {
+          let claims = []; let missing = [];
+          try { claims = JSON.parse(c.claims_json); missing = JSON.parse(c.missing_information_json); } catch {}
+          return "<div class='impact' style='border-color:#b30000'>" +
+            "<div><b>" + esc(c.kind) + "</b> <code>" + esc(c.fact_key) + "</code>" +
+            " · likely owner <b>" + esc(c.likely_owner) + "</b>" +
+            " · resolution: <code>" + (c.resolution === null ? "null (always)" : esc(c.resolution)) + "</code></div>" +
+            "<div style='display:flex;gap:1rem;flex-wrap:wrap;margin:.5rem 0'>" +
+            claims.map(cl => "<div style='flex:1;min-width:16rem;border:1px solid #ddd;border-radius:6px;padding:.5rem .8rem'>" +
+              "<b>" + esc(cl.tier) + "</b> claims <code>" + esc(JSON.stringify(cl.value)) + "</code>" +
+              "<div class='muted'>" + esc(cl.locator) + "</div></div>").join("") + "</div>" +
+            "<div class='muted'>Missing: " + missing.map(esc).join(" · ") + "</div>" +
+            "<p><b>Suggested question:</b> " + esc(c.suggested_question) + "</p></div>";
+        }).join("")
       : "") +
+    (() => {
+      const active = (data.findings ?? []).filter(f => f.disposition !== "suppressed");
+      const suppressed = (data.findings ?? []).filter(f => f.disposition === "suppressed");
+      return (active.length
+        ? "<h3>Findings (" + active.length + ")</h3>" + active.map(f =>
+            "<div class='impact'><b>" + esc(f.kind) + "</b> <code>" + esc(f.fact_key) + "</code>" +
+            (f.owner ? " <span class='muted'>owner " + esc(f.owner) + "</span>" : "") +
+            "<p class='muted'>" + esc(f.detail) + "</p></div>").join("")
+        : "") +
+      (suppressed.length
+        ? "<h3>Suppressed findings (" + suppressed.length + ")</h3>" +
+          "<p class='muted'>Refuted by the adversarial falsifier — stored and shown, never deleted.</p>" +
+          suppressed.map(f =>
+            "<div class='impact' style='opacity:.75;border-style:dashed'><b>" + esc(f.kind) + "</b> <code>" + esc(f.fact_key) + "</code>" +
+            "<p class='muted'>" + esc(f.detail) + "</p>" +
+            "<p><b>Refutation:</b> " + esc(f.refutation ?? "(none recorded)") + "</p></div>").join("")
+        : "");
+    })() +
     "<h3>Steps</h3><pre>" + esc(JSON.stringify(data.steps, null, 2)) + "</pre>";
 }
 document.getElementById("load").onclick = () => load(document.getElementById("runId").value.trim());

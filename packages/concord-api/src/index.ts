@@ -66,7 +66,7 @@ app.get("/api/public/runs/:id", async (c) => {
     .bind(runId)
     .first();
   if (!run) return c.json({ error: "not_found" }, 404);
-  const [steps, impacts, patches, findings, warnings, modelCalls] = await Promise.all([
+  const [steps, impacts, patches, findings, warnings, modelCalls, conflicts] = await Promise.all([
     c.env.concord_db
       .prepare("SELECT step, detail_json, created_at FROM run_step WHERE run_id = ? ORDER BY created_at")
       .bind(runId)
@@ -79,7 +79,7 @@ app.get("/api/public/runs/:id", async (c) => {
       .bind(runId)
       .all(),
     c.env.concord_db
-      .prepare("SELECT kind, fact_key, doc_unit_id, projection_id, detail, owner FROM finding WHERE run_id = ?")
+      .prepare("SELECT kind, fact_key, doc_unit_id, projection_id, detail, owner, disposition, refutation, proposal_json FROM finding WHERE run_id = ?")
       .bind(runId)
       .all(),
     c.env.concord_db
@@ -90,6 +90,10 @@ app.get("/api/public/runs/:id", async (c) => {
       .prepare(
         "SELECT purpose, COUNT(*) AS calls, SUM(input_tokens) AS input_tokens, SUM(output_tokens) AS output_tokens, SUM(cache_creation_input_tokens) AS cache_creation, SUM(cache_read_input_tokens) AS cache_read, SUM(cost_usd) AS cost_usd FROM model_call WHERE run_id = ? GROUP BY purpose",
       )
+      .bind(runId)
+      .all(),
+    c.env.concord_db
+      .prepare("SELECT * FROM conflict WHERE run_id = ?")
       .bind(runId)
       .all(),
   ]);
@@ -104,6 +108,7 @@ app.get("/api/public/runs/:id", async (c) => {
     patches: patches.results,
     findings: findings.results,
     warnings: warnings.results,
+    conflicts: conflicts.results,
     model_calls: modelCalls.results,
     estimated_cost_usd: Number(cost.toFixed(4)),
   });
