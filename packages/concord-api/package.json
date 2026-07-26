@@ -4,10 +4,14 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "generate:estate": "node scripts/generate-estate.mjs",
+    "pretypecheck": "node scripts/generate-estate.mjs",
     "typecheck": "tsc --noEmit",
+    "predeploy": "node scripts/generate-estate.mjs",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
     "@concord/core": "workspace:*",
     "@relay/contracts": "workspace:*",
     "hono": "^4.12.0",

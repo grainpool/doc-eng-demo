@@ -26,6 +26,9 @@ importers:
 
   packages/concord-api:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.115.0
+        version: 0.115.0(zod@4.4.3)
       '@concord/core':
         specifier: workspace:*
         version: link:../concord-core

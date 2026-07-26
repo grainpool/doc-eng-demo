@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Concord — fact graph explorer</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, sans-serif; margin: 0; color: #222; }
+  header { padding: 1rem 1.5rem; border-bottom: 1px solid #ddd; }
+  header h1 { margin: 0; font-size: 1.2rem; }
+  .wrap { display: flex; min-height: calc(100vh - 60px); }
+  nav { width: 30rem; max-width: 40%; border-right: 1px solid #ddd; overflow-y: auto; padding: .5rem 0; }
+  nav button { display: block; width: 100%; text-align: left; border: 0; background: none;
+    padding: .45rem 1rem; cursor: pointer; font: inherit; }
+  nav button:hover { background: #f4f4f0; }
+  nav button.sel { background: #eef2ff; }
+  nav .count { color: #666; font-size: .85em; }
+  nav .zero { color: #b30000; font-weight: 700; }
+  main { flex: 1; padding: 1rem 1.5rem; overflow-x: auto; }
+  code, pre { font-family: ui-monospace, monospace; background: #f4f4f0; }
+  pre { padding: .75rem; overflow-x: auto; }
+  .proj { border: 1px solid #ddd; border-radius: 6px; padding: .8rem 1rem; margin: .8rem 0; }
+  .proj .head { display: flex; gap: .8rem; flex-wrap: wrap; align-items: baseline; }
+  .surface { font-weight: 700; }
+  .conf { color: #1a7f37; } .conf.low { color: #b35900; }
+  .muted { color: #666; font-size: .9em; }
+  .asserted { font-size: 1.05em; margin: .4rem 0; }
+  .finding { border-left: 4px solid #b30000; padding: .5rem .8rem; background: #fff5f5; margin: .5rem 0; }
+  .conflict { border-left: 4px solid #b35900; padding: .5rem .8rem; background: #fffaf0; margin: .5rem 0; }
+</style>
+</head>
+<body>
+<header><h1>Concord fact-graph explorer <span class="muted">— one truth, many representations</span></h1>
+<p class="muted" style="margin:.3rem 0 0">Pick a fact to see every representation across surfaces with extractor, confidence, and normalized value. <a href="/">run report</a></p></header>
+<div class="wrap"><nav id="nav"></nav><main id="main"><p class="muted">Loading facts…</p></main></div>
+<script>
+const nav = document.getElementById("nav");
+const main = document.getElementById("main");
+function esc(s) { const d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; }
+
+async function loadList() {
+  const res = await fetch("/api/public/facts");
+  if (!res.ok) { main.innerHTML = "<p>No completed run yet — start one from the run report page.</p>"; return; }
+  const data = await res.json();
+  const facts = data.facts.filter(f => f.tier !== "T4_RELEASE" && f.tier !== "T5_HUMAN")
+    .sort((a, b) => b.projection_count - a.projection_count || (a.key < b.key ? -1 : 1));
+  nav.innerHTML = facts.map(f =>
+    "<button data-key='" + esc(f.key) + "'><code>" + esc(f.key) + "</code> " +
+    (f.undocumented ? "<span class='zero'>ZERO projections</span>"
+      : "<span class='count'>" + f.projection_count + " projection" + (f.projection_count === 1 ? "" : "s") + "</span>") +
+    "<div class='muted'>" + esc(f.tier) + " · owner " + esc(f.owner ?? "?") + "</div></button>").join("");
+  for (const b of nav.querySelectorAll("button")) b.onclick = () => { select(b); };
+  const first = facts.find(f => f.key === "limit.upload.csv.max_bytes");
+  const target = nav.querySelector("button[data-key='" + (first ? first.key : facts[0].key) + "']");
+  if (target) select(target);
+}
+
+async function select(btn) {
+  for (const b of nav.querySelectorAll("button")) b.classList.remove("sel");
+  btn.classList.add("sel");
+  const key = btn.dataset.key;
+  const res = await fetch("/api/public/facts/" + encodeURIComponent(key));
+  if (!res.ok) { main.innerHTML = "<p>not found</p>"; return; }
+  const data = await res.json();
+  const arb = data.arbitration;
+  const auth = arb && arb.authoritative;
+  const values = new Set((data.projections ?? [])
+    .map(p => p.normalized_value_json).filter(v => v !== "null" && v != null));
+  main.innerHTML =
+    "<h2><code>" + esc(key) + "</code></h2>" +
+    "<p>Authoritative: " + (auth
+      ? "<code>" + esc(JSON.stringify(auth.value)) + "</code> <span class='muted'>from " + esc(auth.tier) + " (" + esc(auth.source) + ")</span>"
+      : "<span class='muted'>no authoritative claim in snapshot</span>") +
+    " · owner <b>" + esc(data.owner ?? "?") + "</b></p>" +
+    ((arb && arb.human_claims.length) ? arb.human_claims.map(h =>
+      "<div class='conflict'><b>T5 decision claims this key</b> (" + esc(h.source) + "):<br>" + esc(h.value) + "</div>").join("") : "") +
+    ((arb && arb.ignored_temporal.length) ? "<p class='muted'>" + arb.ignored_temporal.length +
+      " temporal (T4) claim(s) about this key ignored — T4 is authoritative for when, never for what-is-now.</p>" : "") +
+    ((arb && arb.conflicts.length) ? arb.conflicts.map(c =>
+      "<div class='conflict'><b>" + esc(c.kind) + "</b>: " + esc(c.detail) + "</div>").join("") : "") +
+    ((data.findings ?? []).map(f =>
+      "<div class='finding'><b>" + esc(f.kind) + "</b>: " + esc(f.detail) + "</div>").join("")) +
+    "<h3>" + (data.projections ?? []).length + " representation(s) · " + values.size +
+      " distinct normalized value(s)" + (values.size <= 1 ? " — consistent" : " — INCONSISTENT") + "</h3>" +
+    (data.projections ?? []).map(p =>
+      "<div class='proj'><div class='head'>" +
+      "<span class='surface'>" + esc(p.surface ?? p.doc_unit_id.split(":")[0]) + "</span>" +
+      "<code>" + esc(p.doc_unit_id) + "</code></div>" +
+      "<div class='asserted'>asserts " + (p.asserted_value_json && p.asserted_value_json !== "null"
+        ? "<code>" + esc(JSON.parse(p.asserted_value_json)) + "</code>" : "<span class='muted'>(nothing statically)</span>") +
+      " → normalized <code>" + esc(p.normalized_value_json) + "</code></div>" +
+      "<div class='muted'>extractor <b>" + esc(p.extractor) + "</b> · confidence <span class='conf" +
+      (p.confidence < 1 ? " low" : "") + "'>" + esc(p.confidence) + "</span> · mode " + esc(p.mode) +
+      (p.span_start != null ? " · span " + esc(p.span_start) + "–" + esc(p.span_end) : "") +
+      " · unit owner " + esc(p.unit_owner ?? "?") + "</div></div>").join("");
+}
+loadList();
+</script>
+</body>
+</html>

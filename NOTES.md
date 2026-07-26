@@ -28,3 +28,20 @@ Ideas noted during a phase and deliberately not built in it (constraints.md AP11
   live observation.
 - The true OCI digest is printed by every deploy; if Phase 06 provenance wants it instead of the
   build-content hash, thread it in as a container env var at deploy time.
+
+## From Phase 12
+
+- `frontmatter_field` projections are span-less (frontmatter sits outside the unit body), so the
+  pipeline records them but does not classify them on a delta. Phase 13 needs a frontmatter-aware
+  patcher (rewrite the YAML value) before rule 3 can fire for them.
+- The 30-day retention ambiguity (artifact vs uploaded-file, equal values) is refused by
+  `numeric_pattern` by design. If the two values ever diverge, the refusals disappear on their own;
+  consider a `concord:fact` marker in the two retention passages if per-fact attribution is wanted
+  while they remain equal.
+- `term_occurrence` emits one projection per unit per term (first occurrence). Per-occurrence spans
+  (a unit mixing "Task" and "Job") are a Phase 13 concern when term patches become real.
+- Interpolated in-product copy still asserts nothing statically (Phase 10 decision); rule 4 should
+  turn those `references_facts` declarations into derived_prose projections.
+- `model_extraction` fan-out is capped at 10 units/run (`MODEL_EXTRACTION_MAX_UNITS`), prioritizing
+  nothing in particular; a signal-based ranking (units containing digits/platform words) would spend
+  the budget better.

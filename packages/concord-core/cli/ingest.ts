@@ -6,15 +6,9 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { mintlifyAdapter } from "../src/adapters/mintlify.js";
-import { inproductAdapter } from "../src/adapters/inproduct.js";
-import { helpcenterAdapter } from "../src/adapters/helpcenter.js";
-import {
-  clidocsAdapter,
-  releaseAdapter,
-  generatedAdapter,
-} from "../src/adapters/generated-like.js";
-import type { SurfaceAdapter } from "../src/types.js";
+import { ADAPTERS, filesFor } from "../src/select.js";
+
+export { ADAPTERS, filesFor };
 
 const ESTATE = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -39,30 +33,6 @@ export function readEstate(): { path: string; content: string }[] {
   };
   walk(ESTATE);
   return files;
-}
-
-export const ADAPTERS: SurfaceAdapter[] = [
-  mintlifyAdapter,
-  helpcenterAdapter,
-  inproductAdapter,
-  clidocsAdapter,
-  releaseAdapter,
-  generatedAdapter,
-];
-
-function globToRegExp(glob: string): RegExp {
-  const escapeLiteral = (s: string): string =>
-    s.replace(/[.+^${}()|[\]\\]/g, "\\$&").replaceAll("*", "[^/]*");
-  const source = glob.split("**/").map(escapeLiteral).join("(?:.*/)?");
-  return new RegExp(`^${source}$`);
-}
-
-export function filesFor(
-  adapter: SurfaceAdapter,
-  files: { path: string; content: string }[],
-): { path: string; content: string }[] {
-  const patterns = adapter.ownedGlobs.map(globToRegExp);
-  return files.filter((f) => patterns.some((p) => p.test(f.path)));
 }
 
 export function ingest(

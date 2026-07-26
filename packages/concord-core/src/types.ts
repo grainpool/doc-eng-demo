@@ -66,8 +66,27 @@ export const FactProjectionSchema = z.object({
   ]),
   confidence: z.number().min(0).max(1),
   detected_at: z.string(),
+  /**
+   * The comparison form of asserted_value (AP2), or null when normalization
+   * returned `unknown` — in which case mode has been downgraded to
+   * derived_prose and no deterministic action can ever cite this projection.
+   */
+  normalized_value: z
+    .union([z.string(), z.number(), z.boolean()])
+    .nullable()
+    .optional(),
 });
 export type FactProjection = z.infer<typeof FactProjectionSchema>;
+
+/** Phase 12 findings — recorded now, acted on in Phase 13/15. */
+export const FindingSchema = z.object({
+  kind: z.enum(["inconsistent_value", "undocumented_fact", "authority_conflict"]),
+  fact_key: z.string(),
+  doc_unit_id: z.string().nullable(),
+  projection_id: z.string().nullable(),
+  detail: z.string(),
+});
+export type Finding = z.infer<typeof FindingSchema>;
 
 /** A detected change in one authoritative fact between two snapshots. */
 export interface FactDelta {

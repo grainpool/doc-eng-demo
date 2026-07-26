@@ -17,3 +17,6 @@ __pycache__/
 
 # Local environmental context (Cloudflare account inventory, etc.) — not for version control
 environmental-context/
+
+# generated estate snapshot for the concord-api build
+packages/concord-api/src/estate.generated.ts

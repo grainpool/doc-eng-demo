@@ -212,3 +212,16 @@ Narration: streamed, ~4 s. Both write `model_call` rows (purpose, tokens, prompt
   deployed-URL test in `health.test.ts` failed on this machine immediately after the first deploy
   while the same suite passed in GitHub CI (clean resolvers) — see CI run 30178033001, green.
   Not a platform issue; it clears when the local resolver's negative TTL expires.
+
+## Phase 12 additions
+
+- **Worker secrets piped through PowerShell arrive corrupted.** `Get-Content -Raw | npx wrangler secret put`
+  produced a secret the API rejected with `401 invalid x-api-key` (PowerShell 5.1 re-encodes the
+  pipeline with the console codepage and appends a newline). The same key piped from Git Bash with
+  `printf '%s'` worked. Symptom is invisible until first use — `wrangler secret put` reports success
+  either way. Model-extraction run_steps record a truncated `first_error` for exactly this class of
+  silent ops failure (never prompt text).
+- **Secret/deploy propagation lag applies to plain Workers too**, not only containers: a run fired
+  seconds after `wrangler deploy`/`secret put` can execute the previous version (observed: a
+  redeployed step schema missing its new field; a re-put secret still 401ing one run later).
+  Verification needs a delay or polling, as with the kernel container (Phase 04 note).
