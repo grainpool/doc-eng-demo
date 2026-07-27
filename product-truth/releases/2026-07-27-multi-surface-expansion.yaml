@@ -1,0 +1,37 @@
+id: rel_2026_07_27_multi_surface_expansion
+version: "1.7.0"
+released_at: "2026-07-27T00:00:00Z"
+summary: "Relay becomes a multi-surface workspace: Chat and a browser Terminal join Analysis"
+changes:
+  - fact_key: availability.feature.chat.platform.web
+    from: false
+    to: true
+    kind: availability_changed
+  - fact_key: availability.feature.terminal.platform.web
+    from: false
+    to: true
+    kind: availability_changed
+  - fact_key: limit.chat.message.max_chars
+    from: null
+    to: 8000
+    kind: limit_introduced
+  - fact_key: cli.command.projects.delete.flags
+    from: null
+    to: "projects rename/archive/unarchive/delete added"
+    kind: cli_changed
+  - fact_key: cli.command.files.delete.flags
+    from: null
+    to: "files download/delete added"
+    kind: cli_changed
+  - fact_key: cli.command.artifacts.delete.flags
+    from: null
+    to: "artifacts delete added"
+    kind: cli_changed
+notes_md: |
+  Relay now presents as a small multi-surface AI workspace. Chat is a
+  streaming assistant conversation surface with optional project context;
+  the browser Terminal runs the same bounded command grammar as the
+  installable CLI. Projects gained full lifecycle management (rename,
+  archive, cascading delete), and every visitor works in an anonymous
+  per-browser demo workspace. Analysis and its bounded operation set are
+  unchanged.
