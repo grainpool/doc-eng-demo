@@ -8,6 +8,9 @@ import health from "../../../../estate/in-product-copy/health.json";
 import sessions from "../../../../estate/in-product-copy/sessions.json";
 import artifacts from "../../../../estate/in-product-copy/artifacts.json";
 import settings from "../../../../estate/in-product-copy/settings.json";
+import workspace from "../../../../estate/in-product-copy/workspace.json";
+import chat from "../../../../estate/in-product-copy/chat.json";
+import terminal from "../../../../estate/in-product-copy/terminal.json";
 import type { Env } from "../env.js";
 
 /**
@@ -24,6 +27,9 @@ const ENTRIES: CopyEntry[] = z.array(CopyEntrySchema).parse([
   ...sessions.entries,
   ...artifacts.entries,
   ...settings.entries,
+  ...workspace.entries,
+  ...chat.entries,
+  ...terminal.entries,
 ]);
 
 export const copyRegistry = new Hono<{ Bindings: Env }>();

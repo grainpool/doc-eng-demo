@@ -1,10 +1,15 @@
-import { useEffect, useState } from "react";
-import { t } from "./copy.js";
+import { useEffect, useState, type ReactNode } from "react";
+import { AppShell } from "./shell/AppShell.js";
+import { resolveRoute } from "./shell/routes.js";
 import { ProjectList } from "./screens/ProjectList.js";
 import { ProjectDetail } from "./screens/ProjectDetail.js";
-import { Health } from "./screens/Health.js";
 import { Session } from "./screens/Session.js";
 import { ArtifactDetail } from "./screens/ArtifactDetail.js";
+import { ChatPlaceholder } from "./screens/ChatPlaceholder.js";
+import { TerminalPlaceholder } from "./screens/TerminalPlaceholder.js";
+import { AnalysisEntry } from "./screens/AnalysisEntry.js";
+import { ArtifactsBrowse } from "./screens/ArtifactsBrowse.js";
+import { Settings } from "./screens/Settings.js";
 
 function useHashRoute(): string {
   const [hash, setHash] = useState(location.hash);
@@ -18,25 +23,47 @@ function useHashRoute(): string {
 
 export function App() {
   const hash = useHashRoute();
-  const projectMatch = /^#\/projects\/([a-z0-9_]+)$/.exec(hash);
-  const sessionMatch = /^#\/sessions\/([a-z0-9_]+)$/.exec(hash);
-  const artifactMatch = /^#\/artifacts\/([a-z0-9_]+)$/.exec(hash);
+  const route = resolveRoute(hash);
 
-  let screen = <ProjectList />;
-  if (projectMatch) screen = <ProjectDetail projectId={projectMatch[1] as string} />;
-  else if (sessionMatch) screen = <Session sessionId={sessionMatch[1] as string} />;
-  else if (artifactMatch) screen = <ArtifactDetail artifactId={artifactMatch[1] as string} />;
-  else if (hash === "#/health") screen = <Health />;
+  useEffect(() => {
+    if ("redirect" in route) location.hash = route.redirect;
+  }, [route]);
+  if ("redirect" in route) return null;
+
+  let screen: ReactNode;
+  switch (route.screen.kind) {
+    case "chat":
+      screen = <ChatPlaceholder />;
+      break;
+    case "projects":
+      screen = <ProjectList />;
+      break;
+    case "project":
+      screen = <ProjectDetail projectId={route.screen.id} />;
+      break;
+    case "analysis":
+      screen = <AnalysisEntry />;
+      break;
+    case "session":
+      screen = <Session sessionId={route.screen.id} />;
+      break;
+    case "terminal":
+      screen = <TerminalPlaceholder />;
+      break;
+    case "artifacts":
+      screen = <ArtifactsBrowse />;
+      break;
+    case "artifact":
+      screen = <ArtifactDetail artifactId={route.screen.id} />;
+      break;
+    case "settings":
+      screen = <Settings />;
+      break;
+  }
 
   return (
-    <main
-      className="content"
-      style={{ maxWidth: 720, margin: "0 auto", padding: "1.5rem 1rem 4rem" }}
-    >
-      <p>
-        <a href="#/">{t("app.title")}</a>
-      </p>
+    <AppShell section={route.section} width={route.width}>
       {screen}
-    </main>
+    </AppShell>
   );
 }

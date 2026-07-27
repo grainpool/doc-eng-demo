@@ -45,6 +45,33 @@ a:focus-visible, button:focus-visible, input:focus-visible { ${c.focusRing} }
 .status-success { ${c.statusSuccess} }
 .empty { ${c.emptyState} }
 .loading { ${c.loadingState} }
+
+/* App shell (expansion Phase 3). Layout is structural CSS; every color/font
+   comes from the theme tokens above it. */
+.shell { display: flex; min-height: 100vh; }
+.shell-sidebar { ${c.sidebar} width: 180px; flex-shrink: 0; box-sizing: border-box; }
+.shell-brand { ${c.brand} display: block; margin: 0 0.8em 1em; }
+.shell-nav a { ${c.navItem} }
+.shell-nav a:hover { ${c.navItemHover} }
+.shell-nav a[aria-current="page"] { ${c.navItemActive} }
+.shell-main { flex: 1; min-width: 0; padding: 1.5rem 1.5rem 4rem; box-sizing: border-box; }
+.shell-context { ${c.contextHeader} margin-bottom: 1.2em; }
+.surface-reading { max-width: 720px; margin: 0 auto; }
+.surface-wide { max-width: 960px; margin: 0 auto; }
+.surface-fluid { max-width: none; }
+.terminal-panel { ${c.terminalPanel} }
+.shell-menu-toggle { display: none; }
+@media (max-width: 719px) {
+  .shell { display: block; }
+  .shell-sidebar { width: auto; border-right: none; border-bottom: 1px solid ${theme.palette.border}; padding: 0.7em 0.8em; }
+  .shell-menu-toggle { display: inline-block; }
+  .shell-nav { display: none; }
+  .shell-nav.open { display: block; }
+  .shell-main { padding: 1rem 1rem 3rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .shell-nav a { transition: background-color 120ms ease; }
+}
 `;
 
 export function injectTheme(): void {

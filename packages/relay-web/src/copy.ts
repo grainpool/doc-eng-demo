@@ -12,6 +12,9 @@ import health from "../../../estate/in-product-copy/health.json";
 import sessionsCopy from "../../../estate/in-product-copy/sessions.json";
 import artifactsCopy from "../../../estate/in-product-copy/artifacts.json";
 import settingsCopy from "../../../estate/in-product-copy/settings.json";
+import workspaceCopy from "../../../estate/in-product-copy/workspace.json";
+import chatCopy from "../../../estate/in-product-copy/chat.json";
+import terminalCopy from "../../../estate/in-product-copy/terminal.json";
 
 export interface CopyEntry {
   id: string;
@@ -32,6 +35,9 @@ export const ALL_ENTRIES: CopyEntry[] = [
   ...sessionsCopy.entries,
   ...artifactsCopy.entries,
   ...settingsCopy.entries,
+  ...workspaceCopy.entries,
+  ...chatCopy.entries,
+  ...terminalCopy.entries,
 ];
 
 const BY_ID = new Map(ALL_ENTRIES.map((e) => [e.id, e]));

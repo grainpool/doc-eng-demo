@@ -91,6 +91,20 @@
     "generated": false
   },
   {
+    "id": "inproduct:in-product-copy/artifacts.json#artifacts.browse.intro",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifacts.browse.intro",
+    "title": "artifacts.browse.intro",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifacts.browse.empty",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifacts.browse.empty",
+    "title": "artifacts.browse.empty",
+    "generated": false
+  },
+  {
     "id": "inproduct:in-product-copy/artifacts.json#session.turn.artifacts",
     "path": "in-product-copy/artifacts.json",
     "anchor": "session.turn.artifacts",
@@ -109,6 +123,20 @@
     "path": "in-product-copy/artifacts.json",
     "anchor": "session.chain.original",
     "title": "session.chain.original",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.placeholder.title",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.placeholder.title",
+    "title": "chat.placeholder.title",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.placeholder.body",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.placeholder.body",
+    "title": "chat.placeholder.body",
     "generated": false
   },
   {
@@ -728,6 +756,34 @@
     "generated": false
   },
   {
+    "id": "inproduct:in-product-copy/sessions.json#analysis.entry.intro",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "analysis.entry.intro",
+    "title": "analysis.entry.intro",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#analysis.entry.recent",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "analysis.entry.recent",
+    "title": "analysis.entry.recent",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#analysis.entry.none",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "analysis.entry.none",
+    "title": "analysis.entry.none",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/sessions.json#analysis.entry.start",
+    "path": "in-product-copy/sessions.json",
+    "anchor": "analysis.entry.start",
+    "title": "analysis.entry.start",
+    "generated": false
+  },
+  {
     "id": "inproduct:in-product-copy/settings.json#settings.retention.artifacts",
     "path": "in-product-copy/settings.json",
     "anchor": "settings.retention.artifacts",
@@ -760,6 +816,111 @@
     "path": "in-product-copy/settings.json",
     "anchor": "settings.terminology",
     "title": "settings.terminology",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/settings.json#settings.about.heading",
+    "path": "in-product-copy/settings.json",
+    "anchor": "settings.about.heading",
+    "title": "settings.about.heading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/settings.json#settings.health.link",
+    "path": "in-product-copy/settings.json",
+    "anchor": "settings.health.link",
+    "title": "settings.health.link",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/terminal.json#terminal.placeholder.title",
+    "path": "in-product-copy/terminal.json",
+    "anchor": "terminal.placeholder.title",
+    "title": "terminal.placeholder.title",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/terminal.json#terminal.placeholder.body",
+    "path": "in-product-copy/terminal.json",
+    "anchor": "terminal.placeholder.body",
+    "title": "terminal.placeholder.body",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/workspace.json#nav.chat",
+    "path": "in-product-copy/workspace.json",
+    "anchor": "nav.chat",
+    "title": "nav.chat",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/workspace.json#nav.projects",
+    "path": "in-product-copy/workspace.json",
+    "anchor": "nav.projects",
+    "title": "nav.projects",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/workspace.json#nav.analysis",
+    "path": "in-product-copy/workspace.json",
+    "anchor": "nav.analysis",
+    "title": "nav.analysis",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/workspace.json#nav.terminal",
+    "path": "in-product-copy/workspace.json",
+    "anchor": "nav.terminal",
+    "title": "nav.terminal",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/workspace.json#nav.artifacts",
+    "path": "in-product-copy/workspace.json",
+    "anchor": "nav.artifacts",
+    "title": "nav.artifacts",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/workspace.json#nav.settings",
+    "path": "in-product-copy/workspace.json",
+    "anchor": "nav.settings",
+    "title": "nav.settings",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/workspace.json#nav.menu",
+    "path": "in-product-copy/workspace.json",
+    "anchor": "nav.menu",
+    "title": "nav.menu",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/workspace.json#workspace.banner.label",
+    "path": "in-product-copy/workspace.json",
+    "anchor": "workspace.banner.label",
+    "title": "workspace.banner.label",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/workspace.json#settings.facts.key",
+    "path": "in-product-copy/workspace.json",
+    "anchor": "settings.facts.key",
+    "title": "settings.facts.key",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/workspace.json#settings.facts.value",
+    "path": "in-product-copy/workspace.json",
+    "anchor": "settings.facts.value",
+    "title": "settings.facts.value",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/workspace.json#workspace.banner",
+    "path": "in-product-copy/workspace.json",
+    "anchor": "workspace.banner",
+    "title": "workspace.banner",
     "generated": false
   }
 ]

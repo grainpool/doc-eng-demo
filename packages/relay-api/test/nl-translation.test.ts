@@ -4,8 +4,9 @@
 // {operation_id, params} pair, and unsupported/invalid paths make ZERO
 // kernel calls. The deployed block then runs four real prompts end-to-end.
 import { env } from "cloudflare:test";
-import { visitorClient } from "./client.js";
+import { liveClient, visitorClient } from "./client.js";
 const vfetch = visitorClient();
+const lfetch = liveClient();
 import { beforeAll, describe, expect, it } from "vitest";
 import type {
   DatasetRef,
@@ -278,7 +279,7 @@ describe("deployed — four NL prompts resolve to four different operations", ()
     "correlate / summarize / histogram / normality — and an unsupported refusal",
     { timeout: 300_000, retry: 1 },
     async () => {
-      const projectRes = await fetch(`${DEPLOYED}/api/projects`, {
+      const projectRes = await lfetch(`${DEPLOYED}/api/projects`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ name: "phase05 integration" }),
@@ -290,14 +291,14 @@ describe("deployed — four NL prompts resolve to four different operations", ()
         "region,units,price,score\nA,10,2.5,60.0\nB,14,3.4,71.2\nA,11,2.6,62.8\nB,13,3.3,69.9\nA,15,2.9,73.5\nB,8,3.0,55.4\nA,10,2.4,61.2\nB,12,3.2,66.8\n";
       const form = new FormData();
       form.set("file", new File([csv], "sales.csv", { type: "text/csv" }));
-      const fileRes = await fetch(`${DEPLOYED}/api/projects/${project.id}/files`, {
+      const fileRes = await lfetch(`${DEPLOYED}/api/projects/${project.id}/files`, {
         method: "POST",
         body: form,
       });
       expect(fileRes.status).toBe(201);
       const uploaded = (await fileRes.json()) as { id: string };
 
-      const sessionRes = await fetch(
+      const sessionRes = await lfetch(
         `${DEPLOYED}/api/projects/${project.id}/sessions`,
         {
           method: "POST",
@@ -309,7 +310,7 @@ describe("deployed — four NL prompts resolve to four different operations", ()
       const liveSession = (await sessionRes.json()) as { id: string };
 
       const ask = async (prompt: string) => {
-        const res = await fetch(
+        const res = await lfetch(
           `${DEPLOYED}/api/sessions/${liveSession.id}/turns`,
           {
             method: "POST",

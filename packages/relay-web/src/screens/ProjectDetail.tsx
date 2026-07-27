@@ -53,7 +53,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     api
       .createSession(projectId, fileId)
       .then((session) => {
-        location.hash = `#/sessions/${session.id}`;
+        location.hash = `#/analysis/sessions/${session.id}`;
       })
       .catch((e: unknown) => setBanner({ kind: "error", copyId: faultCopyId(e) }))
       .finally(() => setCreatingSession(null));
@@ -104,7 +104,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     api
       .deleteProject(projectId)
       .then(() => {
-        location.hash = "#/";
+        location.hash = "#/projects";
       })
       .catch((e: unknown) => {
         setBanner({ kind: "error", copyId: faultCopyId(e) });
@@ -142,7 +142,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   return (
     <section>
       <p>
-        <a href="#/">{t("projects.detail.back")}</a>
+        <a href="#/projects">{t("projects.detail.back")}</a>
       </p>
       {project.phase === "loading" && <p className="loading">{t("projects.list.loading")}</p>}
       {project.phase === "error" && <p className="status-error">{t(project.copyId)}</p>}
@@ -318,7 +318,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
             <ul>
               {sessions.map((session) => (
                 <li key={session.id}>
-                  <a href={`#/sessions/${session.id}`}>{session.title}</a>{" "}
+                  <a href={`#/analysis/sessions/${session.id}`}>{session.title}</a>{" "}
                   <span className="empty">
                     {new Date(session.created_at).toLocaleString()}
                   </span>
