@@ -76,3 +76,42 @@ pnpm eval                 # deterministic leg — writes eval-report.{md,json} a
 EVAL_MODEL=1 pnpm eval    # adds the N=3 falsification leg (needs ANTHROPIC_API_KEY in .dev.vars)
 pnpm eval:failures-page   # regenerates the public failures page from the report
 ```
+
+## Expansion — materially documentable behavior (2026-07-27)
+
+Starting inventory for the future documentation project. Facts only; the
+authoritative sources are named so docs can cite rather than restate.
+
+**New product surfaces** (all live at relay.otonieltrejo.com):
+- Chat: streaming Anthropic conversations; create/list/reopen/rename/delete;
+  optional project association injects bounded context (metadata, file
+  shapes, capped previews). Per-message length limit is the T1 fact
+  `limit.chat.message.max_chars`. Availability: `availability.feature.chat.platform.*`.
+- Browser Terminal: xterm surface over the SAME grammar as the installable
+  CLI (`fixtures/cli-introspection.json`, 28 commands); deletes require
+  `--yes`; uploading points to Projects; no shell/eval. Availability:
+  `availability.feature.terminal.platform.web`.
+- Artifacts: global scoped browse (`/api/artifacts?project_id=&kind=`),
+  delete with provenance+R2 cascade; a deleted producing session renders as
+  "session removed" while provenance persists.
+
+**Lifecycle semantics** (the resource matrix, expansion `architecture.md` §4):
+projects create/rename/archive/unarchive/delete-with-cascade; files
+upload/download/delete (409 RESOURCE_IN_USE while session-referenced);
+sessions delete (turns + stored results go, artifacts + provenance survive);
+conversations create/rename/associate/delete; turn history immutable.
+
+**Demo workspace model**: per-browser anonymous identity (`vis_*` in the
+signed `relay_demo` cookie); reads = own + seed, mutations = own only, seed
+returns 403 SEED_READ_ONLY, foreign ids 404 (existence never leaks). The CLI
+persists the cookie (`~/.config/relay/session`). Token-gated maintenance
+reset (`scripts/reset-relay.mjs`) wipes content (never `model_call`) and
+reseeds the deterministic fixture as `seed`.
+
+**Contracts**: `@relay/contracts` 1.4.0 (single bump; CONTRACTS-FROZEN.md
+changelog); six new fact keys; five new error codes; both frozen Concord
+endpoints byte-shape unchanged throughout (every Concord suite green at
+every phase).
+
+**Spend**: chat shares the $5/day budget and per-IP rate rails with
+analysis; one `model_call` row per stream with real usage.

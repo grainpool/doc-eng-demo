@@ -3,6 +3,13 @@
 Decisions were made during packet generation, per the planning instruction. The coding agent does
 not re-open them; it verifies exact minor versions at install time against official docs.
 
+> **Execution note (Phase 4, 2026-07-27):** at install time assistant-ui had already reclassified
+> AI SDK v6 as *legacy* and directs new projects to **v7**. Per the "current primary documentation
+> wins" rule the build shipped on `ai@7.0.37`, `@ai-sdk/react@4.0.40`, `@ai-sdk/anthropic@4.0.21`,
+> `@assistant-ui/react-ai-sdk@1.4.0` (`useAISDKRuntime` over `useChat` + `DefaultChatTransport`;
+> server returns `result.toUIMessageStreamResponse({ originalMessages, onFinish })`, and
+> `convertToModelMessages` is async in v7). The v6 sections below are the packet-time snapshot.
+
 ## Chat stack — DECIDED: assistant-ui primitives over AI SDK v6
 
 - **AI SDK 6** shipped 2026-05-07 (`ai@^6`, `@ai-sdk/react@^3`). Breaking vs v5: no compat layer,

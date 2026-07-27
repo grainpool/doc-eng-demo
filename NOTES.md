@@ -139,3 +139,22 @@ prefixes, registry 23→29, CONTRACTS-FROZEN entry); migration `0005_expansion_i
 (project.owner_id, conversation, conversation_message + indexes, applied locally); demo-auth v2 +
 `workspace.ts` + `GET /api/whoami` + `demo-identity.test.ts`; product-truth test asserts the six
 new keys report honest (false/8000) values.
+
+## Expansion Phase 7 — residual known limitations (2026-07-27)
+
+- Chat renders message text parts as plain text (no markdown rendering);
+  fine for v1, a renderer swap inside MessagePrimitive.Parts is the upgrade
+  path.
+- The browser terminal's arrow-history handles one escape sequence per data
+  chunk and ignores Home/End/word-wise editing — deliberate readline-lite.
+- `sessions run` in the terminal blocks the prompt for the turn's duration
+  (kernel + model latency) with no spinner; acceptable, noted for polish.
+- Chat regeneration replaces the LAST stored assistant row only; editing
+  older turns client-side can drift storage from the visible thread (their
+  own conversation only; reload restores server truth).
+- Visual/keyboard QA on real devices was executed as far as programmatic
+  checks allow (aria-current nav, aria-expanded menu toggle, focus-ring
+  tokens, prefers-reduced-motion, 719px collapse breakpoints, ellipsized
+  thread titles); a human walk-through on physical mobile remains worthwhile.
+- The AI SDK pick moved v6 → v7 at install time (assistant-ui had already
+  reclassified v6 as legacy); recorded in the packet's research-findings.
