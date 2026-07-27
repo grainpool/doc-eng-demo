@@ -39,6 +39,18 @@ function claims(): Promise<FactClaim[]> {
         availability.connector_drive.web,
         "availability.connector_drive.web",
       ),
+      ...Object.entries(availability.chat).map(([platform, enabled]) =>
+        claim(
+          `availability.feature.chat.platform.${platform}`,
+          enabled,
+          `availability.chat.${platform}`,
+        ),
+      ),
+      claim(
+        "availability.feature.terminal.platform.web",
+        availability.terminal.web,
+        "availability.terminal.web",
+      ),
       claim(
         "plan.feature.analysis_sessions.min_plan",
         plans.analysis_sessions_min_plan,

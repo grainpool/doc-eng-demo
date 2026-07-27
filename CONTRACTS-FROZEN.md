@@ -1,7 +1,7 @@
 # CONTRACTS-FROZEN — what Concord may rely on
 
 Frozen 2026-07-26 at `@relay/contracts` **1.0.0**, git tag `relay-contracts-v1`.
-Current version **1.3.0** (see the change log in §5).
+Current version **1.4.0** (see the change log in §5).
 Relay is a FIXTURE from here on. Concord (Phases 10+) is built against exactly
 this surface and nothing else.
 
@@ -71,3 +71,16 @@ copy entries do not require a bump; anything Concord parses does.
   mutation allowlist (nine keys, closed value sets), `AllowedMutationSchema`,
   `ChangeLabRequestSchema`, `ChangeLabRunSchema` (one shape for replay AND
   live), full `ImpactRecordSchema`/`PatchRecordSchema` persisted shapes.
+- 2026-07-27 — 1.4.0 — ADDITIVE (Relay expansion, Phase 1 of
+  `prompt-packets/relay-expansion/`): the Relay-is-a-fixture freeze is
+  deliberately reopened for product-surface expansion; the two §1 endpoints
+  and all existing schemas are untouched. Added: six literal fact keys —
+  `availability.feature.chat.platform.{web,ios,android,cli}` and
+  `availability.feature.terminal.platform.web` (T3, values `false` until the
+  phase that ships each surface flips them) and `limit.chat.message.max_chars`
+  (T1, constant in `chat.ts`); `chat.ts` (`ConversationSchema`,
+  `ConversationMessageSchema`, `MessagePartSchema`,
+  `LIMIT_CHAT_MESSAGE_MAX_CHARS`); id prefixes `cnv`/`msg`/`vis`; error codes
+  `SEED_READ_ONLY`, `PROJECT_ARCHIVED`, `RESOURCE_IN_USE`, `CHAT_UNAVAILABLE`,
+  `MESSAGE_TOO_LONG` (codes are additive-exempt but recorded here since the
+  fact registry moved in the same version). Registry count 23 → 29.

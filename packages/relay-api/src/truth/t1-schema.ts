@@ -1,4 +1,4 @@
-import type { FactClaim } from "@relay/contracts";
+import { LIMIT_CHAT_MESSAGE_MAX_CHARS, type FactClaim } from "@relay/contracts";
 import {
   LIMIT_UPLOAD_CSV_MAX_BYTES,
   LIMIT_UPLOAD_CSV_MAX_ROWS,
@@ -49,6 +49,17 @@ function claims(): Promise<FactClaim[]> {
           confidence: 1,
         }),
       ),
+      {
+        // 1.4.0: the chat message cap is enforced by the contracts schema
+        // itself, so the constant lives in @relay/contracts (T1's defining
+        // property: the value IS the enforcement).
+        key: "limit.chat.message.max_chars",
+        value: LIMIT_CHAT_MESSAGE_MAX_CHARS,
+        tier: "T1_SCHEMA",
+        locator: "packages/contracts/src/chat.ts#LIMIT_CHAT_MESSAGE_MAX_CHARS",
+        observed_at: observedAt,
+        confidence: 1,
+      },
     ];
     return Promise.resolve(claims);
 }

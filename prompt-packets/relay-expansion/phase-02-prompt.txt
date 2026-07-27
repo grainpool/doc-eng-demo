@@ -1,0 +1,59 @@
+Phase 2 of the Relay expansion: project/file/session lifecycle repair, demo-workspace scoping,
+and CLI parity. Phase 1 is merged and verified: contracts are at 1.4.0, migration 0005 is
+applied, demo-auth mints per-visitor ids, workspace.ts holds the scoping rule, and the whole
+monorepo suite (including Concord) is green. Do not reopen Phase 1 decisions.
+
+Read architecture.md §3–§4 and contracts.md §2–§3 before coding; constraints.md is binding.
+
+Build, in this order:
+
+1. SCOPING. Apply the workspace.ts rule to every existing Relay route: lists filter to
+   mine|seed; direct reads 404 (never 403) for anything else — including NULL-owner rows, which
+   have no API semantics (they are pre-scoping debris the reset below removes); mutations on
+   seed rows return 403 SEED_READ_ONLY. Update seed.ts so all seeded rows carry owner_id 'seed',
+   and keep the seed-determinism test green.
+
+1b. MAINTENANCE RESET. Add POST /api/internal/reset per architecture.md §3: gated by a
+   RELAY_MAINTENANCE_TOKEN secret (bearer header; unset secret or mismatch → the generic 404,
+   indistinguishable from a missing route). It deletes all content rows (project, file,
+   analysis_session, session_turn, artifact, artifact_provenance, conversation,
+   conversation_message) and their R2 objects — NEVER model_call — then runs the existing
+   deterministic seed. Add scripts/reset-relay.mjs (token from env RELAY_MAINTENANCE_TOKEN,
+   never argv; prints the SeedReport). Cover with tests: 404 without token; with token, wipes,
+   reseeds, preserves model_call rows.
+
+2. PROJECT LIFECYCLE. PATCH /api/projects/:id (name/description), POST …/archive and
+   …/unarchive using the existing state column, DELETE /api/projects/:id with the full cascade
+   from architecture.md §4 (files+R2, sessions, turns, conversations+messages, artifacts+
+   provenance+R2) as batched D1 statements, R2 deletes after commit, r2_orphan logging on
+   failure. Archived projects reject writes with 409 PROJECT_ARCHIVED per the matrix.
+
+3. FILE + SESSION LIFECYCLE. DELETE /api/files/:id (409 RESOURCE_IN_USE when any session
+   references the file; otherwise D1 row + R2 object go), GET /api/files/:id/download
+   (content-disposition attachment), DELETE /api/sessions/:id (turns cascade; artifacts and
+   provenance survive deliberately — history is immutable, per the matrix).
+
+4. EXISTING UI, MINIMAL TOUCH. Wire rename/archive/delete/file-delete/download into the CURRENT
+   screens with confirmations (typed project name for project delete) and honest error states.
+   Do not restructure navigation — the shell is Phase 3. All strings via t(); if a needed copy id
+   does not exist yet, add it to the Phase-3 copy list you hand back to the operator and use the
+   closest existing entry meanwhile only if one genuinely fits; otherwise stub the screen action
+   until Phase 3 rather than hardcoding text.
+
+5. CLI. Add projects rename|archive|delete, files delete|download with the established
+   withExamples/introspection discipline; implement cookie persistence per architecture.md §3
+   (persist the signed relay_demo set-cookie to ~/.config/relay/session with 0600, replay it on
+   every request; `relay config show` reports identity presence, never the cookie value).
+   Regenerate fixtures/cli-introspection.json via the existing script so the staleness gate and
+   I3 (usage === --help) stay true.
+
+6. TESTS. Everything in validation.md §2: cascade completeness (zero orphan rows, zero orphan R2
+   keys), two-visitor isolation, seed immutability, file-in-use 409, session-delete artifact
+   survival, CLI cookie persistence. Full monorepo suite green.
+
+Report: the lifecycle test output, the cascade-verification approach, the regenerated fixture
+diff summary, and the copy ids you need authored for Phase 3. Stop before any shell/navigation
+work. After your report the operator sets the RELAY_MAINTENANCE_TOKEN secret, deploys, and runs
+node scripts/reset-relay.mjs once — that wipes the interim NULL-owner content (including the
+hand-made "Quarterly Sales" demo project created 2026-07-27) and puts the full deterministic
+fixture into production for the first time, owned by 'seed'.

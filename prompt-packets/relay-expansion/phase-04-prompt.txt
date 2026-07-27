@@ -1,0 +1,47 @@
+Phase 4 of the Relay expansion: Chat. Phases 1–3 are merged, deployed, verified: the shell is
+live with #/chat as a placeholder, conversation tables exist (migration 0005), contracts 1.4.0
+carries ConversationSchema and limit.chat.message.max_chars, and chat copy ids are in the
+registry. Do not reopen those decisions.
+
+Read architecture.md §6, contracts.md §3–§4, research-findings.md, and constraints.md first.
+Verify current package APIs against official docs at install time (assistant-ui AI SDK v6
+integration; ai@6 streamText/toUIMessageStreamResponse; @ai-sdk/react@3 useChat;
+@ai-sdk/anthropic) — do not code from memory. The analysis paths stay on @anthropic-ai/sdk
+untouched.
+
+Build:
+
+1. API. Conversation CRUD per contracts.md §3 (create/list/get-with-messages/rename+project-
+   association/delete), all workspace-scoped, archived projects rejecting new association with
+   409 PROJECT_ARCHIVED. Then POST /api/conversations/:id/stream per architecture.md §6:
+   guardModelCall(env, ip, "chat") FIRST (existing guard, shared $5/day budget, existing 429
+   bodies); persist the incoming user message; streamText with anthropic(MODEL_ID) — MODEL_ID
+   from @relay/contracts, never a literal; bounded history window; return
+   toUIMessageStreamResponse(); onFinish persists assistant parts_json verbatim and inserts a
+   model_call row (purpose "chat", real usage). Absent ANTHROPIC_API_KEY → CHAT_UNAVAILABLE,
+   zero model calls. Message length over the contract limit → 422 MESSAGE_TOO_LONG.
+
+2. PROJECT CONTEXT. When project_id is set, build the bounded system-prompt block from project
+   metadata, file list with shapes, and existing datasetPreview output for CSV/TSV files, inside
+   a <project_context> data-not-instructions wrapper copied in spirit from translator.ts. Hard
+   size cap by constant; truncate previews first, then the file list; never raw file dumps.
+
+3. UI. Install @assistant-ui/react, @assistant-ui/react-ai-sdk, ai@^6, @ai-sdk/react@^3,
+   @ai-sdk/anthropic (server), pinning what you verified. Use UNSTYLED assistant-ui primitives
+   (Thread/Message/Composer/ThreadList) styled entirely from Olive Folio theme tokens — no
+   Tailwind, no default assistant-ui skin. Wire the AI SDK runtime to the stream route; hydrate
+   reopened conversations from stored parts_json; thread list with new/rename/delete/reopen and
+   a project-association picker. The chat route chunk is lazy-loaded. Failure states are explicit
+   and copy-driven: budget 429, rate 429, unavailable, aborted stream (retriable, no phantom
+   assistant message).
+
+4. TRUTH. Flip availability.feature.chat.platform.web to true in PRODUCT_CONFIG (ios/android/cli
+   stay false). No other contract changes — if you believe one is needed, stop and ask.
+
+5. TESTS. Everything in validation.md §4 automated rows (mock the model client the way existing
+   analysis tests do), plus the manual checklist. Confirm the built client bundle passes the
+   existing secret scrub and that Concord tests are green.
+
+Report: package versions pinned and why, the stream route design as implemented, test output,
+bundle-size note for the lazy chunk, and the manual checklist results. Stop before terminal
+work. Operator deploys after verification.

@@ -1,0 +1,45 @@
+Phase 3 of the Relay expansion: the multi-surface application shell. Phases 1–2 are merged,
+deployed, and verified: contracts 1.4.0, per-visitor workspaces, full project/file/session
+lifecycle, CLI parity. The estate copy PR for this phase (chat.json, terminal.json,
+workspace.json plus shell strings) has been merged and the submodule repinned — confirm the new
+copy ids resolve through t() before building screens; if the repin has not happened, stop and
+ask the operator.
+
+Read architecture.md §5, design/theme.json, design/README.md, and constraints.md (especially
+AP-E1 rehouse-don't-rewrite and AP-E3 no-dashboard) before coding.
+
+Build:
+
+1. SHELL. src/shell/AppShell.tsx + routes.ts per architecture.md §5: persistent sidebar with
+   Chat / Projects / Analysis / Terminal / Artifacts / Settings, collapsing below ~720px;
+   per-surface content max-widths; contextual header showing global-vs-project context. Extend
+   design/theme.json componentStyles with the DERIVED shell tokens (sidebar, nav item, header,
+   terminal panel) including _provenance notes, and consume them via the existing theme.ts
+   mechanism — no inline hex.
+
+2. ROUTES. Default route #/chat. New routes: #/chat (placeholder this phase), #/projects,
+   #/projects/:id, #/analysis, #/analysis/sessions/:id, #/terminal (placeholder), #/artifacts
+   (placeholder list route is fine until Phase 6 if the global endpoint doesn't exist yet — use
+   per-project data), #/artifacts/:id, #/settings. Preserve old URLs: #/sessions/:id redirects
+   to #/analysis/sessions/:id; #/health renders under Settings. Hash routing stays; extract the
+   route table, do not add a router library.
+
+3. REHOUSE. Move ProjectList/ProjectDetail/Session/ArtifactDetail into the shell unchanged in
+   behavior. Build the Analysis entry screen (#/analysis): recent sessions across visible
+   projects + start-analysis flow (pick/create project → pick/upload dataset → create session).
+   Session.tsx is relocated and restyled to shell widths only.
+
+4. HONEST PLACEHOLDERS. #/chat and #/terminal render designed empty states from registry copy
+   describing what the surface will do — never lorem, never fake functionality. Settings shows
+   product information sourced from product-truth (versions, availability, retention) plus the
+   health check, and the workspace banner copy (anonymous cookie workspace, public demo, no
+   confidential uploads, deletable content).
+
+5. QUALITY. Empty/loading/error states for every routed surface; keyboard navigability with the
+   theme focus ring; extend no-literal-copy.test.ts to all new source; verify the analysis
+   regression flow manually inside the shell.
+
+Report: route table, theme.json additions (with provenance text), screenshots or a described
+walk-through of desktop + 360px, and the validation.md §3 checklist with each item checked or
+explained. Full monorepo suite green. Stop before chat functionality. Operator deploys after
+verification.

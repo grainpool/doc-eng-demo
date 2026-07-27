@@ -95,3 +95,47 @@ Ideas noted during a phase and deliberately not built in it (constraints.md AP11
   falsification pass in the §14 validation.falsification field — wiring the
   falsifier into the patch path is a natural Phase 16 hardening if eval
   shows unsafe autofixes.
+
+## Expansion Phase 1 audit — 2026-07-27 (prompt-packets/relay-expansion/)
+
+Repo inspected at contracts 1.3.0 → bumped to 1.4.0 this phase. Classification of every
+existing Relay capability for the multi-surface expansion:
+
+**Preserve unchanged**: analysis kernel + 8 bounded operations; NL translation/narration
+(`analysis/*.ts`, stays on `@anthropic-ai/sdk`); session/turn flow and immutable turn history;
+artifact persistence + schema-enforced provenance/lineage; spend rails (`limits-guard.ts` —
+shared $5/day budget, per-IP rate); copy discipline (`t()` + estate registry + no-literal-copy);
+CLI introspection authority (I3); both frozen Concord endpoints; deploy pipeline.
+
+**Expose through new UI**: artifacts (global browse/detail — today reachable only via
+project); analysis entry (today project-first routing only); CLI grammar (browser terminal
+renders `fixtures/cli-introspection.json`); health (moves under Settings).
+
+**Extend**: `demo-auth.ts` (fixed `demo-user` → per-visitor `vis_*`, done this phase);
+`product-config.ts` (chat/terminal availability, done); truth resolvers T1/T3 (six new facts,
+done); `App.tsx` routing (route table + shell, Phase 3); `api.ts` client (new routes, Phases 2–6);
+seed (`owner='seed'`, Phase 2); CLI (lifecycle commands + cookie persistence, Phase 2).
+
+**Repair**: project lifecycle (no rename/archive/delete despite `state` column — Phase 2);
+file lifecycle (no delete/download — Phase 2); workspace scoping (global pool → `workspace.ts`
+rule, groundwork done, routes adopt in Phase 2); production seeding (dev-only seed route; prod
+was verified to contain ONLY build-phase test debris and was wiped 2026-07-27; Phase 2 adds the
+token-gated maintenance reset).
+
+**Deprecate/remove**: the fixed `demo-user` identity (gone this phase); nothing else — no
+existing route or schema is removed.
+
+Code-vs-packet contradictions found: none blocking. One nuance: `artifact_provenance.session_id`
+has no FK, which is exactly what lets artifacts survive session deletion (the packet's §4 matrix
+relies on it) — deliberate, keep.
+
+Lifecycle matrix implemented across Phases 2–6 (authority: expansion `architecture.md` §4):
+project C/R/U/archive/delete+cascade; file C/R/download/delete (409 in-use, no update);
+conversation C/R/rename+assoc/delete; session C/R/delete (turns cascade, artifacts survive;
+history immutable); turn create/read only; artifact kernel-create/R/download/delete.
+
+Done this phase: contracts 1.4.0 (6 fact keys, 5 error codes, chat schemas, `cnv|msg|vis`
+prefixes, registry 23→29, CONTRACTS-FROZEN entry); migration `0005_expansion_identity.sql`
+(project.owner_id, conversation, conversation_message + indexes, applied locally); demo-auth v2 +
+`workspace.ts` + `GET /api/whoami` + `demo-identity.test.ts`; product-truth test asserts the six
+new keys report honest (false/8000) values.

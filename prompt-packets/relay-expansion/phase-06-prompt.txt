@@ -1,0 +1,42 @@
+Phase 6 of the Relay expansion: Artifacts as a first-class surface, and cross-surface coherence.
+Phases 1–5 are merged, deployed, verified: all five surfaces exist; artifacts are still only
+reachable per-project. Analysis remains the only artifact producer — do not fake multi-surface
+provenance (anti-pattern AP-E7); the data model already permits future producers without a
+schema change, which is enough.
+
+Read architecture.md §8 and contracts.md §3 first; constraints.md is binding.
+
+Build:
+
+1. API. GET /api/artifacts?project_id=&kind= (workspace-scoped, most-recent first) and
+   DELETE /api/artifacts/:id (provenance row + R2 object cascade, plain confirm in UI). Existing
+   per-project list, detail, and download routes unchanged.
+
+2. BROWSE + DETAIL. #/artifacts: filterable browse (project, kind) built with the shell's list
+   patterns — calm and editorial, no card grid decoration. Promote the existing ArtifactDetail
+   rendering of provenance and lineage; add the defunct-session state (provenance session_id no
+   longer resolving renders as "session removed", never an error) and derived-from lineage links
+   between artifact details.
+
+3. CROSS-SURFACE LINKS (ordinary hrefs, no state-sync layer): artifact → its project; artifact
+   detail → session (or defunct state); session → artifacts it produced; project detail → its
+   conversations and artifacts; chat contextual header → associated project. Verify the
+   navigation paths listed in validation.md §8 land in ≤2 clicks.
+
+4. TERMINAL/CLI PARITY. Bind `artifacts delete` in the browser terminal if Phase 5 did not, and
+   add the matching CLI command if absent — regenerate the introspection fixture and keep the
+   parity + staleness gates green.
+
+5. TRUTH + COPY SWEEP. Confirm the product-truth snapshot now reports all six expansion facts
+   with correct values and still parses under the frozen schema. Sweep every new surface for
+   missing copy states (empty/error/confirm) and produce the final list of copy ids for the
+   operator's estate PR #2; integrate after the repin. Any copy that quotes a fact value must
+   carry references_facts, same as existing entries.
+
+Tests: artifact lifecycle (delete cascade incl. R2), scoped global list, lineage/defunct
+rendering, plus the full monorepo suite. Manual: browse → filter → detail → download → delete on
+the live-like dev environment.
+
+Report: the routes added, the ≤2-click navigation proof, the fact-snapshot diff, and the copy
+ids handed to the operator. Stop before hardening. Operator merges estate PR #2, repins,
+deploys.

@@ -31,7 +31,7 @@ describe("FACT_REGISTRY", () => {
   it("has no duplicate keys (object literal collapses them — assert count)", () => {
     const keys = Object.keys(FACT_REGISTRY);
     expect(new Set(keys).size).toBe(keys.length);
-    expect(keys.length).toBe(23);
+    expect(keys.length).toBe(29); // 23 frozen at 1.0.0 + 6 expansion keys (1.4.0)
   });
 
   it("templated families are mutually exclusive on their own example keys", () => {

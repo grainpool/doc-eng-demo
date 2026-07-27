@@ -17,6 +17,11 @@ export const ID_PREFIXES = {
   impact: "imp",
   patch: "pat",
   conflict: "cfl",
+  // Expansion (contracts 1.4.0): chat conversations/messages and the
+  // per-browser demo visitor identity carried by the signed cookie.
+  conversation: "cnv",
+  conversationMessage: "msg",
+  visitor: "vis",
 } as const;
 
 export type IdPrefix = (typeof ID_PREFIXES)[keyof typeof ID_PREFIXES];

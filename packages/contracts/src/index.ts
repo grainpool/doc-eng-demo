@@ -135,4 +135,14 @@ export {
   type ImpactRecord,
   type PatchRecord,
 } from "./change-lab.js";
+export {
+  LIMIT_CHAT_MESSAGE_MAX_CHARS,
+  CONVERSATION_TITLE_MAX_CHARS,
+  MessagePartSchema,
+  ConversationMessageSchema,
+  ConversationSchema,
+  type MessagePart,
+  type ConversationMessage,
+  type Conversation,
+} from "./chat.js";
 export { CONTRACTS_VERSION } from "./version.js";

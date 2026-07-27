@@ -18,6 +18,14 @@ export const ERROR_CODES = [
   // Phase-09 spend controls (security.md §5): both map to HTTP 429.
   "BUDGET_EXHAUSTED",
   "RATE_LIMITED",
+  // Expansion (contracts 1.4.0) — additive per the CONTRACTS-FROZEN change
+  // rule. Lifecycle/workspace codes land with the Phase-2 routes; chat codes
+  // with Phase 4.
+  "SEED_READ_ONLY",     // 403: seeded demo content is immutable
+  "PROJECT_ARCHIVED",   // 409: writes rejected while a project is archived
+  "RESOURCE_IN_USE",    // 409: delete blocked by a referencing resource
+  "CHAT_UNAVAILABLE",   // 503: chat needs a model key the deployment lacks
+  "MESSAGE_TOO_LONG",   // 422: over limit.chat.message.max_chars
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

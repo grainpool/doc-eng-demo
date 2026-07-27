@@ -14,7 +14,7 @@ import type { Env } from "./env.js";
 
 export { RelayKernelContainer } from "./kernel.js";
 
-type Variables = { requestId: string };
+type Variables = { requestId: string; visitorId: string };
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -39,6 +39,10 @@ app.route("/api", kernelInternal);
 app.route("/api", sessions);
 app.route("/api", artifacts);
 app.route("/api", copyRegistry);
+
+// Who the demo cookie says this browser is (expansion Phase 1). Relay-internal
+// UI/test surface — NOT part of the frozen Concord contract (I13 untouched).
+app.get("/api/whoami", (c) => c.json({ visitor_id: c.get("visitorId") }));
 
 app.get("/api/product-truth", async (c) => {
   const snapshot = await buildProductTruth(c.env);

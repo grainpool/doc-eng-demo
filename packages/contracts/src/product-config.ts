@@ -29,6 +29,17 @@ export const PRODUCT_CONFIG = Object.freeze({
     connector_drive: Object.freeze({
       web: false,
     }),
+    // Expansion surfaces (contracts 1.4.0). False until the phase that ships
+    // each surface flips it — availability facts must never lead the product.
+    chat: Object.freeze({
+      web: false,
+      ios: false,
+      android: false,
+      cli: false,
+    }),
+    terminal: Object.freeze({
+      web: false,
+    }),
   }),
   plans: Object.freeze({
     analysis_sessions_min_plan: "free" as Plan,

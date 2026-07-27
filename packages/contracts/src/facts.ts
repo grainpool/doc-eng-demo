@@ -44,6 +44,14 @@ export const FACT_REGISTRY = Object.freeze({
   "availability.feature.analysis_sessions.platform.android": { tier: "T3_CONFIG", valueType: "boolean", owner: "product" },
   "availability.feature.analysis_sessions.platform.cli":     { tier: "T3_CONFIG", valueType: "boolean", owner: "product" },
   "availability.feature.connector_drive.platform.web":       { tier: "T3_CONFIG", valueType: "boolean", owner: "product" },
+  // 1.4.0 (expansion Phase 1): Chat and browser-Terminal surfaces. Values stay
+  // false in PRODUCT_CONFIG until the phase that ships each surface flips them.
+  "availability.feature.chat.platform.web":     { tier: "T3_CONFIG", valueType: "boolean", owner: "product" },
+  "availability.feature.chat.platform.ios":     { tier: "T3_CONFIG", valueType: "boolean", owner: "product" },
+  "availability.feature.chat.platform.android": { tier: "T3_CONFIG", valueType: "boolean", owner: "product" },
+  "availability.feature.chat.platform.cli":     { tier: "T3_CONFIG", valueType: "boolean", owner: "product" },
+  "availability.feature.terminal.platform.web": { tier: "T3_CONFIG", valueType: "boolean", owner: "product" },
+  "limit.chat.message.max_chars": { tier: "T1_SCHEMA", valueType: "integer", owner: "eng-platform" },
   "plan.feature.analysis_sessions.min_plan": { tier: "T3_CONFIG", valueType: "enum:plan", owner: "product" },
   "plan.feature.connector_drive.min_plan":   { tier: "T3_CONFIG", valueType: "enum:plan", owner: "product" },
   "retention.artifact.days":       { tier: "T3_CONFIG", valueType: "integer", owner: "product" },

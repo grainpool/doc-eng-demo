@@ -74,6 +74,21 @@ describe("GET /api/product-truth", () => {
     // The central fact of the demo is present with the enforced value.
     const limit = body.facts.find((f) => f.key === "limit.upload.csv.max_bytes");
     expect(limit?.value).toBe(10485760);
+
+    // Expansion Phase 1 (contracts 1.4.0): the six new keys report HONEST
+    // values — chat/terminal availability stays false until the phase that
+    // ships each surface flips it; the chat limit is the enforced constant.
+    const byKey = new Map(body.facts.map((f) => [f.key, f.value]));
+    for (const key of [
+      "availability.feature.chat.platform.web",
+      "availability.feature.chat.platform.ios",
+      "availability.feature.chat.platform.android",
+      "availability.feature.chat.platform.cli",
+      "availability.feature.terminal.platform.web",
+    ]) {
+      expect(byKey.get(key), key).toBe(false);
+    }
+    expect(byKey.get("limit.chat.message.max_chars")).toBe(8000);
   });
 
   it("a T4 record contradicting T3 does NOT change the reported current value", async () => {

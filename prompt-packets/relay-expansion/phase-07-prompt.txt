@@ -1,0 +1,41 @@
+Phase 7 of the Relay expansion — final: hardening and product polish. Phases 1–6 are merged and
+deployed; every surface exists and works. This phase adds no features. Its output is a demo that
+stays credible when things go wrong, on any viewport, with a keyboard.
+
+Read validation.md in full (it is the work order) and constraints.md.
+
+Do:
+
+1. QA MATRIX. Execute validation.md §7 end to end on a production build (desktop + 360px ×
+   all five surfaces × loading/empty/error/populated). Fix what fails; log each fix. Stress:
+   very long streamed chat response, 20+ threads, long project/file names, terminal
+   resize/overflow/paste, throttled network, exhausted daily budget (simulate via a dev seed of
+   model_call rows), absent API key.
+
+2. ACCESSIBILITY. Keyboard-only pass across all surfaces (nav, composer, terminal focus
+   management, dialogs/confirms, focus ring visibility); contrast spot-check of every NEW theme
+   token against the design/README.md verification approach; prefers-reduced-motion honored;
+   sensible aria labels on icon-only controls. xterm needs explicit focus/blur handling — make
+   entering and leaving the terminal with a keyboard possible and obvious.
+
+3. ERROR-STATE AUDIT. Grep every apiError code path introduced by this expansion and confirm
+   each renders a copy-registry string in the UI and appears in the terminal as its message
+   form. No raw codes, no stack traces, no silent catches.
+
+4. REGRESSION + LIVE VERIFY. Full monorepo suite; analysis workflow manually on the live site
+   after deploy; the CLI from a clean install against production (cookie persistence included);
+   ask the operator to trigger a Concord reconciliation run against deployed Relay and confirm
+   both frozen endpoints parse and the run completes.
+
+5. RECORD. Append to EVALUATION.md a dated section listing the materially documentable behavior
+   this expansion created (new surfaces, lifecycle semantics, demo-workspace model, new facts,
+   new copy families) — the future documentation project's starting inventory, facts only, no
+   marketing prose. Update relay-web/README.md and relay-cli/README.md only where they now state
+   false things.
+
+6. DEFINITION OF DONE. Walk validation.md §8 on the live site and return the checklist with
+   every box checked or a blocking reason.
+
+Report: fixes made (grouped by surface), the completed §7 matrix, the §8 checklist, live-site
+walk-through notes, and any residual known limitation worth recording in NOTES.md. This closes
+the packet.

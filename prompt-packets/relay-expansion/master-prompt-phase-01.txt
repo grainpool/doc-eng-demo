@@ -1,0 +1,52 @@
+You are expanding Relay — the deployed, working AI-workspace demo in this monorepo — from a
+data-analysis-only product into a small multi-surface AI workspace (Chat, Projects, Analysis,
+Terminal, Artifacts). This is Phase 1 of 7: audit, contracts, migrations, and identity
+groundwork. You will not build any UI or new product surface in this phase.
+
+Context you must load before writing anything: the attached architecture.md (whole file),
+contracts.md, constraints.md; the repo's CONTRACTS-FROZEN.md; and the previous packet's
+prompt-packets/relay-concord/contracts.md for the original invariants. The previous packet is
+historical evidence — never edit it, and do not treat its "Relay is feature complete" freeze as a
+requirement; treat the contracts it froze as compatibility obligations. Concord (packages/
+concord-*) is out of scope and must keep compiling and passing throughout; it consumes exactly
+GET /api/product-truth and GET /api/copy-registry, and those response schemas must not change.
+
+Do, in order:
+
+1. AUDIT. Read the current Relay implementation (relay-api routes, relay-web screens, relay-cli,
+   contracts package, migrations, seed script, demo-auth.ts, limits-guard.ts, theme materials).
+   Append a dated "Expansion Phase 1 audit" section to NOTES.md classifying every existing Relay
+   capability as: preserve unchanged / expose through new UI / extend / repair / deprecate.
+   Include the resource-lifecycle matrix from architecture.md §4, adjusted only if the code
+   contradicts it — if it does, say where and propose the minimal correction before proceeding.
+
+2. CONTRACTS 1.4.0. In packages/contracts (one commit-worthy change, additive only): register the
+   six new fact keys from contracts.md §2 with their tiers (five T3 availability keys wired to
+   PRODUCT_CONFIG — chat and terminal availability all FALSE for now, they flip when the surfaces
+   ship — and one T1 limit.chat.message.max_chars beside the Zod schema that enforces it); add
+   ConversationSchema, ConversationMessageSchema, the chat-message limit constant, and the new
+   error codes (SEED_READ_ONLY, PROJECT_ARCHIVED, RESOURCE_IN_USE, CHAT_UNAVAILABLE,
+   MESSAGE_TOO_LONG); bump the version to 1.4.0; append the dated entry to CONTRACTS-FROZEN.md
+   stating exactly what was added and why. Nothing existing changes shape.
+
+3. MIGRATION 0005. Forward-only, per architecture.md §6: owner_id TEXT on project; conversation
+   and conversation_message tables; indexes on owner_id and conversation_id. Apply locally; do
+   not touch migrations 0001–0004.
+
+4. IDENTITY. Rework relay-api/src/demo-auth.ts per architecture.md §3: mint per-browser visitor
+   ids (vis_ prefix via the existing newId), re-mint legacy "demo-user" cookies, keep the cookie
+   name/flags/no-401 behavior. Add a workspace.ts helper exposing the single scoping rule
+   (read: mine|seed; mutate: mine; seed mutations → 403 SEED_READ_ONLY; NULL-owner rows have no
+   API semantics — invisible, removed later by the Phase-2 maintenance reset) — routes adopt it
+   in Phase 2, but wire it into GET /api/whoami now ({ visitor_id }) and cover it with unit
+   tests including the two-cookie isolation shape.
+
+5. VERIFY. pnpm -r typecheck && pnpm lint && pnpm -r test must be green — the recursive scope
+   deliberately includes every Concord package, the seed-determinism test, and the CLI
+   introspection staleness gate. Additionally assert: a product-truth snapshot now contains the
+   six new keys with honest (false/limit) values and still parses with the frozen schema; the
+   copy-registry endpoint is byte-shape identical.
+
+Report back: the audit classification, any place the code contradicted architecture.md, the
+exact CONTRACTS-FROZEN entry text, and the test summary. Stop after this phase; do not begin
+lifecycle routes or UI.

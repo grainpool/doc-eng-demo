@@ -1,0 +1,46 @@
+Phase 5 of the Relay expansion: the browser Terminal. Phases 1–4 are merged, deployed, verified:
+the shell is live, Chat works, #/terminal is a placeholder. The installed CLI and its
+introspection fixture (fixtures/cli-introspection.json, CI-gated, invariant I3) are the command
+authority — you are building a second RENDERER over that one grammar, never a second vocabulary
+(anti-pattern AP-E2).
+
+Read architecture.md §7, contracts.md §5, and constraints.md first. This terminal is a bounded
+Relay command environment: no shell, no PTY, no code evaluation, no filesystem, no network
+beyond the existing api.ts client.
+
+Build:
+
+1. RENDERER. src/terminal/ with @xterm/xterm@^5 and @xterm/addon-fit (verify current versions
+   against xterm.js docs at install). Prompt, echo, scrollback, ArrowUp/Down history, paste
+   handling, resize/reflow via fit. Lazy-load the chunk on the #/terminal route. Style as the
+   derived dark Olive panel token added to design/theme.json in Phase 3 (add it now with a
+   _provenance note if Phase 3 did not).
+
+2. GRAMMAR. Import fixtures/cli-introspection.json at build time. Parser: longest-prefix command
+   path match over fixture paths, then flag parsing against that command's flag specs. `help`
+   lists supported commands from fixture summaries; `help <command>` prints the fixture usage
+   text VERBATIM (I3 extends to the browser). Errors: unknown command → UNKNOWN_COMMAND copy +
+   nearest-match suggestion; known-but-unbound → the installed-CLI message; bad flags → usage
+   excerpt.
+
+3. BINDINGS. terminal/bindings.ts mapping exactly the supported paths in architecture.md §7 to
+   existing api.ts calls (browser cookie = same workspace as the UI; no privileged path).
+   Built-ins: help, clear, history. files upload → friendly pointer to the web UI; artifacts
+   download → browser download. Confirmation-required deletes prompt inline (y/N) before calling
+   the API.
+
+4. ANTI-DRIFT. The vitest from contracts.md §5: every binding path exists in the fixture,
+   binding flags are a subset of fixture flags, help output equals fixture usage. Demonstrate it
+   fails on an injected drift (scratch change, then revert, note it in the report). Add the
+   no-eval assertion from validation.md §5.
+
+5. TRUTH + POLISH. Flip availability.feature.terminal.platform.web to true. Empty/first-run
+   state prints a short registry-copy banner with 2–3 example commands. All human-readable
+   terminal chrome strings via t(); fixture-derived text (usage/summaries) is authority output,
+   not copy, and renders verbatim.
+
+Tests: validation.md §5 in full; whole monorepo suite green including the staleness gate.
+
+Report: supported-command table (path → binding), parity-test proof, manual round-trip results
+from the browser against the live API, and anything the fixture made awkward (report, don't
+work around silently). Stop before artifact-surface work. Operator deploys after verification.
