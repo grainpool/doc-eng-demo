@@ -61,6 +61,16 @@
       ],
       "statement": "Linear regression should be PAUSED for the next release while the\nstatistics review of coefficient reporting is open. Docs should stop\nrecommending it until the review closes.\n",
       "notes_md": "Phase-15 ambiguous_ownership fixture, record B of two — deliberately\nopposes dec_regression_flag_keep on the same key. Neither record\nsupersedes the other; that is the point. Concord escalates to the\nfact owner and resolves nothing.\n"
+    },
+    {
+      "source_file": "product-truth/decisions/2026-07-27-prose-coverage-deferral.yaml",
+      "id": "dec_prose_coverage_deferral",
+      "decided_at": "2026-07-27T00:00:00Z",
+      "decided_by": "product",
+      "kind": "coverage_observation",
+      "claims_fact_keys": [],
+      "statement": "Relay shipped Chat and a browser Terminal\n(rel_2026_07_27_multi_surface_expansion) and no hand-authored\ndocumentation page mentions either surface. Concord cannot observe this:\nits extractors project registered facts onto existing text, so absence\nproduces no projection and no impact. Prose reconciliation is\ndeliberately deferred to the documentation project. This record is\nitself the detection.\n",
+      "notes_md": "claims_fact_keys is deliberately empty: this record does not dispute any\nfact's value, it attests a coverage state — claiming the availability\nkeys would manufacture a third standing conflict and dilute the two\ncurated ones. The failures page renders coverage_observation records in\nits \"Blind spots observed in production\" section; the future\ndocumentation project finds its mandate by filtering the product-truth\nsnapshot for this kind, and should retire this record with a superseding\none when prose coverage lands.\n"
     }
   ]
 }

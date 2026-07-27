@@ -1,0 +1,22 @@
+id: dec_prose_coverage_deferral
+decided_at: "2026-07-27T00:00:00Z"
+decided_by: "product"
+kind: coverage_observation
+claims_fact_keys: []
+statement: |
+  Relay shipped Chat and a browser Terminal
+  (rel_2026_07_27_multi_surface_expansion) and no hand-authored
+  documentation page mentions either surface. Concord cannot observe this:
+  its extractors project registered facts onto existing text, so absence
+  produces no projection and no impact. Prose reconciliation is
+  deliberately deferred to the documentation project. This record is
+  itself the detection.
+notes_md: |
+  claims_fact_keys is deliberately empty: this record does not dispute any
+  fact's value, it attests a coverage state — claiming the availability
+  keys would manufacture a third standing conflict and dilute the two
+  curated ones. The failures page renders coverage_observation records in
+  its "Blind spots observed in production" section; the future
+  documentation project finds its mandate by filtering the product-truth
+  snapshot for this kind, and should retire this record with a superseding
+  one when prose coverage lands.

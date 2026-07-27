@@ -68,6 +68,20 @@ See the <a href="/">run report</a> and <a href="/facts.html">fact explorer</a>.<
 <div class="miss"><b>def_missing_prereq_json_flag</b> <code>MISSING_PREREQ</code> <span class="muted">expected EDITORIAL_REVIEW</span>
 <p>Same gap: deleting the '--json first' guidance leaves grammatically clean, factually silent prose.</p></div>
 
+<h2>Blind spots observed in production (1)</h2>
+<p class="muted">A different evidence class from the misses above: those are seeded and measured;
+these were observed in the wild and recorded as human-attested product truth (T5 decision records,
+<code>kind: coverage_observation</code>). Each renders from its record in the fact snapshot — the
+prose lives in <code>product-truth/decisions/</code>, not in this page's generator.</p>
+<div class="miss" style="border-left-color:#7a5420"><b>dec_prose_coverage_deferral</b> <span class="muted">2026-07-27 · decided_by product · <code>product-truth/decisions/2026-07-27-prose-coverage-deferral.yaml</code></span>
+<p>Relay shipped Chat and a browser Terminal
+(rel_2026_07_27_multi_surface_expansion) and no hand-authored
+documentation page mentions either surface. Concord cannot observe this:
+its extractors project registered facts onto existing text, so absence
+produces no projection and no impact. Prose reconciliation is
+deliberately deferred to the documentation project. This record is
+itself the detection.</p></div>
+
 <h2>False positives (0)</h2>
 <p>None: all negative controls held (false-positive rate 0).</p>
 
