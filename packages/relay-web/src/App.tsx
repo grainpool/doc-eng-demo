@@ -5,14 +5,14 @@ import { ProjectList } from "./screens/ProjectList.js";
 import { ProjectDetail } from "./screens/ProjectDetail.js";
 import { Session } from "./screens/Session.js";
 import { ArtifactDetail } from "./screens/ArtifactDetail.js";
-import { TerminalPlaceholder } from "./screens/TerminalPlaceholder.js";
 import { AnalysisEntry } from "./screens/AnalysisEntry.js";
 import { ArtifactsBrowse } from "./screens/ArtifactsBrowse.js";
 import { Settings } from "./screens/Settings.js";
 import { t } from "./copy.js";
 
-// Route-level code split: #/projects must not pay for the chat stack.
+// Route-level code split: #/projects must not pay for the chat or xterm stacks.
 const Chat = lazy(() => import("./screens/Chat.js"));
+const TerminalScreen = lazy(() => import("./screens/Terminal.js"));
 
 function useHashRoute(): string {
   const [hash, setHash] = useState(location.hash);
@@ -55,7 +55,11 @@ export function App() {
       screen = <Session sessionId={route.screen.id} />;
       break;
     case "terminal":
-      screen = <TerminalPlaceholder />;
+      screen = (
+        <Suspense fallback={<p className="loading">{t("chat.loading")}</p>}>
+          <TerminalScreen />
+        </Suspense>
+      );
       break;
     case "artifacts":
       screen = <ArtifactsBrowse />;

@@ -80,11 +80,11 @@ describe("GET /api/product-truth", () => {
     // stay false until their surface exists; the chat limit is enforced.
     const byKey = new Map(body.facts.map((f) => [f.key, f.value]));
     expect(byKey.get("availability.feature.chat.platform.web")).toBe(true);
+    expect(byKey.get("availability.feature.terminal.platform.web")).toBe(true);
     for (const key of [
       "availability.feature.chat.platform.ios",
       "availability.feature.chat.platform.android",
       "availability.feature.chat.platform.cli",
-      "availability.feature.terminal.platform.web",
     ]) {
       expect(byKey.get(key), key).toBe(false);
     }

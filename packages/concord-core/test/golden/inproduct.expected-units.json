@@ -945,17 +945,73 @@
     "generated": false
   },
   {
-    "id": "inproduct:in-product-copy/terminal.json#terminal.placeholder.title",
+    "id": "inproduct:in-product-copy/terminal.json#terminal.welcome",
     "path": "in-product-copy/terminal.json",
-    "anchor": "terminal.placeholder.title",
-    "title": "terminal.placeholder.title",
+    "anchor": "terminal.welcome",
+    "title": "terminal.welcome",
     "generated": false
   },
   {
-    "id": "inproduct:in-product-copy/terminal.json#terminal.placeholder.body",
+    "id": "inproduct:in-product-copy/terminal.json#terminal.help.heading",
     "path": "in-product-copy/terminal.json",
-    "anchor": "terminal.placeholder.body",
-    "title": "terminal.placeholder.body",
+    "anchor": "terminal.help.heading",
+    "title": "terminal.help.heading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/terminal.json#terminal.help.locals",
+    "path": "in-product-copy/terminal.json",
+    "anchor": "terminal.help.locals",
+    "title": "terminal.help.locals",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/terminal.json#terminal.unknown",
+    "path": "in-product-copy/terminal.json",
+    "anchor": "terminal.unknown",
+    "title": "terminal.unknown",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/terminal.json#terminal.suggestion",
+    "path": "in-product-copy/terminal.json",
+    "anchor": "terminal.suggestion",
+    "title": "terminal.suggestion",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/terminal.json#terminal.unbound",
+    "path": "in-product-copy/terminal.json",
+    "anchor": "terminal.unbound",
+    "title": "terminal.unbound",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/terminal.json#terminal.bad_args",
+    "path": "in-product-copy/terminal.json",
+    "anchor": "terminal.bad_args",
+    "title": "terminal.bad_args",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/terminal.json#terminal.upload_pointer",
+    "path": "in-product-copy/terminal.json",
+    "anchor": "terminal.upload_pointer",
+    "title": "terminal.upload_pointer",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/terminal.json#terminal.download_started",
+    "path": "in-product-copy/terminal.json",
+    "anchor": "terminal.download_started",
+    "title": "terminal.download_started",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/terminal.json#terminal.confirm_yes",
+    "path": "in-product-copy/terminal.json",
+    "anchor": "terminal.confirm_yes",
+    "title": "terminal.confirm_yes",
     "generated": false
   },
   {

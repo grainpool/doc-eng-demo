@@ -38,7 +38,7 @@ export const PRODUCT_CONFIG = Object.freeze({
       cli: false,
     }),
     terminal: Object.freeze({
-      web: false,
+      web: true, // flipped by expansion Phase 5 — the surface that ships it
     }),
   }),
   plans: Object.freeze({
