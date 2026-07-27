@@ -20,7 +20,8 @@
   "vars": {
     "RELAY_DEMO_COOKIE_SECRET": "test-only-cookie-secret",
     "RELAY_DATASET_URL_SECRET": "test-only-dataset-secret",
-    "RELAY_SEED_ENABLED": "1"
+    "RELAY_SEED_ENABLED": "1",
+    "RELAY_MAINTENANCE_TOKEN": "test-only-maintenance-token"
   },
   "d1_databases": [
     {

@@ -31,6 +31,11 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
   const [artifacts, setArtifacts] = useState<ArtifactListItem[]>([]);
   const [creatingSession, setCreatingSession] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleteTyped, setDeleteTyped] = useState("");
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     api
@@ -63,6 +68,57 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   };
 
   const maxSizeHuman = limitBytes ? humanBytes(limitBytes) : "";
+  const archived = project.phase === "ready" && project.data.state === "archived";
+
+  const applyProject = (data: Project) => setProject({ phase: "ready", data });
+
+  const saveRename = () => {
+    if (project.phase !== "ready" || renameValue.trim().length === 0) return;
+    setBusy(true);
+    api
+      .patchProject(projectId, { name: renameValue.trim() })
+      .then((data) => {
+        applyProject(data);
+        setRenaming(false);
+      })
+      .catch((e: unknown) => setBanner({ kind: "error", copyId: faultCopyId(e) }))
+      .finally(() => setBusy(false));
+  };
+
+  const toggleArchive = () => {
+    if (project.phase !== "ready") return;
+    setBusy(true);
+    (archived ? api.unarchiveProject(projectId) : api.archiveProject(projectId))
+      .then(applyProject)
+      .catch((e: unknown) => setBanner({ kind: "error", copyId: faultCopyId(e) }))
+      .finally(() => setBusy(false));
+  };
+
+  const confirmDelete = () => {
+    if (project.phase !== "ready") return;
+    if (deleteTyped !== project.data.name) {
+      setBanner({ kind: "error", copyId: "projects.delete.mismatch" });
+      return;
+    }
+    setBusy(true);
+    api
+      .deleteProject(projectId)
+      .then(() => {
+        location.hash = "#/";
+      })
+      .catch((e: unknown) => {
+        setBanner({ kind: "error", copyId: faultCopyId(e) });
+        setBusy(false);
+      });
+  };
+
+  const removeFile = (file: FileRecord) => {
+    if (!window.confirm(t("files.delete.confirm", { name: file.name }))) return;
+    api
+      .deleteFile(file.id)
+      .then(() => loadFiles())
+      .catch((e: unknown) => setBanner({ kind: "error", copyId: faultCopyId(e) }));
+  };
 
   const upload = () => {
     if (!selected) {
@@ -92,8 +148,83 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
       {project.phase === "error" && <p className="status-error">{t(project.copyId)}</p>}
       {project.phase === "ready" && (
         <>
-          <h1>{project.data.name}</h1>
+          <h1>
+            {project.data.name}{" "}
+            {archived && <code>{t("projects.state.archived")}</code>}
+          </h1>
           {project.data.description && <p>{project.data.description}</p>}
+          <p>
+            {!renaming && (
+              <button
+                className="btn-secondary"
+                disabled={busy || archived}
+                onClick={() => {
+                  setRenameValue(project.data.name);
+                  setRenaming(true);
+                }}
+              >
+                {t("projects.actions.rename")}
+              </button>
+            )}{" "}
+            <button className="btn-secondary" disabled={busy} onClick={toggleArchive}>
+              {archived ? t("projects.actions.unarchive") : t("projects.actions.archive")}
+            </button>{" "}
+            <button
+              className="btn-secondary"
+              disabled={busy}
+              onClick={() => setConfirmingDelete((v) => !v)}
+            >
+              {t("projects.actions.delete")}
+            </button>
+          </p>
+          {renaming && (
+            <p>
+              <input
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                maxLength={120}
+              />{" "}
+              <button className="btn-primary" disabled={busy} onClick={saveRename}>
+                {t("projects.actions.save")}
+              </button>{" "}
+              <button
+                className="btn-secondary"
+                disabled={busy}
+                onClick={() => setRenaming(false)}
+              >
+                {t("projects.create.cancel")}
+              </button>
+            </p>
+          )}
+          {confirmingDelete && (
+            <div className="card" style={{ marginBottom: "1em" }}>
+              <p>{t("projects.delete.confirm_help")}</p>
+              <p>
+                <input
+                  value={deleteTyped}
+                  onChange={(e) => setDeleteTyped(e.target.value)}
+                  placeholder={project.data.name}
+                />{" "}
+                <button
+                  className="btn-primary"
+                  disabled={busy || deleteTyped !== project.data.name}
+                  onClick={confirmDelete}
+                >
+                  {t("projects.actions.delete")}
+                </button>{" "}
+                <button
+                  className="btn-secondary"
+                  disabled={busy}
+                  onClick={() => {
+                    setConfirmingDelete(false);
+                    setDeleteTyped("");
+                  }}
+                >
+                  {t("projects.create.cancel")}
+                </button>
+              </p>
+            </div>
+          )}
           <h2>{t("projects.detail.files_heading")}</h2>
           <div className="card" style={{ marginBottom: "1em" }}>
             <p>{t("uploader.help", { max_size_human: maxSizeHuman })}</p>
@@ -117,7 +248,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
             )}
             <button
               className="btn-primary"
-              disabled={uploading || !selected}
+              disabled={uploading || !selected || archived}
               onClick={upload}
             >
               {uploading ? t("uploader.uploading") : t("uploader.button")}
@@ -155,10 +286,24 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                     <td>
                       <button
                         className="btn-secondary"
-                        disabled={creatingSession === file.id}
+                        disabled={creatingSession === file.id || archived}
                         onClick={() => analyze(file.id)}
                       >
                         {t("session.open")}
+                      </button>{" "}
+                      <a
+                        className="btn-secondary"
+                        style={{ display: "inline-block" }}
+                        href={`/api/files/${file.id}/download`}
+                      >
+                        {t("files.actions.download")}
+                      </a>{" "}
+                      <button
+                        className="btn-secondary"
+                        disabled={archived}
+                        onClick={() => removeFile(file)}
+                      >
+                        {t("files.actions.delete")}
                       </button>
                     </td>
                   </tr>

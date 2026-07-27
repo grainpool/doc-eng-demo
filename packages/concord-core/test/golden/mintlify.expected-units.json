@@ -182,6 +182,34 @@
     "generated": true
   },
   {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#projects-rename",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "projects-rename",
+    "title": "projects rename",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#projects-archive",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "projects-archive",
+    "title": "projects archive",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#projects-unarchive",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "projects-unarchive",
+    "title": "projects unarchive",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#projects-delete",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "projects-delete",
+    "title": "projects delete",
+    "generated": true
+  },
+  {
     "id": "mintlify:docs-mintlify/cli-reference.mdx#files",
     "path": "docs-mintlify/cli-reference.mdx",
     "anchor": "files",
@@ -207,6 +235,20 @@
     "path": "docs-mintlify/cli-reference.mdx",
     "anchor": "files-show",
     "title": "files show",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#files-download",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "files-download",
+    "title": "files download",
+    "generated": true
+  },
+  {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#files-delete",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "files-delete",
+    "title": "files delete",
     "generated": true
   },
   {

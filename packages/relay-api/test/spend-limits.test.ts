@@ -1,6 +1,8 @@
 // Phase 09: the spend cap blocks the call BEFORE it is made, and the per-IP
 // rate limit answers 429 with the contract error shape.
-import { SELF, env } from "cloudflare:test";
+import { env } from "cloudflare:test";
+import { visitorClient } from "./client.js";
+const vfetch = visitorClient();
 import { beforeEach, describe, expect, it } from "vitest";
 import { MODEL_ID, newId } from "@relay/contracts";
 import {
@@ -38,7 +40,7 @@ describe("daily spend cap", () => {
     expect(rejection?.body.error.code).toBe("BUDGET_EXHAUSTED");
 
     // End-to-end through the route: a turn request is refused up front.
-    const projectRes = await SELF.fetch("https://example.com/api/projects", {
+    const projectRes = await vfetch("https://example.com/api/projects", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ name: "spend cap" }),
@@ -46,12 +48,12 @@ describe("daily spend cap", () => {
     const project = (await projectRes.json()) as { id: string };
     const form = new FormData();
     form.set("file", new File(["a,b\n1,2\n"], "s.csv", { type: "text/csv" }));
-    const fileRes = await SELF.fetch(
+    const fileRes = await vfetch(
       `https://example.com/api/projects/${project.id}/files`,
       { method: "POST", body: form },
     );
     const file = (await fileRes.json()) as FileRow;
-    const sessionRes = await SELF.fetch(
+    const sessionRes = await vfetch(
       `https://example.com/api/projects/${project.id}/sessions`,
       {
         method: "POST",
@@ -60,7 +62,7 @@ describe("daily spend cap", () => {
       },
     );
     const session = (await sessionRes.json()) as { id: string };
-    const turnRes = await SELF.fetch(
+    const turnRes = await vfetch(
       `https://example.com/api/sessions/${session.id}/turns`,
       {
         method: "POST",
@@ -122,13 +124,13 @@ describe("per-IP rate limit", () => {
 
 describe("malformed multipart upload", () => {
   it("garbage multipart body is a 422, not a 500", async () => {
-    const projectRes = await SELF.fetch("https://example.com/api/projects", {
+    const projectRes = await vfetch("https://example.com/api/projects", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ name: "multipart" }),
     });
     const project = (await projectRes.json()) as { id: string };
-    const res = await SELF.fetch(
+    const res = await vfetch(
       `https://example.com/api/projects/${project.id}/files`,
       {
         method: "POST",

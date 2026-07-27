@@ -6,9 +6,13 @@ import { datasetPreview } from "../analysis/dataset-preview.js";
 import { runTurn } from "../analysis/turn.js";
 import { narrateResult } from "../analysis/narration.js";
 import { guardModelCall } from "../analysis/limits-guard.js";
+import { log } from "../log.js";
 import type { MessagesClient } from "../analysis/translator.js";
+import { READ_SCOPE_JOIN_SQL, canMutate, projectForWrite } from "../workspace.js";
 import type { Env } from "../env.js";
 import type { FileRow } from "./files.js";
+
+type Variables = { requestId: string; visitorId: string };
 
 export interface SessionRow {
   id: string;
@@ -46,11 +50,21 @@ function messagesClient(env: Env): MessagesClient | null {
   };
 }
 
-export const sessions = new Hono<{ Bindings: Env }>();
+export const sessions = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // POST /api/projects/:id/sessions — a session binds one project + one file.
 sessions.post("/projects/:id/sessions", async (c) => {
   const projectId = c.req.param("id");
+  const access = await projectForWrite(c.env.relay_db, projectId, c.get("visitorId"));
+  if (access.kind === "seed_read_only") {
+    return c.json(apiError("SEED_READ_ONLY", "error.workspace.seed_read_only"), 403);
+  }
+  if (access.kind === "archived") {
+    return c.json(apiError("PROJECT_ARCHIVED", "error.project.archived"), 409);
+  }
+  if (access.kind !== "ok") {
+    return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
+  }
   const body = (await c.req.json().catch(() => null)) as {
     file_id?: unknown;
     title?: unknown;
@@ -87,21 +101,35 @@ sessions.post("/projects/:id/sessions", async (c) => {
   return c.json(row, 201);
 });
 
+const SESSION_JOIN_COLUMNS = SESSION_COLUMNS.split(", ")
+  .map((col) => `s.${col}`)
+  .join(", ");
+
+/** Session visible to this visitor (own or seed), else null. */
+async function scopedSession(env: Env, sessionId: string, visitorId: string) {
+  return env.relay_db
+    .prepare(
+      `SELECT ${SESSION_JOIN_COLUMNS}, p.owner_id AS project_owner_id, p.state AS project_state
+       FROM analysis_session s JOIN project p ON p.id = s.project_id
+       WHERE s.id = ? AND ${READ_SCOPE_JOIN_SQL}`,
+    )
+    .bind(sessionId, visitorId)
+    .first<SessionRow & { project_owner_id: string | null; project_state: string }>();
+}
+
 sessions.get("/projects/:id/sessions", async (c) => {
   const { results } = await c.env.relay_db
     .prepare(
-      `SELECT ${SESSION_COLUMNS} FROM analysis_session WHERE project_id = ? ORDER BY created_at DESC`,
+      `SELECT ${SESSION_JOIN_COLUMNS} FROM analysis_session s JOIN project p ON p.id = s.project_id
+       WHERE s.project_id = ? AND ${READ_SCOPE_JOIN_SQL} ORDER BY s.created_at DESC`,
     )
-    .bind(c.req.param("id"))
+    .bind(c.req.param("id"), c.get("visitorId"))
     .all<SessionRow>();
   return c.json({ sessions: results });
 });
 
 sessions.get("/sessions/:id", async (c) => {
-  const session = await c.env.relay_db
-    .prepare(`SELECT ${SESSION_COLUMNS} FROM analysis_session WHERE id = ?`)
-    .bind(c.req.param("id"))
-    .first<SessionRow>();
+  const session = await scopedSession(c.env, c.req.param("id"), c.get("visitorId"));
   if (!session) {
     return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
   }
@@ -114,14 +142,62 @@ sessions.get("/sessions/:id", async (c) => {
   return c.json({ session, turns });
 });
 
-// POST /api/sessions/:id/turns — prompt in, translation + result out.
-sessions.post("/sessions/:id/turns", async (c) => {
+// DELETE /api/sessions/:id — turns (and their stored results) cascade;
+// artifacts and provenance SURVIVE: history records stay true (matrix §4).
+sessions.delete("/sessions/:id", async (c) => {
   const session = await c.env.relay_db
-    .prepare(`SELECT ${SESSION_COLUMNS} FROM analysis_session WHERE id = ?`)
+    .prepare(
+      `SELECT s.id, p.owner_id AS project_owner_id
+       FROM analysis_session s JOIN project p ON p.id = s.project_id WHERE s.id = ?`,
+    )
     .bind(c.req.param("id"))
-    .first<SessionRow>();
+    .first<{ id: string; project_owner_id: string | null }>();
   if (!session) {
     return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
+  }
+  const decision = canMutate(session.project_owner_id, c.get("visitorId"));
+  if (decision === "seed_read_only") {
+    return c.json(apiError("SEED_READ_ONLY", "error.workspace.seed_read_only"), 403);
+  }
+  if (decision !== "ok") {
+    return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
+  }
+  const keyRows = await c.env.relay_db
+    .prepare(
+      "SELECT result_r2_key AS r2_key FROM session_turn WHERE session_id = ? AND result_r2_key IS NOT NULL",
+    )
+    .bind(session.id)
+    .all<{ r2_key: string }>();
+  await c.env.relay_db.batch([
+    c.env.relay_db.prepare("DELETE FROM session_turn WHERE session_id = ?").bind(session.id),
+    c.env.relay_db.prepare("DELETE FROM analysis_session WHERE id = ?").bind(session.id),
+  ]);
+  const keys = keyRows.results.map((r) => r.r2_key);
+  if (keys.length > 0) {
+    try {
+      await c.env.relay_artifacts.delete(keys);
+    } catch {
+      log("r2_orphan", { request_id: c.get("requestId"), session_id: session.id, keys });
+    }
+  }
+  return c.json({ deleted: true });
+});
+
+// POST /api/sessions/:id/turns — prompt in, translation + result out.
+sessions.post("/sessions/:id/turns", async (c) => {
+  const session = await scopedSession(c.env, c.req.param("id"), c.get("visitorId"));
+  if (!session) {
+    return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
+  }
+  // Running a turn WRITES history: owner only, and only while active.
+  if (canMutate(session.project_owner_id, c.get("visitorId")) === "seed_read_only") {
+    return c.json(apiError("SEED_READ_ONLY", "error.workspace.seed_read_only"), 403);
+  }
+  if (canMutate(session.project_owner_id, c.get("visitorId")) !== "ok") {
+    return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
+  }
+  if (session.project_state !== "active") {
+    return c.json(apiError("PROJECT_ARCHIVED", "error.project.archived"), 409);
   }
   const body = (await c.req.json().catch(() => null)) as {
     prompt?: unknown;
@@ -190,11 +266,25 @@ sessions.post("/sessions/:id/turns", async (c) => {
   return c.json(outcome.body, outcome.http as 200);
 });
 
-sessions.get("/turns/:id/result", async (c) => {
-  const turn = await c.env.relay_db
-    .prepare(`SELECT ${TURN_COLUMNS} FROM session_turn WHERE id = ?`)
-    .bind(c.req.param("id"))
+const TURN_JOIN_COLUMNS = TURN_COLUMNS.split(", ")
+  .map((col) => `t.${col}`)
+  .join(", ");
+
+/** Turn visible to this visitor (through its session's project), else null. */
+async function scopedTurn(env: Env, turnId: string, visitorId: string) {
+  return env.relay_db
+    .prepare(
+      `SELECT ${TURN_JOIN_COLUMNS} FROM session_turn t
+       JOIN analysis_session s ON s.id = t.session_id
+       JOIN project p ON p.id = s.project_id
+       WHERE t.id = ? AND ${READ_SCOPE_JOIN_SQL}`,
+    )
+    .bind(turnId, visitorId)
     .first<TurnListRow>();
+}
+
+sessions.get("/turns/:id/result", async (c) => {
+  const turn = await scopedTurn(c.env, c.req.param("id"), c.get("visitorId"));
   if (!turn?.result_r2_key) {
     return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
   }
@@ -223,10 +313,7 @@ sessions.post("/turns/:id/narration", async (c) => {
       503,
     );
   }
-  const turn = await c.env.relay_db
-    .prepare(`SELECT ${TURN_COLUMNS} FROM session_turn WHERE id = ?`)
-    .bind(c.req.param("id"))
-    .first<TurnListRow>();
+  const turn = await scopedTurn(c.env, c.req.param("id"), c.get("visitorId"));
   if (!turn?.result_r2_key) {
     return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
   }
@@ -255,8 +342,11 @@ sessions.post("/turns/:id/narration", async (c) => {
 // Dataset preview for the session UI — a bounded R2 read, not a kernel call.
 sessions.get("/files/:id/preview", async (c) => {
   const file = await c.env.relay_db
-    .prepare("SELECT * FROM file WHERE id = ?")
-    .bind(c.req.param("id"))
+    .prepare(
+      `SELECT f.* FROM file f JOIN project p ON p.id = f.project_id
+       WHERE f.id = ? AND ${READ_SCOPE_JOIN_SQL}`,
+    )
+    .bind(c.req.param("id"), c.get("visitorId"))
     .first<FileRow>();
   if (!file) {
     return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);

@@ -206,7 +206,9 @@ export async function seedRelay(env: Env): Promise<SeedReport> {
     projectIds.push(id);
     await env.relay_db
       .prepare(
-        "INSERT INTO project (id, name, state, created_at, updated_at) VALUES (?, ?, 'active', ?, ?)",
+        // Seeded demo content is owned by the reserved 'seed' workspace:
+        // globally readable, immutable through the API (workspace.ts).
+        "INSERT INTO project (id, name, state, owner_id, created_at, updated_at) VALUES (?, ?, 'active', 'seed', ?, ?)",
       )
       .bind(id, name, now(), now())
       .run();

@@ -210,6 +210,27 @@
     "generated": false
   },
   {
+    "id": "inproduct:in-product-copy/errors.json#error.workspace.seed_read_only",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.workspace.seed_read_only",
+    "title": "error.workspace.seed_read_only",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.project.archived",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.project.archived",
+    "title": "error.project.archived",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/errors.json#error.file.in_use",
+    "path": "in-product-copy/errors.json",
+    "anchor": "error.file.in_use",
+    "title": "error.file.in_use",
+    "generated": false
+  },
+  {
     "id": "inproduct:in-product-copy/files.json#files.list.empty",
     "path": "in-product-copy/files.json",
     "anchor": "files.list.empty",
@@ -319,6 +340,27 @@
     "path": "in-product-copy/files.json",
     "anchor": "uploader.limit_note",
     "title": "uploader.limit_note",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#files.actions.download",
+    "path": "in-product-copy/files.json",
+    "anchor": "files.actions.download",
+    "title": "files.actions.download",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#files.actions.delete",
+    "path": "in-product-copy/files.json",
+    "anchor": "files.actions.delete",
+    "title": "files.actions.delete",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/files.json#files.delete.confirm",
+    "path": "in-product-copy/files.json",
+    "anchor": "files.delete.confirm",
+    "title": "files.delete.confirm",
     "generated": false
   },
   {
@@ -501,6 +543,55 @@
     "path": "in-product-copy/projects.json",
     "anchor": "onboarding.first_upload",
     "title": "onboarding.first_upload",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.actions.rename",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.actions.rename",
+    "title": "projects.actions.rename",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.actions.save",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.actions.save",
+    "title": "projects.actions.save",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.actions.archive",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.actions.archive",
+    "title": "projects.actions.archive",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.actions.unarchive",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.actions.unarchive",
+    "title": "projects.actions.unarchive",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.actions.delete",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.actions.delete",
+    "title": "projects.actions.delete",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.delete.confirm_help",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.delete.confirm_help",
+    "title": "projects.delete.confirm_help",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.delete.mismatch",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.delete.mismatch",
+    "title": "projects.delete.mismatch",
     "generated": false
   },
   {

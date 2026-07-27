@@ -166,6 +166,23 @@ export const api = {
       body: JSON.stringify(description ? { name, description } : { name }),
     }),
   getProject: (id: string) => request<Project>(`/api/projects/${id}`),
+  patchProject: (id: string, fields: { name?: string; description?: string | null }) =>
+    request<Project>(`/api/projects/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(fields),
+    }),
+  archiveProject: (id: string) =>
+    request<Project>(`/api/projects/${id}/archive`, { method: "POST" }),
+  unarchiveProject: (id: string) =>
+    request<Project>(`/api/projects/${id}/unarchive`, { method: "POST" }),
+  deleteProject: (id: string) =>
+    request<{ deleted: boolean; counts: Record<string, number> }>(
+      `/api/projects/${id}`,
+      { method: "DELETE" },
+    ),
+  deleteFile: (id: string) =>
+    request<{ deleted: boolean }>(`/api/files/${id}`, { method: "DELETE" }),
   listFiles: (projectId: string) =>
     request<{ files: FileRecord[] }>(`/api/projects/${projectId}/files`).then(
       (r) => r.files,

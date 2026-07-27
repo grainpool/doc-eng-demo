@@ -1,6 +1,8 @@
 // Phase 06: no artifact without complete provenance (invariant I2),
 // provenance captured at computation time, lineage chains resolve.
-import { SELF, env } from "cloudflare:test";
+import { env } from "cloudflare:test";
+import { visitorClient } from "./client.js";
+const vfetch = visitorClient();
 import { beforeAll, describe, expect, it } from "vitest";
 import type { DatasetRef, KernelResult, OperationId } from "@relay/contracts";
 import {
@@ -102,7 +104,7 @@ let session: { id: string };
 let projectId: string;
 
 beforeAll(async () => {
-  const projectRes = await SELF.fetch("https://example.com/api/projects", {
+  const projectRes = await vfetch("https://example.com/api/projects", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ name: "provenance test" }),
@@ -113,12 +115,12 @@ beforeAll(async () => {
     "file",
     new File(["a,b\n1,2\n3,4\n5,6\n"], "prov.csv", { type: "text/csv" }),
   );
-  const fileRes = await SELF.fetch(
+  const fileRes = await vfetch(
     `https://example.com/api/projects/${projectId}/files`,
     { method: "POST", body: form },
   );
   file = (await fileRes.json()) as FileRow;
-  const sessionRes = await SELF.fetch(
+  const sessionRes = await vfetch(
     `https://example.com/api/projects/${projectId}/sessions`,
     {
       method: "POST",
@@ -201,7 +203,7 @@ describe("invariant I2 — no artifact without complete provenance", () => {
     const artifact = completeArtifact();
     artifact.id = "art_testvalid00000000000000";
     await insertArtifact(env, artifact);
-    const detail = await SELF.fetch(
+    const detail = await vfetch(
       `https://example.com/api/artifacts/${artifact.id}`,
     );
     expect(detail.status).toBe(200);
@@ -309,7 +311,7 @@ describe("lineage — filter → correlate chain", () => {
 
     // The lineage endpoint resolves the two-step chain.
     const corrTable = secondArtifacts.find((a) => a.kind === "table_csv");
-    const lineageRes = await SELF.fetch(
+    const lineageRes = await vfetch(
       `https://example.com/api/artifacts/${corrTable!.id}/lineage`,
     );
     expect(lineageRes.status).toBe(200);

@@ -94,7 +94,7 @@
     {
       "path": "projects",
       "summary": "Work with projects",
-      "usage": "Usage: relay projects [options] [command]\n\nList, create, and inspect Relay projects.\n\nOptions:\n  -h, --help        display help for command\n\nCommands:\n  list              List all projects\n  create [options]  Create a project\n  show <projectId>  Show one project\n  help [command]    display help for command\n\nExamples:\n  $ relay projects list\n  $ relay projects create --name \"Q3 data\"\n\n",
+      "usage": "Usage: relay projects [options] [command]\n\nList, create, and inspect Relay projects.\n\nOptions:\n  -h, --help                    display help for command\n\nCommands:\n  list                          List all projects\n  create [options]              Create a project\n  show <projectId>              Show one project\n  rename [options] <projectId>  Rename a project\n  archive <projectId>           Archive a project\n  unarchive <projectId>         Unarchive a project\n  delete [options] <projectId>  Delete a project and everything in it\n  help [command]                display help for command\n\nExamples:\n  $ relay projects list\n  $ relay projects create --name \"Q3 data\"\n\n",
       "flags": [],
       "exit_codes": [
         {
@@ -267,9 +267,191 @@
       ]
     },
     {
+      "path": "projects rename",
+      "summary": "Rename a project",
+      "usage": "Usage: relay projects rename [options] <projectId>\n\nRename a project and/or update its description.\n\nArguments:\n  projectId             project id (prj_…)\n\nOptions:\n  --name <name>         new project name\n  --description <text>  new description\n  -h, --help            display help for command\n\nExamples:\n  $ relay projects rename prj_01abc --name \"Q4 data\"\n\n",
+      "flags": [
+        {
+          "name": "--name",
+          "alias": null,
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "new project name"
+        },
+        {
+          "name": "--description",
+          "alias": null,
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "new description"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay projects rename prj_01abc --name \"Q4 data\""
+      ]
+    },
+    {
+      "path": "projects archive",
+      "summary": "Archive a project",
+      "usage": "Usage: relay projects archive [options] <projectId>\n\nArchive a project: it stays readable but rejects new writes.\n\nArguments:\n  projectId   project id (prj_…)\n\nOptions:\n  -h, --help  display help for command\n\nExamples:\n  $ relay projects archive prj_01abc\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay projects archive prj_01abc"
+      ]
+    },
+    {
+      "path": "projects unarchive",
+      "summary": "Unarchive a project",
+      "usage": "Usage: relay projects unarchive [options] <projectId>\n\nRestore an archived project to the active state.\n\nArguments:\n  projectId   project id (prj_…)\n\nOptions:\n  -h, --help  display help for command\n\nExamples:\n  $ relay projects unarchive prj_01abc\n\n",
+      "flags": [],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay projects unarchive prj_01abc"
+      ]
+    },
+    {
+      "path": "projects delete",
+      "summary": "Delete a project and everything in it",
+      "usage": "Usage: relay projects delete [options] <projectId>\n\nPermanently delete a project with all its files, sessions, conversations, and\nartifacts. Requires --yes.\n\nArguments:\n  projectId   project id (prj_…)\n\nOptions:\n  --yes       confirm the permanent, cascading deletion\n  -h, --help  display help for command\n\nExamples:\n  $ relay projects delete prj_01abc --yes\n\n",
+      "flags": [
+        {
+          "name": "--yes",
+          "alias": null,
+          "type": "boolean",
+          "required": false,
+          "default": null,
+          "description": "confirm the permanent, cascading deletion"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay projects delete prj_01abc --yes"
+      ]
+    },
+    {
       "path": "files",
       "summary": "Work with uploaded files",
-      "usage": "Usage: relay files [options] [command]\n\nList, upload, and inspect a project's data files.\n\nOptions:\n  -h, --help                 display help for command\n\nCommands:\n  list <projectId>           List a project's files\n  upload <projectId> <path>  Upload a CSV or TSV file\n  show <fileId>              Show one file\n  help [command]             display help for command\n\nExamples:\n  $ relay files list prj_01abc\n  $ relay files upload prj_01abc ./data.csv\n\n",
+      "usage": "Usage: relay files [options] [command]\n\nList, upload, and inspect a project's data files.\n\nOptions:\n  -h, --help                   display help for command\n\nCommands:\n  list <projectId>             List a project's files\n  upload <projectId> <path>    Upload a CSV or TSV file\n  show <fileId>                Show one file\n  download [options] <fileId>  Download an uploaded file\n  delete [options] <fileId>    Delete an uploaded file\n  help [command]               display help for command\n\nExamples:\n  $ relay files list prj_01abc\n  $ relay files upload prj_01abc ./data.csv\n\n",
       "flags": [],
       "exit_codes": [
         {
@@ -421,6 +603,102 @@
       ],
       "examples": [
         "relay files show fil_01abc"
+      ]
+    },
+    {
+      "path": "files download",
+      "summary": "Download an uploaded file",
+      "usage": "Usage: relay files download [options] <fileId>\n\nDownload an uploaded file's bytes to a local path.\n\nArguments:\n  fileId        file id (fil_…)\n\nOptions:\n  --out <path>  output path (defaults to the uploaded filename)\n  -h, --help    display help for command\n\nExamples:\n  $ relay files download fil_01abc --out ./data.csv\n\n",
+      "flags": [
+        {
+          "name": "--out",
+          "alias": null,
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "output path (defaults to the uploaded filename)"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay files download fil_01abc --out ./data.csv"
+      ]
+    },
+    {
+      "path": "files delete",
+      "summary": "Delete an uploaded file",
+      "usage": "Usage: relay files delete [options] <fileId>\n\nPermanently delete an uploaded file. Refused while an analysis session\nreferences it. Requires --yes.\n\nArguments:\n  fileId      file id (fil_…)\n\nOptions:\n  --yes       confirm the permanent deletion\n  -h, --help  display help for command\n\nExamples:\n  $ relay files delete fil_01abc --yes\n\n",
+      "flags": [
+        {
+          "name": "--yes",
+          "alias": null,
+          "type": "boolean",
+          "required": false,
+          "default": null,
+          "description": "confirm the permanent deletion"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay files delete fil_01abc --yes"
       ]
     },
     {
@@ -816,7 +1094,7 @@
     {
       "path": "config show",
       "summary": "Show resolved configuration",
-      "usage": "Usage: relay config show [options]\n\nShow the API URL and whether a token is set (never the token itself).\n\nOptions:\n  -h, --help  display help for command\n\nExamples:\n  $ relay config show\n\n",
+      "usage": "Usage: relay config show [options]\n\nShow the API URL, whether a token is set (never the token itself), and whether a\ndemo-workspace identity has been saved.\n\nOptions:\n  -h, --help  display help for command\n\nExamples:\n  $ relay config show\n\n",
       "flags": [],
       "exit_codes": [
         {

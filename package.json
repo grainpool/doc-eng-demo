@@ -15,6 +15,7 @@
     "build": "pnpm -r run build",
     "cli:introspect": "node scripts/capture-cli-introspection.mjs",
     "seed:relay": "node scripts/seed-relay.mjs",
+    "reset:relay": "node scripts/reset-relay.mjs",
     "dev": "pnpm --filter relay-web dev",
     "deploy:relay": "pnpm --filter relay-web run deploy",
     "deploy:kernel": "pnpm --filter relay-web run deploy",

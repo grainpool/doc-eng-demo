@@ -5,7 +5,10 @@ import {
   SUPPORTED_FILE_TYPES,
 } from "../limits.js";
 import { scanDelimitedStream } from "../csv-scan.js";
+import { READ_SCOPE_JOIN_SQL, projectForWrite } from "../workspace.js";
 import type { Env } from "../env.js";
+
+type Variables = { requestId: string; visitorId: string };
 
 export interface FileRow {
   id: string;
@@ -28,17 +31,20 @@ function sanitizeFilename(name: string): string {
   return base.replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 120) || "upload";
 }
 
-export const files = new Hono<{ Bindings: Env }>();
+export const files = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // POST /api/projects/:id/files — the ONLY place upload limits are enforced,
 // reading the constants that are simultaneously the T1 fact source (limits.ts).
 files.post("/projects/:id/files", async (c) => {
   const projectId = c.req.param("id");
-  const project = await c.env.relay_db
-    .prepare("SELECT id FROM project WHERE id = ?")
-    .bind(projectId)
-    .first();
-  if (!project) {
+  const access = await projectForWrite(c.env.relay_db, projectId, c.get("visitorId"));
+  if (access.kind === "seed_read_only") {
+    return c.json(apiError("SEED_READ_ONLY", "error.workspace.seed_read_only"), 403);
+  }
+  if (access.kind === "archived") {
+    return c.json(apiError("PROJECT_ARCHIVED", "error.project.archived"), 409);
+  }
+  if (access.kind !== "ok") {
     return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
   }
 
@@ -124,23 +130,90 @@ files.post("/projects/:id/files", async (c) => {
   return c.json(row, 201);
 });
 
+const FILE_JOIN_COLUMNS = FILE_COLUMNS.split(", ")
+  .map((col) => `f.${col}`)
+  .join(", ");
+
 files.get("/projects/:id/files", async (c) => {
   const { results } = await c.env.relay_db
     .prepare(
-      `SELECT ${FILE_COLUMNS} FROM file WHERE project_id = ? ORDER BY created_at DESC`,
+      `SELECT ${FILE_JOIN_COLUMNS} FROM file f JOIN project p ON p.id = f.project_id
+       WHERE f.project_id = ? AND ${READ_SCOPE_JOIN_SQL} ORDER BY f.created_at DESC`,
     )
-    .bind(c.req.param("id"))
+    .bind(c.req.param("id"), c.get("visitorId"))
     .all<FileRow>();
   return c.json({ files: results });
 });
 
-files.get("/files/:id", async (c) => {
-  const row = await c.env.relay_db
-    .prepare(`SELECT ${FILE_COLUMNS} FROM file WHERE id = ?`)
-    .bind(c.req.param("id"))
+async function scopedFile(c: { env: Env }, fileId: string, visitorId: string) {
+  return c.env.relay_db
+    .prepare(
+      `SELECT ${FILE_JOIN_COLUMNS} FROM file f JOIN project p ON p.id = f.project_id
+       WHERE f.id = ? AND ${READ_SCOPE_JOIN_SQL}`,
+    )
+    .bind(fileId, visitorId)
     .first<FileRow>();
+}
+
+files.get("/files/:id", async (c) => {
+  const row = await scopedFile(c, c.req.param("id"), c.get("visitorId"));
   if (!row) {
     return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
   }
   return c.json(row);
+});
+
+// GET /api/files/:id/download — the uploaded bytes back out (Phase 2).
+files.get("/files/:id/download", async (c) => {
+  const row = await scopedFile(c, c.req.param("id"), c.get("visitorId"));
+  if (!row) {
+    return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
+  }
+  const object = await c.env.relay_artifacts.get(row.r2_key);
+  if (!object) {
+    return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
+  }
+  return new Response(object.body, {
+    headers: {
+      "content-type": row.mime,
+      "content-disposition": `attachment; filename="${row.name}"`,
+      "content-length": String(object.size),
+    },
+  });
+});
+
+// DELETE /api/files/:id — blocked while a session references the file
+// (RESOURCE_IN_USE is more honest than nulling provenance sources).
+files.delete("/files/:id", async (c) => {
+  const row = await c.env.relay_db
+    .prepare(
+      `SELECT f.id, f.project_id, f.r2_key FROM file f WHERE f.id = ?`,
+    )
+    .bind(c.req.param("id"))
+    .first<{ id: string; project_id: string; r2_key: string }>();
+  if (!row) {
+    return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
+  }
+  const access = await projectForWrite(
+    c.env.relay_db,
+    row.project_id,
+    c.get("visitorId"),
+    { requireActive: false },
+  );
+  if (access.kind === "seed_read_only") {
+    return c.json(apiError("SEED_READ_ONLY", "error.workspace.seed_read_only"), 403);
+  }
+  if (access.kind !== "ok") {
+    return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
+  }
+  const inUse = await c.env.relay_db
+    .prepare("SELECT COUNT(*) AS n FROM analysis_session WHERE file_id = ?")
+    .bind(row.id)
+    .first<{ n: number }>();
+  if ((inUse?.n ?? 0) > 0) {
+    return c.json(apiError("RESOURCE_IN_USE", "error.file.in_use"), 409);
+  }
+  await c.env.relay_db.prepare("DELETE FROM file WHERE id = ?").bind(row.id).run();
+  await c.env.relay_artifacts.delete(row.r2_key);
+  return c.json({ deleted: true });
 });

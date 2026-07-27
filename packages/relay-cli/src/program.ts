@@ -1,7 +1,13 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { basename } from "node:path";
 import { Command } from "commander";
-import { DEFAULT_API_URL, apiFetch, apiJson, type GlobalOpts } from "./http.js";
+import {
+  DEFAULT_API_URL,
+  apiFetch,
+  apiJson,
+  hasSavedIdentity,
+  type GlobalOpts,
+} from "./http.js";
 import { CliError, EXIT } from "./errors.js";
 
 export const CLI_VERSION = "0.1.0";
@@ -171,6 +177,100 @@ export function buildProgram(): Command {
     "relay projects show prj_01abc",
   );
 
+  withExamples(
+    projects
+      .command("rename")
+      .summary("Rename a project")
+      .description("Rename a project and/or update its description.")
+      .argument("<projectId>", "project id (prj_…)")
+      .option("--name <name>", "new project name")
+      .option("--description <text>", "new description")
+      .action(async function (this: Command, projectId: string) {
+        const opts = globals(this);
+        const local = this.opts<{ name?: string; description?: string }>();
+        if (!local.name && local.description === undefined) {
+          throw new CliError(EXIT.VALIDATION, "nothing to update: pass --name and/or --description");
+        }
+        const project = await apiJson<ProjectDto>(opts, `/api/projects/${projectId}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            ...(local.name ? { name: local.name } : {}),
+            ...(local.description !== undefined ? { description: local.description } : {}),
+          }),
+        });
+        emit(opts, project, () => `renamed ${project.id}  ${project.name}`);
+      }),
+    'relay projects rename prj_01abc --name "Q4 data"',
+  );
+
+  withExamples(
+    projects
+      .command("archive")
+      .summary("Archive a project")
+      .description("Archive a project: it stays readable but rejects new writes.")
+      .argument("<projectId>", "project id (prj_…)")
+      .action(async function (this: Command, projectId: string) {
+        const opts = globals(this);
+        const project = await apiJson<ProjectDto>(opts, `/api/projects/${projectId}/archive`, {
+          method: "POST",
+        });
+        emit(opts, project, () => `archived ${project.id}  ${project.name}`);
+      }),
+    "relay projects archive prj_01abc",
+  );
+
+  withExamples(
+    projects
+      .command("unarchive")
+      .summary("Unarchive a project")
+      .description("Restore an archived project to the active state.")
+      .argument("<projectId>", "project id (prj_…)")
+      .action(async function (this: Command, projectId: string) {
+        const opts = globals(this);
+        const project = await apiJson<ProjectDto>(opts, `/api/projects/${projectId}/unarchive`, {
+          method: "POST",
+        });
+        emit(opts, project, () => `unarchived ${project.id}  ${project.name}`);
+      }),
+    "relay projects unarchive prj_01abc",
+  );
+
+  withExamples(
+    projects
+      .command("delete")
+      .summary("Delete a project and everything in it")
+      .description(
+        "Permanently delete a project with all its files, sessions, conversations, and artifacts. Requires --yes.",
+      )
+      .argument("<projectId>", "project id (prj_…)")
+      .option("--yes", "confirm the permanent, cascading deletion")
+      .action(async function (this: Command, projectId: string) {
+        const opts = globals(this);
+        const local = this.opts<{ yes?: boolean }>();
+        if (!local.yes) {
+          throw new CliError(
+            EXIT.VALIDATION,
+            "refusing to delete without --yes (this permanently removes the project and all its contents)",
+          );
+        }
+        const result = await apiJson<{ deleted: boolean; counts: Record<string, number> }>(
+          opts,
+          `/api/projects/${projectId}`,
+          { method: "DELETE" },
+        );
+        emit(
+          opts,
+          result,
+          () =>
+            `deleted ${projectId}  (${Object.entries(result.counts)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(", ")})`,
+        );
+      }),
+    "relay projects delete prj_01abc --yes",
+  );
+
   // ---------------------------------------------------------------- files
   const files = program
     .command("files")
@@ -256,6 +356,53 @@ export function buildProgram(): Command {
         );
       }),
     "relay files show fil_01abc",
+  );
+
+  withExamples(
+    files
+      .command("download")
+      .summary("Download an uploaded file")
+      .description("Download an uploaded file's bytes to a local path.")
+      .argument("<fileId>", "file id (fil_…)")
+      .option("--out <path>", "output path (defaults to the uploaded filename)")
+      .action(async function (this: Command, fileId: string) {
+        const opts = globals(this);
+        const local = this.opts<{ out?: string }>();
+        const res = await apiFetch(opts, `/api/files/${fileId}/download`);
+        const disposition = res.headers.get("content-disposition") ?? "";
+        const suggested =
+          /filename="([^"]+)"/.exec(disposition)?.[1] ?? `${fileId}.csv`;
+        const out = local.out ?? suggested;
+        await writeFile(out, Buffer.from(await res.arrayBuffer()));
+        emit(opts, { saved: out }, () => `saved ${out}`);
+      }),
+    "relay files download fil_01abc --out ./data.csv",
+  );
+
+  withExamples(
+    files
+      .command("delete")
+      .summary("Delete an uploaded file")
+      .description(
+        "Permanently delete an uploaded file. Refused while an analysis session references it. Requires --yes.",
+      )
+      .argument("<fileId>", "file id (fil_…)")
+      .option("--yes", "confirm the permanent deletion")
+      .action(async function (this: Command, fileId: string) {
+        const opts = globals(this);
+        const local = this.opts<{ yes?: boolean }>();
+        if (!local.yes) {
+          throw new CliError(
+            EXIT.VALIDATION,
+            "refusing to delete without --yes (this permanently removes the uploaded file)",
+          );
+        }
+        const result = await apiJson<{ deleted: boolean }>(opts, `/api/files/${fileId}`, {
+          method: "DELETE",
+        });
+        emit(opts, result, () => `deleted ${fileId}`);
+      }),
+    "relay files delete fil_01abc --yes",
   );
 
   // ------------------------------------------------------------- sessions
@@ -459,19 +606,22 @@ export function buildProgram(): Command {
     config
       .command("show")
       .summary("Show resolved configuration")
-      .description("Show the API URL and whether a token is set (never the token itself).")
+      .description(
+        "Show the API URL, whether a token is set (never the token itself), and whether a demo-workspace identity has been saved.",
+      )
       .action(function (this: Command) {
         const opts = globals(this);
         const data = {
           api_url: opts.apiUrl,
           token_set: Boolean(opts.token),
+          identity_saved: hasSavedIdentity(),
           color: opts.color !== false,
         };
         emit(
           opts,
           data,
           () =>
-            `api_url: ${data.api_url}\ntoken: ${data.token_set ? "set" : "not set"}\ncolor: ${data.color}`,
+            `api_url: ${data.api_url}\ntoken: ${data.token_set ? "set" : "not set"}\nidentity: ${data.identity_saved ? "saved" : "not saved (created on first request)"}\ncolor: ${data.color}`,
         );
       }),
     "relay config show",

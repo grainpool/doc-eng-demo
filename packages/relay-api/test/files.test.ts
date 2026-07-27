@@ -3,7 +3,8 @@
 // sha256, byte size, row and column counts. Plus the §7 CSV edge cases that
 // apply now: empty CSV, single column, duplicate column names, BOM, CRLF,
 // quoted value containing a comma.
-import { SELF } from "cloudflare:test";
+import { visitorClient } from "./client.js";
+const vfetch = visitorClient();
 import { describe, expect, it } from "vitest";
 
 interface FileRecord {
@@ -19,7 +20,7 @@ interface ErrorBody {
 }
 
 async function createProject(): Promise<string> {
-  const res = await SELF.fetch("https://example.com/api/projects", {
+  const res = await vfetch("https://example.com/api/projects", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ name: "Test project" }),
@@ -35,7 +36,7 @@ async function upload(
 ): Promise<Response> {
   const form = new FormData();
   form.append("file", new File([content], filename, { type: "text/csv" }));
-  return SELF.fetch(`https://example.com/api/projects/${projectId}/files`, {
+  return vfetch(`https://example.com/api/projects/${projectId}/files`, {
     method: "POST",
     body: form,
   });
@@ -69,7 +70,7 @@ describe("file upload — rejections", () => {
   it("rejects a missing file part with VALIDATION_FAILED", async () => {
     const projectId = await createProject();
     const form = new FormData();
-    const res = await SELF.fetch(`https://example.com/api/projects/${projectId}/files`, {
+    const res = await vfetch(`https://example.com/api/projects/${projectId}/files`, {
       method: "POST",
       body: form,
     });
@@ -99,7 +100,7 @@ describe("file upload — a valid CSV records correct metadata", () => {
     expect(file.sha256).toBe(await sha256Hex(csv));
 
     // And it is listed for the project.
-    const list = await SELF.fetch(`https://example.com/api/projects/${projectId}/files`);
+    const list = await vfetch(`https://example.com/api/projects/${projectId}/files`);
     const { files } = (await list.json()) as { files: FileRecord[] };
     expect(files.some((f) => f.id === file.id)).toBe(true);
   });

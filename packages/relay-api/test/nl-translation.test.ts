@@ -3,7 +3,9 @@
 // load-bearing safety property: the kernel receives only a validated
 // {operation_id, params} pair, and unsupported/invalid paths make ZERO
 // kernel calls. The deployed block then runs four real prompts end-to-end.
-import { SELF, env } from "cloudflare:test";
+import { env } from "cloudflare:test";
+import { visitorClient } from "./client.js";
+const vfetch = visitorClient();
 import { beforeAll, describe, expect, it } from "vitest";
 import type {
   DatasetRef,
@@ -88,7 +90,7 @@ let file: FileRow;
 let session: { id: string };
 
 beforeAll(async () => {
-  const projectRes = await SELF.fetch("https://example.com/api/projects", {
+  const projectRes = await vfetch("https://example.com/api/projects", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ name: "nl translation test" }),
@@ -99,12 +101,12 @@ beforeAll(async () => {
     "file",
     new File(["a,b\n1,2\n3,4\n5,6\n"], "nums.csv", { type: "text/csv" }),
   );
-  const fileRes = await SELF.fetch(
+  const fileRes = await vfetch(
     `https://example.com/api/projects/${project.id}/files`,
     { method: "POST", body: form },
   );
   file = (await fileRes.json()) as FileRow;
-  const sessionRes = await SELF.fetch(
+  const sessionRes = await vfetch(
     `https://example.com/api/projects/${project.id}/sessions`,
     {
       method: "POST",

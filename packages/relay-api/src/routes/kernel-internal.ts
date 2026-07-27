@@ -175,6 +175,46 @@ kernelInternal.post("/internal/seed", async (c) => {
   return c.json(await seedRelay(c.env));
 });
 
+/**
+ * Maintenance reset (expansion Phase 2, architecture.md §3): wipe every
+ * content table and its R2 objects — NEVER model_call, the spend-cap record —
+ * then run the deterministic seed (owner 'seed'). Gated by the
+ * RELAY_MAINTENANCE_TOKEN secret; unset secret or wrong bearer is the same
+ * generic 404 as a missing route. Operator entrypoint: scripts/reset-relay.mjs.
+ */
+kernelInternal.post("/internal/reset", async (c) => {
+  const token = c.env.RELAY_MAINTENANCE_TOKEN;
+  const auth = c.req.header("authorization") ?? "";
+  if (!token || auth !== `Bearer ${token}`) {
+    return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
+  }
+  const db = c.env.relay_db;
+  const keyRows = await db
+    .prepare(
+      `SELECT r2_key FROM file
+       UNION ALL SELECT r2_key FROM artifact
+       UNION ALL SELECT result_r2_key FROM session_turn WHERE result_r2_key IS NOT NULL`,
+    )
+    .all<{ r2_key: string }>();
+  await db.batch([
+    db.prepare("DELETE FROM conversation_message"),
+    db.prepare("DELETE FROM conversation"),
+    db.prepare("DELETE FROM artifact_provenance"),
+    db.prepare("DELETE FROM artifact"),
+    db.prepare("DELETE FROM session_turn"),
+    db.prepare("DELETE FROM analysis_session"),
+    db.prepare("DELETE FROM file"),
+    db.prepare("DELETE FROM project"),
+  ]);
+  const keys = keyRows.results.map((r) => r.r2_key);
+  for (let i = 0; i < keys.length; i += 1000) {
+    await c.env.relay_artifacts.delete(keys.slice(i, i + 1000));
+  }
+  const { seedRelay } = await import("../seed.js");
+  const report = await seedRelay(c.env);
+  return c.json({ wiped_r2_objects: keys.length, ...report });
+});
+
 /** Pass-through of the kernel's /health — carries the Phase-04 egress-probe
  *  observation (the container has no shell; this is how it is read). */
 kernelInternal.get("/internal/kernel/health", async (c) => {

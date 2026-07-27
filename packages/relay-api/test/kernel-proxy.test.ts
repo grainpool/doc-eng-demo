@@ -7,7 +7,9 @@
 //    sha256-mismatch / oversized-dataset 400s via a stubbed kernel transport.
 //    The kernel-side behaviors themselves are asserted for real by
 //    relay-kernel/tests/test_operations.py against the pinned image.
-import { SELF, env } from "cloudflare:test";
+import { env } from "cloudflare:test";
+import { visitorClient } from "./client.js";
+const vfetch = visitorClient();
 import { describe, expect, it } from "vitest";
 import { ContainerKernel } from "../src/kernel/container-kernel.js";
 import { mapKernelResponse } from "../src/routes/kernel-internal.js";
@@ -20,7 +22,7 @@ import {
 const SECRET = "test-only-dataset-secret";
 
 async function createProjectWithFile(): Promise<{ fileId: string }> {
-  const projectRes = await SELF.fetch("https://example.com/api/projects", {
+  const projectRes = await vfetch("https://example.com/api/projects", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ name: "kernel proxy test" }),
@@ -33,7 +35,7 @@ async function createProjectWithFile(): Promise<{ fileId: string }> {
     "file",
     new File(["a,b\n1,2\n3,4\n"], "tiny.csv", { type: "text/csv" }),
   );
-  const fileRes = await SELF.fetch(
+  const fileRes = await vfetch(
     `https://example.com/api/projects/${project.id}/files`,
     { method: "POST", body: form },
   );
@@ -44,7 +46,7 @@ async function createProjectWithFile(): Promise<{ fileId: string }> {
 
 describe("POST /api/internal/kernel/op/:id — Worker-side gates", () => {
   it("unknown operation id is a 404 (closed enum, checked first)", async () => {
-    const res = await SELF.fetch(
+    const res = await vfetch(
       "https://example.com/api/internal/kernel/op/drop_table",
       { method: "POST", body: JSON.stringify({ file_id: "fil_x" }) },
     );
@@ -54,7 +56,7 @@ describe("POST /api/internal/kernel/op/:id — Worker-side gates", () => {
   });
 
   it("missing file_id is a 422", async () => {
-    const res = await SELF.fetch(
+    const res = await vfetch(
       "https://example.com/api/internal/kernel/op/inspect_schema",
       { method: "POST", body: JSON.stringify({}) },
     );
@@ -63,7 +65,7 @@ describe("POST /api/internal/kernel/op/:id — Worker-side gates", () => {
 
   it("params failing the operation's Zod schema are a 422 before any kernel call", async () => {
     const { fileId } = await createProjectWithFile();
-    const res = await SELF.fetch(
+    const res = await vfetch(
       "https://example.com/api/internal/kernel/op/filter_rows",
       {
         method: "POST",
@@ -81,7 +83,7 @@ describe("POST /api/internal/kernel/op/:id — Worker-side gates", () => {
   });
 
   it("unknown file_id is a 404", async () => {
-    const res = await SELF.fetch(
+    const res = await vfetch(
       "https://example.com/api/internal/kernel/op/inspect_schema",
       {
         method: "POST",
@@ -93,7 +95,7 @@ describe("POST /api/internal/kernel/op/:id — Worker-side gates", () => {
 
   it("kernel unavailable (no binding in the pool) is a 503 with the right copy id", async () => {
     const { fileId } = await createProjectWithFile();
-    const res = await SELF.fetch(
+    const res = await vfetch(
       "https://example.com/api/internal/kernel/op/inspect_schema",
       { method: "POST", body: JSON.stringify({ file_id: fileId }) },
     );
@@ -189,13 +191,13 @@ describe("GET /api/dataset — signed capability URL", () => {
     await env.relay_artifacts.put(key, "a,b\n1,2\n");
 
     const url = await signDatasetUrl(SECRET, "https://example.com", key);
-    const ok = await SELF.fetch(url);
+    const ok = await vfetch(url);
     expect(ok.status).toBe(200);
     expect(await ok.text()).toBe("a,b\n1,2\n");
 
     // Tampered signature → 404 (no oracle).
     const tampered = url.replace(/sig=.{8}/, "sig=00000000");
-    expect((await SELF.fetch(tampered)).status).toBe(404);
+    expect((await vfetch(tampered)).status).toBe(404);
 
     // Expired → 404.
     const expired = await signDatasetUrlWithExpiry(
@@ -204,12 +206,12 @@ describe("GET /api/dataset — signed capability URL", () => {
       key,
       Math.floor(Date.now() / 1000) - 5,
     );
-    expect((await SELF.fetch(expired)).status).toBe(404);
+    expect((await vfetch(expired)).status).toBe(404);
 
     // A signature authorizes exactly ONE key.
     const other = new URL(url);
     other.searchParams.set("key", "files/prj_t/fil_t/other.csv");
-    expect((await SELF.fetch(other.toString())).status).toBe(404);
+    expect((await vfetch(other.toString())).status).toBe(404);
 
     await env.relay_artifacts.delete(key);
   });

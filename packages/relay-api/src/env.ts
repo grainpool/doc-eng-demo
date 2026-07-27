@@ -17,4 +17,7 @@ export interface Env {
   RELAY_DATASET_ORIGIN?: string;
   /** "1" enables POST /api/internal/seed (tests + local dev only). */
   RELAY_SEED_ENABLED?: string;
+  /** Bearer token gating POST /api/internal/reset (wipe + reseed). Secret
+   *  store only; when unset the route is indistinguishable from 404. */
+  RELAY_MAINTENANCE_TOKEN?: string;
 }

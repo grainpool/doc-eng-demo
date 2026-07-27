@@ -1,6 +1,9 @@
 import { Hono } from "hono";
 import { apiError } from "@relay/contracts";
+import { READ_SCOPE_JOIN_SQL } from "../workspace.js";
 import type { Env } from "../env.js";
+
+type Variables = { requestId: string; visitorId: string };
 
 export interface ArtifactRow {
   id: string;
@@ -60,11 +63,23 @@ function toDetail(artifact: ArtifactRow, prov: ProvenanceRow) {
   };
 }
 
-async function loadDetail(env: Env, id: string) {
-  const artifact = await env.relay_db
-    .prepare(`SELECT ${ARTIFACT_COLUMNS} FROM artifact WHERE id = ?`)
-    .bind(id)
+const ARTIFACT_JOIN_COLUMNS = ARTIFACT_COLUMNS.split(", ")
+  .map((col) => `a.${col}`)
+  .join(", ");
+
+/** Artifact visible to this visitor (through its project), else null. */
+async function scopedArtifact(env: Env, id: string, visitorId: string) {
+  return env.relay_db
+    .prepare(
+      `SELECT ${ARTIFACT_JOIN_COLUMNS} FROM artifact a JOIN project p ON p.id = a.project_id
+       WHERE a.id = ? AND ${READ_SCOPE_JOIN_SQL}`,
+    )
+    .bind(id, visitorId)
     .first<ArtifactRow>();
+}
+
+async function loadDetail(env: Env, id: string, visitorId: string) {
+  const artifact = await scopedArtifact(env, id, visitorId);
   if (!artifact) return null;
   const prov = await env.relay_db
     .prepare("SELECT * FROM artifact_provenance WHERE artifact_id = ?")
@@ -74,20 +89,21 @@ async function loadDetail(env: Env, id: string) {
   return toDetail(artifact, prov);
 }
 
-export const artifacts = new Hono<{ Bindings: Env }>();
+export const artifacts = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 artifacts.get("/projects/:id/artifacts", async (c) => {
   const { results } = await c.env.relay_db
     .prepare(
-      `SELECT ${ARTIFACT_COLUMNS} FROM artifact WHERE project_id = ? ORDER BY created_at DESC`,
+      `SELECT ${ARTIFACT_JOIN_COLUMNS} FROM artifact a JOIN project p ON p.id = a.project_id
+       WHERE a.project_id = ? AND ${READ_SCOPE_JOIN_SQL} ORDER BY a.created_at DESC`,
     )
-    .bind(c.req.param("id"))
+    .bind(c.req.param("id"), c.get("visitorId"))
     .all<ArtifactRow>();
   return c.json({ artifacts: results });
 });
 
 artifacts.get("/artifacts/:id", async (c) => {
-  const detail = await loadDetail(c.env, c.req.param("id"));
+  const detail = await loadDetail(c.env, c.req.param("id"), c.get("visitorId"));
   if (!detail) {
     return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
   }
@@ -102,10 +118,7 @@ const CONTENT_TYPES: Record<string, string> = {
 };
 
 artifacts.get("/artifacts/:id/download", async (c) => {
-  const artifact = await c.env.relay_db
-    .prepare(`SELECT ${ARTIFACT_COLUMNS} FROM artifact WHERE id = ?`)
-    .bind(c.req.param("id"))
-    .first<ArtifactRow>();
+  const artifact = await scopedArtifact(c.env, c.req.param("id"), c.get("visitorId"));
   if (!artifact) {
     return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
   }
@@ -133,7 +146,7 @@ artifacts.get("/artifacts/:id/lineage", async (c) => {
   const walk = async (id: string, depth: number): Promise<LineageNode | null> => {
     if (depth > 10 || seen.has(id)) return null;
     seen.add(id);
-    const detail = await loadDetail(c.env, id);
+    const detail = await loadDetail(c.env, id, c.get("visitorId"));
     if (!detail) return null;
     const parents: LineageNode[] = [];
     for (const parentId of detail.provenance.derived_from_artifact_ids) {
