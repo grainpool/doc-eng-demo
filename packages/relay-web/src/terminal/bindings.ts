@@ -221,6 +221,16 @@ export const BINDINGS: Record<string, Binding> = {
       ];
     },
   },
+  "artifacts delete": {
+    positionals: ["artifactId"],
+    flags: ["--yes"],
+    run: async ([id], flags) => {
+      const confirm = needsYes(flags);
+      if (confirm) return confirm;
+      await api.deleteArtifact(id as string);
+      return [`${id}`];
+    },
+  },
   "artifacts download": {
     positionals: ["artifactId"],
     flags: ["--out"],

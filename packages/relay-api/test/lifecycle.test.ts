@@ -212,6 +212,44 @@ describe("session lifecycle", () => {
   });
 });
 
+describe("artifact lifecycle (Phase 6)", () => {
+  it("global list is scoped and filterable; delete removes provenance + R2", async () => {
+    const alice = visitorClient();
+    const bob = visitorClient();
+    const projectId = await createProject(alice);
+    const fileId = await uploadFile(alice, projectId);
+    const planted = await plantAnalysisChildren(projectId, fileId);
+
+    const list = await alice("https://example.com/api/artifacts");
+    const mine = (await list.json()) as { artifacts: { id: string }[] };
+    expect(mine.artifacts.find((a) => a.id === planted.artifactId)).toBeDefined();
+
+    const kindFiltered = await alice("https://example.com/api/artifacts?kind=plot");
+    const plots = (await kindFiltered.json()) as { artifacts: { id: string }[] };
+    expect(plots.artifacts.find((a) => a.id === planted.artifactId)).toBeUndefined();
+
+    const foreign = await bob("https://example.com/api/artifacts");
+    const theirs = (await foreign.json()) as { artifacts: { id: string }[] };
+    expect(theirs.artifacts.find((a) => a.id === planted.artifactId)).toBeUndefined();
+    expect(
+      (
+        await bob(`https://example.com/api/artifacts/${planted.artifactId}`, {
+          method: "DELETE",
+        })
+      ).status,
+    ).toBe(404);
+
+    const del = await alice(
+      `https://example.com/api/artifacts/${planted.artifactId}`,
+      { method: "DELETE" },
+    );
+    expect(del.status).toBe(200);
+    expect(await rowCount("artifact", "id", planted.artifactId)).toBe(0);
+    expect(await rowCount("artifact_provenance", "artifact_id", planted.artifactId)).toBe(0);
+    expect(await env.relay_artifacts.get(planted.artifactKey)).toBeNull();
+  });
+});
+
 describe("two-visitor isolation", () => {
   it("visitor B cannot list, read, mutate, or delete visitor A's project", async () => {
     const alice = visitorClient();

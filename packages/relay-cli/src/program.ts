@@ -595,6 +595,34 @@ export function buildProgram(): Command {
     "relay artifacts download art_01abc --out ./correlation.csv",
   );
 
+  withExamples(
+    artifacts
+      .command("delete")
+      .summary("Delete an artifact")
+      .description(
+        "Permanently delete an artifact and its stored bytes. Provenance of other artifacts is unaffected. Requires --yes.",
+      )
+      .argument("<artifactId>", "artifact id (art_…)")
+      .option("--yes", "confirm the permanent deletion")
+      .action(async function (this: Command, artifactId: string) {
+        const opts = globals(this);
+        const local = this.opts<{ yes?: boolean }>();
+        if (!local.yes) {
+          throw new CliError(
+            EXIT.VALIDATION,
+            "refusing to delete without --yes (this permanently removes the artifact)",
+          );
+        }
+        const result = await apiJson<{ deleted: boolean }>(
+          opts,
+          `/api/artifacts/${artifactId}`,
+          { method: "DELETE" },
+        );
+        emit(opts, result, () => `deleted ${artifactId}`);
+      }),
+    "relay artifacts delete art_01abc --yes",
+  );
+
   // --------------------------------------------------------------- config
   const config = program
     .command("config")

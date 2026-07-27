@@ -263,6 +263,17 @@ export const api = {
     request<{ artifacts: ArtifactListItem[] }>(
       `/api/projects/${projectId}/artifacts`,
     ).then((r) => r.artifacts),
+  browseArtifacts: (filters?: { project_id?: string; kind?: string }) => {
+    const query = new URLSearchParams();
+    if (filters?.project_id) query.set("project_id", filters.project_id);
+    if (filters?.kind) query.set("kind", filters.kind);
+    const suffix = query.size > 0 ? `?${query.toString()}` : "";
+    return request<{ artifacts: (ArtifactListItem & { project_name: string })[] }>(
+      `/api/artifacts${suffix}`,
+    ).then((r) => r.artifacts);
+  },
+  deleteArtifact: (id: string) =>
+    request<{ deleted: boolean }>(`/api/artifacts/${id}`, { method: "DELETE" }),
   getArtifact: (id: string) => request<ArtifactDetail>(`/api/artifacts/${id}`),
   getLineage: (id: string) => request<LineageNode>(`/api/artifacts/${id}/lineage`),
   getTurnResult: (turnId: string) =>

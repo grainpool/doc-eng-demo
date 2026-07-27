@@ -888,7 +888,7 @@
     {
       "path": "artifacts",
       "summary": "Inspect and download artifacts",
-      "usage": "Usage: relay artifacts [options] [command]\n\nEvery analysis output is a durable artifact with full provenance.\n\nOptions:\n  -h, --help                       display help for command\n\nCommands:\n  list <projectId>                 List a project's artifacts\n  show <artifactId>                Show an artifact with its provenance\n  download [options] <artifactId>  Download an artifact\n  help [command]                   display help for command\n\nExamples:\n  $ relay artifacts list prj_01abc\n  $ relay artifacts download art_01abc\n\n",
+      "usage": "Usage: relay artifacts [options] [command]\n\nEvery analysis output is a durable artifact with full provenance.\n\nOptions:\n  -h, --help                       display help for command\n\nCommands:\n  list <projectId>                 List a project's artifacts\n  show <artifactId>                Show an artifact with its provenance\n  download [options] <artifactId>  Download an artifact\n  delete [options] <artifactId>    Delete an artifact\n  help [command]                   display help for command\n\nExamples:\n  $ relay artifacts list prj_01abc\n  $ relay artifacts download art_01abc\n\n",
       "flags": [],
       "exit_codes": [
         {
@@ -1049,6 +1049,54 @@
       ],
       "examples": [
         "relay artifacts download art_01abc --out ./correlation.csv"
+      ]
+    },
+    {
+      "path": "artifacts delete",
+      "summary": "Delete an artifact",
+      "usage": "Usage: relay artifacts delete [options] <artifactId>\n\nPermanently delete an artifact and its stored bytes. Provenance of other\nartifacts is unaffected. Requires --yes.\n\nArguments:\n  artifactId  artifact id (art_…)\n\nOptions:\n  --yes       confirm the permanent deletion\n  -h, --help  display help for command\n\nExamples:\n  $ relay artifacts delete art_01abc --yes\n\n",
+      "flags": [
+        {
+          "name": "--yes",
+          "alias": null,
+          "type": "boolean",
+          "required": false,
+          "default": null,
+          "description": "confirm the permanent deletion"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "ok"
+        },
+        {
+          "code": 1,
+          "meaning": "unexpected error"
+        },
+        {
+          "code": 2,
+          "meaning": "usage error"
+        },
+        {
+          "code": 3,
+          "meaning": "auth failure"
+        },
+        {
+          "code": 4,
+          "meaning": "not found"
+        },
+        {
+          "code": 5,
+          "meaning": "validation failure"
+        },
+        {
+          "code": 6,
+          "meaning": "remote unavailable"
+        }
+      ],
+      "examples": [
+        "relay artifacts delete art_01abc --yes"
       ]
     },
     {

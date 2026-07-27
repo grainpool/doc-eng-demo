@@ -158,11 +158,14 @@ conversations.post("/conversations", async (c) => {
 });
 
 conversations.get("/conversations", async (c) => {
+  const projectId = c.req.query("project_id");
   const { results } = await c.env.relay_db
     .prepare(
-      `SELECT ${CONVERSATION_COLUMNS} FROM conversation WHERE ${READ_SCOPE_SQL} ORDER BY updated_at DESC`,
+      `SELECT ${CONVERSATION_COLUMNS} FROM conversation
+       WHERE ${READ_SCOPE_SQL}${projectId ? " AND project_id = ?" : ""}
+       ORDER BY updated_at DESC`,
     )
-    .bind(c.get("visitorId"))
+    .bind(...(projectId ? [c.get("visitorId"), projectId] : [c.get("visitorId")]))
     .all<ConversationRow>();
   return c.json({ conversations: results });
 });

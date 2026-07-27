@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { apiError } from "@relay/contracts";
-import { READ_SCOPE_JOIN_SQL } from "../workspace.js";
+import { READ_SCOPE_JOIN_SQL, canMutate } from "../workspace.js";
 import type { Env } from "../env.js";
 
 type Variables = { requestId: string; visitorId: string };
@@ -90,6 +90,62 @@ async function loadDetail(env: Env, id: string, visitorId: string) {
 }
 
 export const artifacts = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+// GET /api/artifacts?project_id=&kind= — the global scoped browse (Phase 6).
+artifacts.get("/artifacts", async (c) => {
+  const projectId = c.req.query("project_id");
+  const kind = c.req.query("kind");
+  const conditions = [`${READ_SCOPE_JOIN_SQL}`];
+  const params: string[] = [c.get("visitorId")];
+  if (projectId) {
+    conditions.push("a.project_id = ?");
+    params.push(projectId);
+  }
+  if (kind) {
+    conditions.push("a.kind = ?");
+    params.push(kind);
+  }
+  const { results } = await c.env.relay_db
+    .prepare(
+      `SELECT ${ARTIFACT_JOIN_COLUMNS}, p.name AS project_name
+       FROM artifact a JOIN project p ON p.id = a.project_id
+       WHERE ${conditions.join(" AND ")} ORDER BY a.created_at DESC LIMIT 200`,
+    )
+    .bind(...params)
+    .all<ArtifactRow & { project_name: string }>();
+  return c.json({ artifacts: results });
+});
+
+// DELETE /api/artifacts/:id — provenance row + R2 object go with it. Lineage
+// children keep their derived_from ids; the walk skips missing parents (a
+// deleted ancestor is absence, not an error).
+artifacts.delete("/artifacts/:id", async (c) => {
+  const artifact = await c.env.relay_db
+    .prepare(
+      `SELECT a.id, a.r2_key, p.owner_id AS project_owner_id
+       FROM artifact a JOIN project p ON p.id = a.project_id WHERE a.id = ?`,
+    )
+    .bind(c.req.param("id"))
+    .first<{ id: string; r2_key: string; project_owner_id: string | null }>();
+  if (!artifact) {
+    return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
+  }
+  const decision = canMutate(artifact.project_owner_id, c.get("visitorId"));
+  if (decision === "seed_read_only") {
+    return c.json(apiError("SEED_READ_ONLY", "error.workspace.seed_read_only"), 403);
+  }
+  if (decision !== "ok") {
+    return c.json(apiError("NOT_FOUND", "error.generic.not_found"), 404);
+  }
+  await c.env.relay_db.batch([
+    c.env.relay_db
+      .prepare("DELETE FROM artifact_provenance WHERE artifact_id = ?")
+      .bind(artifact.id),
+    c.env.relay_db.prepare("DELETE FROM artifact WHERE id = ?").bind(artifact.id),
+  ]);
+  await c.env.relay_artifacts.delete(artifact.r2_key);
+  return c.json({ deleted: true });
+});
 
 artifacts.get("/projects/:id/artifacts", async (c) => {
   const { results } = await c.env.relay_db

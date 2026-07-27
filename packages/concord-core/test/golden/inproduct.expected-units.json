@@ -105,6 +105,55 @@
     "generated": false
   },
   {
+    "id": "inproduct:in-product-copy/artifacts.json#artifacts.filter.all_projects",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifacts.filter.all_projects",
+    "title": "artifacts.filter.all_projects",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifacts.filter.all_kinds",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifacts.filter.all_kinds",
+    "title": "artifacts.filter.all_kinds",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifacts.filter.kind",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifacts.filter.kind",
+    "title": "artifacts.filter.kind",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifacts.actions.delete",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifacts.actions.delete",
+    "title": "artifacts.actions.delete",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifacts.delete.confirm",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifacts.delete.confirm",
+    "title": "artifacts.delete.confirm",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifact.session_link",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifact.session_link",
+    "title": "artifact.session_link",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/artifacts.json#artifact.session_removed",
+    "path": "in-product-copy/artifacts.json",
+    "anchor": "artifact.session_removed",
+    "title": "artifact.session_removed",
+    "generated": false
+  },
+  {
     "id": "inproduct:in-product-copy/artifacts.json#session.turn.artifacts",
     "path": "in-product-copy/artifacts.json",
     "anchor": "session.turn.artifacts",
@@ -725,6 +774,20 @@
     "path": "in-product-copy/projects.json",
     "anchor": "projects.delete.confirm_help",
     "title": "projects.delete.confirm_help",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.conversations.heading",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.conversations.heading",
+    "title": "projects.conversations.heading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/projects.json#projects.conversations.empty",
+    "path": "in-product-copy/projects.json",
+    "anchor": "projects.conversations.empty",
+    "title": "projects.conversations.empty",
     "generated": false
   },
   {

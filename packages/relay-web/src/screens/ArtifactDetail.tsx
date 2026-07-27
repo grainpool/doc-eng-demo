@@ -38,17 +38,36 @@ const RETENTION_DAY_MS = 86_400_000;
 export function ArtifactDetail({ artifactId }: { artifactId: string }) {
   const [state, setState] = useState<Load<Detail>>({ phase: "loading" });
   const [lineage, setLineage] = useState<LineageNode | null>(null);
+  const [sessionExists, setSessionExists] = useState<boolean | null>(null);
+  const [errorCopy, setErrorCopy] = useState<string | null>(null);
 
   useEffect(() => {
     setState({ phase: "loading" });
+    setSessionExists(null);
     api
       .getArtifact(artifactId)
       .then((data) => {
         setState({ phase: "ready", data });
+        // The provenance keeps pointing at a deleted session on purpose —
+        // render "session removed" instead of a broken link.
+        api
+          .getSession(data.provenance.session_id)
+          .then(() => setSessionExists(true))
+          .catch(() => setSessionExists(false));
         return api.getLineage(artifactId).then(setLineage);
       })
       .catch((e: unknown) => setState({ phase: "error", copyId: faultCopyId(e) }));
   }, [artifactId]);
+
+  const removeArtifact = (artifact: Detail) => {
+    if (!window.confirm(t("artifacts.delete.confirm", { name: artifact.name }))) return;
+    api
+      .deleteArtifact(artifact.id)
+      .then(() => {
+        location.hash = "#/artifacts";
+      })
+      .catch((e: unknown) => setErrorCopy(faultCopyId(e)));
+  };
 
   if (state.phase === "loading") {
     return <p className="loading">{t("projects.list.loading")}</p>;
@@ -74,11 +93,25 @@ export function ArtifactDetail({ artifactId }: { artifactId: string }) {
       <h1>
         {artifact.name} <code>{artifact.kind}</code>
       </h1>
+      {errorCopy && <p className="status-error">{t(errorCopy)}</p>}
       <p>
         <a className="btn-secondary" href={`/api/artifacts/${artifact.id}/download`}>
           {t("artifact.download")}
         </a>{" "}
+        <button className="btn-secondary" onClick={() => removeArtifact(artifact)}>
+          {t("artifacts.actions.delete")}
+        </button>{" "}
         <span className="empty">{humanBytes(artifact.byte_size)}</span>
+      </p>
+      <p>
+        {sessionExists === true && (
+          <a href={`#/analysis/sessions/${prov.session_id}`}>
+            {t("artifact.session_link")}
+          </a>
+        )}
+        {sessionExists === false && (
+          <span className="empty">{t("artifact.session_removed")}</span>
+        )}
       </p>
       {artifact.retention_expires_at && retentionDays !== null && (
         <p className="empty">

@@ -5,6 +5,7 @@ import {
   fetchUploadLimitBytes,
   humanBytes,
   type ArtifactListItem,
+  type Conversation,
   type FileRecord,
   type Project,
   type SessionRecord,
@@ -29,6 +30,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   const [banner, setBanner] = useState<{ kind: "ok" | "error"; copyId: string } | null>(null);
   const [inputKey, setInputKey] = useState(0);
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [artifacts, setArtifacts] = useState<ArtifactListItem[]>([]);
   const [creatingSession, setCreatingSession] = useState<string | null>(null);
   const [renaming, setRenaming] = useState(false);
@@ -45,6 +47,10 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     void fetchUploadLimitBytes().then(setLimitBytes).catch(() => setLimitBytes(null));
     loadFiles();
     void api.listSessions(projectId).then(setSessions).catch(() => setSessions([]));
+    void fetch(`/api/conversations?project_id=${projectId}`)
+      .then((r) => r.json() as Promise<{ conversations: Conversation[] }>)
+      .then((r) => setConversations(r.conversations))
+      .catch(() => setConversations([]));
     void api.listArtifacts(projectId).then(setArtifacts).catch(() => setArtifacts([]));
   }, [projectId]);
 
@@ -321,6 +327,23 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                   <a href={`#/analysis/sessions/${session.id}`}>{session.title}</a>{" "}
                   <span className="empty">
                     {new Date(session.created_at).toLocaleString()}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <h2>{t("projects.conversations.heading")}</h2>
+          {conversations.length === 0 && (
+            <p className="empty">{t("projects.conversations.empty")}</p>
+          )}
+          {conversations.length > 0 && (
+            <ul>
+              {conversations.map((conversation) => (
+                <li key={conversation.id}>
+                  <a href={`#/chat/${conversation.id}`}>{conversation.title}</a>{" "}
+                  <span className="empty">
+                    {new Date(conversation.updated_at).toLocaleString()}
                   </span>
                 </li>
               ))}

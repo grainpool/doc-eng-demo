@@ -308,6 +308,13 @@
     "generated": true
   },
   {
+    "id": "mintlify:docs-mintlify/cli-reference.mdx#artifacts-delete",
+    "path": "docs-mintlify/cli-reference.mdx",
+    "anchor": "artifacts-delete",
+    "title": "artifacts delete",
+    "generated": true
+  },
+  {
     "id": "mintlify:docs-mintlify/cli-reference.mdx#config",
     "path": "docs-mintlify/cli-reference.mdx",
     "anchor": "config",
