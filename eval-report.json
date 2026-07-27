@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-07-26T22:34:55.903Z",
-  "corpus_size": 36,
+  "generated_at": "2026-07-27T11:44:00.612Z",
+  "corpus_size": 39,
   "matching_rule": "location (doc_unit_id | fact_key | file path) AND fixed per-class signal mapping; new-vs-baseline event diffing; see cli/eval.ts header",
   "metrics": {
-    "detection_precision": 0.882,
-    "detection_recall_overall": 0.484,
+    "detection_precision": 0.895,
+    "detection_recall_overall": 0.515,
     "detection_recall_per_class": {
       "UNDECLARED_FACT_REF": {
         "recall": 0.667,
@@ -65,12 +65,17 @@
         "recall": 0.5,
         "detected": 1,
         "total": 2
+      },
+      "MISSING_COVERAGE": {
+        "recall": 1,
+        "detected": 2,
+        "total": 2
       }
     },
     "false_positive_rate": 0,
     "remediation_correctness": 1,
     "remediation_patches_checked": 3,
-    "escalation_appropriateness": 0.286,
+    "escalation_appropriateness": 0.375,
     "unsafe_autofix_count": 0,
     "provenance_completeness": 1,
     "falsification_suppression_rate": 0.25
@@ -675,6 +680,43 @@
       "notes": "Removed preconditions leave no contradiction to measure — detection would need procedure modeling. Expected miss, analyzed on the failures page."
     },
     {
+      "id": "def_missing_coverage_chat",
+      "class": "MISSING_COVERAGE",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": true,
+      "matched_events": [
+        "missing_coverage: feature \"chat\" is enabled (availability.feature.chat.platform.web) but none of the 57 hand-authored documentation units mentions it (vocabul"
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "The REAL production gap recorded by dec_prose_coverage_deferral, now measured: a standing missing_coverage finding in the clean estate. Stays a defect until the docs project writes the page."
+    },
+    {
+      "id": "def_missing_coverage_terminal",
+      "class": "MISSING_COVERAGE",
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "detected": true,
+      "matched_events": [
+        "missing_coverage: feature \"terminal\" is enabled (availability.feature.terminal.platform.web) but none of the 57 hand-authored documentation units mentions it "
+      ],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "The second half of the real production gap. Also exercises the vocabulary precision rule: shell-sense 'terminal' mentions exist and must not satisfy the check."
+    },
+    {
+      "id": "def_false_coverage_analysis_sessions",
+      "class": "MISSING_COVERAGE",
+      "expected_detection": false,
+      "expected_action": "NO_ACTION",
+      "detected": false,
+      "matched_events": [],
+      "unmatched_new_events": 0,
+      "remediation_correct": null,
+      "notes": "Asserts the covered side of the boolean: one genuine mention anywhere satisfies the check."
+    },
+    {
       "id": "def_false_matrix_dash_cells",
       "class": "WRONG_PLATFORM",
       "expected_detection": false,
@@ -687,7 +729,7 @@
     }
   ],
   "baseline": {
-    "findings": 9,
+    "findings": 11,
     "conflicts": 2,
     "warnings": 0,
     "broken_refs": 0
@@ -704,7 +746,7 @@
     "mean": 0.25,
     "spread": 0,
     "model_calls": 12,
-    "cost_usd": 0.0551,
+    "cost_usd": 0.0603,
     "per_candidate": [
       {
         "defect": "def_wrong_platform_generated_matrix",
@@ -724,7 +766,7 @@
       {
         "defect": "def_term_drift_inproduct",
         "suppressed_runs": 3,
-        "sample_refutation": "The passage is a two-word UI label (\"Run Job\") with no context showing that \"Job\" refers to the entity governed by terminology.task; \"job\" is plausibly a distinct concept (e.g., a job run/execution), so this is not an assertion that the canonical task term is \"Job\"."
+        "sample_refutation": "The passage is a two-word UI label (\"Run Job\") with no context establishing that \"Job\" refers to the same concept as the canonical term \"Task\"; \"job\" is commonly a distinct concept (e.g., a batch/scheduled job run), so the extraction's referent mapping is unsupported."
       }
     ]
   }

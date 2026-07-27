@@ -25,6 +25,7 @@ export const DEFECT_CLASSES = [
   "IA_PROBLEM",
   "STALE_INPRODUCT_COPY",
   "UNDECLARED_FACT_REF",
+  "MISSING_COVERAGE",
 ] as const;
 export const DefectClassSchema = z.enum(DEFECT_CLASSES);
 export type DefectClass = z.infer<typeof DefectClassSchema>;

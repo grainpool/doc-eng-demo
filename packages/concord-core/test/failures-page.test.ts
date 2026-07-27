@@ -49,6 +49,14 @@ describe("failures page — blind spots observed in production", () => {
     expect(html).toContain(`Misses (${REPORT.misses.length})`);
   });
 
+  it("renders the supersession arc: old record marked, successor listed", () => {
+    const html = renderFailuresPage(REPORT, DECISIONS);
+    expect(html).toContain("dec_missing_coverage_detector");
+    expect(html).toContain("superseded by dec_missing_coverage_detector");
+    // The successor states the honest end state: seen, not gone.
+    expect(html).toContain("What changed is that the absence is now seen");
+  });
+
   it("selects only coverage_observation records, never other decision kinds", () => {
     const selected = coverageObservations(DECISIONS);
     expect(selected.length).toBeGreaterThanOrEqual(1);
@@ -57,9 +65,11 @@ describe("failures page — blind spots observed in production", () => {
     expect(selected.find((d) => d.id === "dec_regression_flag_keep")).toBeUndefined();
   });
 
-  it("the observation record claims no fact keys (no third standing conflict)", () => {
-    const record = DECISIONS.find((d) => d.id === "dec_prose_coverage_deferral");
-    expect(record).toBeDefined();
-    expect(record!.claims_fact_keys).toEqual([]);
+  it("the observation records claim no fact keys (no third standing conflict)", () => {
+    for (const id of ["dec_prose_coverage_deferral", "dec_missing_coverage_detector"]) {
+      const record = DECISIONS.find((d) => d.id === id);
+      expect(record, id).toBeDefined();
+      expect(record!.claims_fact_keys, id).toEqual([]);
+    }
   });
 });

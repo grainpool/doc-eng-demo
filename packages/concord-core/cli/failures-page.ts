@@ -42,6 +42,9 @@ export interface DecisionRecord {
   kind: string;
   claims_fact_keys: string[];
   statement: string;
+  /** A later record may retire an earlier one; both stay on the page —
+   *  the observed → capability-built arc is the point. */
+  supersedes?: string;
 }
 
 /** Why each miss happens — committed analysis, keyed by defect id. */
@@ -93,19 +96,29 @@ export function coverageObservations(decisions: DecisionRecord[]): DecisionRecor
 function blindSpotsSection(decisions: DecisionRecord[]): string {
   const observations = coverageObservations(decisions);
   if (observations.length === 0) return "";
+  const supersededBy = new Map<string, string>();
+  for (const d of observations) {
+    if (d.supersedes) supersededBy.set(d.supersedes, d.id);
+  }
   return `
 <h2>Blind spots observed in production (${observations.length})</h2>
 <p class="muted">A different evidence class from the misses above: those are seeded and measured;
 these were observed in the wild and recorded as human-attested product truth (T5 decision records,
 <code>kind: coverage_observation</code>). Each renders from its record in the fact snapshot — the
-prose lives in <code>product-truth/decisions/</code>, not in this page's generator.</p>
+prose lives in <code>product-truth/decisions/</code>, not in this page's generator. Superseded
+records stay listed: the arc from observed blind spot to built capability is part of the record.</p>
 ${observations
-  .map(
-    (d) => `<div class="miss" style="border-left-color:#7a5420"><b>${esc(d.id)}</b> <span class="muted">${esc(
+  .map((d) => {
+    const successor = supersededBy.get(d.id);
+    const color = successor ? "#666" : "#7a5420";
+    const badge = successor
+      ? ` · <b style="color:#3d6b35">superseded by ${esc(successor)}</b>`
+      : "";
+    return `<div class="miss" style="border-left-color:${color}"><b>${esc(d.id)}</b> <span class="muted">${esc(
       d.decided_at.slice(0, 10),
-    )} · decided_by ${esc(d.decided_by)} · <code>${esc(d.source_file)}</code></span>
-<p>${esc(d.statement.trim())}</p></div>`,
-  )
+    )} · decided_by ${esc(d.decided_by)} · <code>${esc(d.source_file)}</code>${badge}</span>
+<p>${esc(d.statement.trim())}</p></div>`;
+  })
   .join("\n")}
 `;
 }

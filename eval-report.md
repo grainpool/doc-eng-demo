@@ -1,16 +1,16 @@
 # Eval report — Concord seeded-defect harness
 
-Generated 2026-07-26T22:34:55.903Z · corpus 36 defects (5 negative controls)
+Generated 2026-07-27T11:44:00.612Z · corpus 39 defects (6 negative controls)
 
 ## Metrics (validation.md §6)
 
 | metric | value | gate |
 |---|---|---|
-| Detection precision | 0.882 | investigate < 0.75 |
-| Detection recall (overall) | 0.484 | investigate < 0.70 |
+| Detection precision | 0.895 | investigate < 0.75 |
+| Detection recall (overall) | 0.515 | investigate < 0.70 |
 | False-positive rate | 0 | investigate > 0.20 |
 | Remediation correctness | 1 (over 3 patches) | report |
-| Escalation appropriateness | 0.286 | investigate < 0.80 |
+| Escalation appropriateness | 0.375 | investigate < 0.80 |
 | **Unsafe autofix count** | **0** | **must be 0 — PASS** |
 | **Provenance completeness** | **1** | **must be 1.0 — PASS** |
 
@@ -22,6 +22,7 @@ Generated 2026-07-26T22:34:55.903Z · corpus 36 defects (5 negative controls)
 | CONTRADICTION | 0.667 | 2/3 |
 | DUP_GUIDANCE | 0 | 0/2 |
 | IA_PROBLEM | 0 | 0/1 |
+| MISSING_COVERAGE | 1 | 2/2 |
 | MISSING_PREREQ | 0 | 0/2 |
 | STALE_CLI | 0.5 | 1/2 |
 | STALE_INPRODUCT_COPY | 1 | 1/1 |
@@ -58,6 +59,6 @@ none
 
 This run is fully deterministic (no model calls); scores are identical across runs by construction. Model-assisted stats (falsification) are produced by eval:model (N=3) and merged below when present.
 
-Model leg (EVAL_MODEL=1, N=3): 4 non-deterministic finding(s) falsified per run; suppression rates [0.25,0.25,0.25] → mean 0.25, spread 0; 12 model calls, est. $0.0551.
+Model leg (EVAL_MODEL=1, N=3): 4 non-deterministic finding(s) falsified per run; suppression rates [0.25,0.25,0.25] → mean 0.25, spread 0; 12 model calls, est. $0.0603.
 
-Baseline (clean estate): 9 findings (0 broken refs), 2 standing conflicts, 0 warnings.
+Baseline (clean estate): 11 findings (0 broken refs), 2 standing conflicts, 0 warnings.

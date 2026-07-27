@@ -14,7 +14,7 @@
 </head>
 <body>
 <h1>What the system gets wrong</h1>
-<p class="muted">Generated from <code>eval-report.json</code> (2026-07-26T22:34:55.903Z), corpus 36 seeded defects.
+<p class="muted">Generated from <code>eval-report.json</code> (2026-07-27T11:44:00.612Z), corpus 39 seeded defects.
 This page is a deliverable, not an apology: the misses below are kept in the fixture deliberately (constraints.md AP7).
 See the <a href="/">run report</a> and <a href="/facts.html">fact explorer</a>.</p>
 
@@ -24,6 +24,7 @@ See the <a href="/">run report</a> and <a href="/facts.html">fact explorer</a>.<
 <tr><td>CONTRADICTION</td><td>0.667</td><td>2/3</td></tr>
 <tr><td>DUP_GUIDANCE</td><td>0</td><td>0/2</td></tr>
 <tr><td>IA_PROBLEM</td><td>0</td><td>0/1</td></tr>
+<tr><td>MISSING_COVERAGE</td><td>1</td><td>2/2</td></tr>
 <tr><td>MISSING_PREREQ</td><td>0</td><td>0/2</td></tr>
 <tr><td>STALE_CLI</td><td>0.5</td><td>1/2</td></tr>
 <tr><td>STALE_INPRODUCT_COPY</td><td>1</td><td>1/1</td></tr>
@@ -68,12 +69,13 @@ See the <a href="/">run report</a> and <a href="/facts.html">fact explorer</a>.<
 <div class="miss"><b>def_missing_prereq_json_flag</b> <code>MISSING_PREREQ</code> <span class="muted">expected EDITORIAL_REVIEW</span>
 <p>Same gap: deleting the '--json first' guidance leaves grammatically clean, factually silent prose.</p></div>
 
-<h2>Blind spots observed in production (1)</h2>
+<h2>Blind spots observed in production (2)</h2>
 <p class="muted">A different evidence class from the misses above: those are seeded and measured;
 these were observed in the wild and recorded as human-attested product truth (T5 decision records,
 <code>kind: coverage_observation</code>). Each renders from its record in the fact snapshot — the
-prose lives in <code>product-truth/decisions/</code>, not in this page's generator.</p>
-<div class="miss" style="border-left-color:#7a5420"><b>dec_prose_coverage_deferral</b> <span class="muted">2026-07-27 · decided_by product · <code>product-truth/decisions/2026-07-27-prose-coverage-deferral.yaml</code></span>
+prose lives in <code>product-truth/decisions/</code>, not in this page's generator. Superseded
+records stay listed: the arc from observed blind spot to built capability is part of the record.</p>
+<div class="miss" style="border-left-color:#666"><b>dec_prose_coverage_deferral</b> <span class="muted">2026-07-27 · decided_by product · <code>product-truth/decisions/2026-07-27-prose-coverage-deferral.yaml</code> · <b style="color:#3d6b35">superseded by dec_missing_coverage_detector</b></span>
 <p>Relay shipped Chat and a browser Terminal
 (rel_2026_07_27_multi_surface_expansion) and no hand-authored
 documentation page mentions either surface. Concord cannot observe this:
@@ -81,13 +83,24 @@ its extractors project registered facts onto existing text, so absence
 produces no projection and no impact. Prose reconciliation is
 deliberately deferred to the documentation project. This record is
 itself the detection.</p></div>
+<div class="miss" style="border-left-color:#7a5420"><b>dec_missing_coverage_detector</b> <span class="muted">2026-07-27 · decided_by product · <code>product-truth/decisions/2026-07-27-missing-coverage-detector.yaml</code></span>
+<p>Supersedes dec_prose_coverage_deferral, whose claim "Concord cannot
+observe this" is no longer true: Concord now runs a deterministic
+missing-coverage check — for every enabled availability feature, at
+least one hand-authored documentation unit must mention it, or the run
+raises a missing_coverage finding naming the fact owner. The Chat and
+Terminal gaps themselves REMAIN OPEN: they surface as standing findings
+in every run and as measured eval defects (def_missing_coverage_chat,
+def_missing_coverage_terminal) until the documentation project writes
+the pages. What changed is that the absence is now seen, not that it
+is gone.</p></div>
 
 <h2>False positives (0)</h2>
 <p>None: all negative controls held (false-positive rate 0).</p>
 
 <h2>Falsifier behavior (model leg)</h2>
 <p>N=3 over 4 non-deterministic findings: mean suppression 0.25, spread 0. Notably, the falsifier consistently suppressed the seeded <code>def_term_drift_inproduct</code> defect ("Run Job" button label) as ambiguous — a REAL defect lost to falsifier aggressiveness:</p>
-<div class="miss"><b>def_term_drift_inproduct</b><p class="muted">The passage is a two-word UI label ("Run Job") with no context showing that "Job" refers to the entity governed by terminology.task; "job" is plausibly a distinct concept (e.g., a job run/execution), so this is not an assertion that the canonical task term is "Job".</p>
+<div class="miss"><b>def_term_drift_inproduct</b><p class="muted">The passage is a two-word UI label ("Run Job") with no context establishing that "Job" refers to the same concept as the canonical term "Task"; "job" is commonly a distinct concept (e.g., a batch/scheduled job run), so the extraction's referent mapping is unsupported.</p>
 <p>The refutation is reasonable on its own terms — a two-word label lacks context — which is exactly the cost of defaulting to refuted under uncertainty. The deterministic detection still catches this defect; the suppression only bites where the deterministic path is silent.</p></div>
 </body>
 </html>

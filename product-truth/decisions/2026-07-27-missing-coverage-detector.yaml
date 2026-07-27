@@ -1,0 +1,24 @@
+id: dec_missing_coverage_detector
+decided_at: "2026-07-27T00:00:00Z"
+decided_by: "product"
+kind: coverage_observation
+supersedes: dec_prose_coverage_deferral
+claims_fact_keys: []
+statement: |
+  Supersedes dec_prose_coverage_deferral, whose claim "Concord cannot
+  observe this" is no longer true: Concord now runs a deterministic
+  missing-coverage check — for every enabled availability feature, at
+  least one hand-authored documentation unit must mention it, or the run
+  raises a missing_coverage finding naming the fact owner. The Chat and
+  Terminal gaps themselves REMAIN OPEN: they surface as standing findings
+  in every run and as measured eval defects (def_missing_coverage_chat,
+  def_missing_coverage_terminal) until the documentation project writes
+  the pages. What changed is that the absence is now seen, not that it
+  is gone.
+notes_md: |
+  The detector is deliberately weak (one mention anywhere satisfies the
+  boolean; single-word vocabulary requires the capitalized product noun,
+  mirroring the term extractor) and purely deterministic — no model call.
+  Depth-of-coverage measurement is out of scope. claims_fact_keys stays
+  empty for the same reason as the superseded record. This record retires
+  when the standing findings clear AND depth of coverage is someone's job.

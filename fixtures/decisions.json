@@ -71,6 +71,17 @@
       "claims_fact_keys": [],
       "statement": "Relay shipped Chat and a browser Terminal\n(rel_2026_07_27_multi_surface_expansion) and no hand-authored\ndocumentation page mentions either surface. Concord cannot observe this:\nits extractors project registered facts onto existing text, so absence\nproduces no projection and no impact. Prose reconciliation is\ndeliberately deferred to the documentation project. This record is\nitself the detection.\n",
       "notes_md": "claims_fact_keys is deliberately empty: this record does not dispute any\nfact's value, it attests a coverage state — claiming the availability\nkeys would manufacture a third standing conflict and dilute the two\ncurated ones. The failures page renders coverage_observation records in\nits \"Blind spots observed in production\" section; the future\ndocumentation project finds its mandate by filtering the product-truth\nsnapshot for this kind, and should retire this record with a superseding\none when prose coverage lands.\n"
+    },
+    {
+      "source_file": "product-truth/decisions/2026-07-27-missing-coverage-detector.yaml",
+      "id": "dec_missing_coverage_detector",
+      "decided_at": "2026-07-27T00:00:00Z",
+      "decided_by": "product",
+      "kind": "coverage_observation",
+      "supersedes": "dec_prose_coverage_deferral",
+      "claims_fact_keys": [],
+      "statement": "Supersedes dec_prose_coverage_deferral, whose claim \"Concord cannot\nobserve this\" is no longer true: Concord now runs a deterministic\nmissing-coverage check — for every enabled availability feature, at\nleast one hand-authored documentation unit must mention it, or the run\nraises a missing_coverage finding naming the fact owner. The Chat and\nTerminal gaps themselves REMAIN OPEN: they surface as standing findings\nin every run and as measured eval defects (def_missing_coverage_chat,\ndef_missing_coverage_terminal) until the documentation project writes\nthe pages. What changed is that the absence is now seen, not that it\nis gone.\n",
+      "notes_md": "The detector is deliberately weak (one mention anywhere satisfies the\nboolean; single-word vocabulary requires the capitalized product noun,\nmirroring the term extractor) and purely deterministic — no model call.\nDepth-of-coverage measurement is out of scope. claims_fact_keys stays\nempty for the same reason as the superseded record. This record retires\nwhen the standing findings clear AND depth of coverage is someone's job.\n"
     }
   ]
 }

@@ -24,6 +24,9 @@
  *       CONTRADICTION     → a conflict on the fact key
  *       UNSUPPORTED_CLAIM → an insufficient_evidence conflict on the unit's
  *                           fact, or a model-extraction candidate finding
+ *       MISSING_COVERAGE  → a `missing_coverage` finding on the fact key
+ *                           (no doc unit exists — the defect IS the absence;
+ *                           these are clean-estate defects, injection null)
  *       DUP_GUIDANCE | MISSING_PREREQ | IA_PROBLEM → any of the above event
  *                           kinds anchored to the unit (these classes have
  *                           no dedicated detector yet — misses are expected
@@ -126,6 +129,8 @@ function eventMatchesDefect(event: DetectionEvent, defect: SeededDefect): boolea
       return event.kind === "conflict:insufficient_evidence" || event.kind === "inconsistent_value";
     case "UNDECLARED_FACT_REF":
       return event.kind === "undeclared_reference";
+    case "MISSING_COVERAGE":
+      return event.kind === "missing_coverage";
     case "DUP_GUIDANCE":
     case "MISSING_PREREQ":
     case "IA_PROBLEM":

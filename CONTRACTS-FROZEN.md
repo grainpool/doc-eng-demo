@@ -1,7 +1,7 @@
 # CONTRACTS-FROZEN — what Concord may rely on
 
 Frozen 2026-07-26 at `@relay/contracts` **1.0.0**, git tag `relay-contracts-v1`.
-Current version **1.4.0** (see the change log in §5).
+Current version **1.5.0** (see the change log in §5).
 Relay is a FIXTURE from here on. Concord (Phases 10+) is built against exactly
 this surface and nothing else.
 
@@ -84,3 +84,12 @@ copy entries do not require a bump; anything Concord parses does.
   `SEED_READ_ONLY`, `PROJECT_ARCHIVED`, `RESOURCE_IN_USE`, `CHAT_UNAVAILABLE`,
   `MESSAGE_TOO_LONG` (codes are additive-exempt but recorded here since the
   fact registry moved in the same version). Registry count 23 → 29.
+
+- 2026-07-27 — 1.5.0 — ADDITIVE (missing-coverage detector): `defects.ts` —
+  `MISSING_COVERAGE` added to `DEFECT_CLASSES` (an enum Concord's eval
+  harness parses, hence the bump). The class scores the new deterministic
+  absence check in concord-core (`missing_coverage` findings: an enabled
+  availability feature with zero hand-authored doc mentions escalates to
+  the fact owner, never a patch). No schema changed shape; the two §1
+  endpoints are untouched. Supersedes the blind spot recorded by
+  dec_prose_coverage_deferral (see dec_missing_coverage_detector).

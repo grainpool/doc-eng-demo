@@ -8,6 +8,7 @@ import {
   undocumentedFactFindings,
 } from "./consistency.js";
 import { arbitrateAll, type Arbitration } from "./authority.js";
+import { missingCoverageFindings } from "./coverage.js";
 import { detectConflicts } from "./conflicts.js";
 import { checkInternalLinks } from "./linkcheck.js";
 import { runGenerators } from "./generators/index.js";
@@ -200,6 +201,9 @@ export function runPipeline(input: PipelineInput): PipelineOutput {
     ...checkInternalLinks(units),
     // In-product copy rendering a fact it never declared (UNDECLARED_FACT_REF).
     ...undeclaredReferenceFindings(units, projections),
+    // An enabled feature no hand-authored documentation unit mentions
+    // (MISSING_COVERAGE) — the absence detector; escalation, never a patch.
+    ...missingCoverageFindings(input.current.facts, units),
   ];
 
   // Conflicts (Phase 15): detected before classification; a conflict on a

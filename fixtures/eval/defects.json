@@ -464,6 +464,39 @@
       "notes": "Removed preconditions leave no contradiction to measure — detection would need procedure modeling. Expected miss, analyzed on the failures page."
     },
     {
+      "id": "def_missing_coverage_chat",
+      "class": "MISSING_COVERAGE",
+      "doc_unit_id": "mintlify:docs-mintlify/chat.mdx#page",
+      "fact_key": "availability.feature.chat.platform.web",
+      "description": "Chat shipped (availability.feature.chat.platform.web: true, rel_2026_07_27_multi_surface_expansion) and no hand-authored documentation unit mentions it. The doc_unit_id names the page that does NOT exist — the defect is the absence; matching is by fact key.",
+      "injection": null,
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "notes": "The REAL production gap recorded by dec_prose_coverage_deferral, now measured: a standing missing_coverage finding in the clean estate. Stays a defect until the docs project writes the page."
+    },
+    {
+      "id": "def_missing_coverage_terminal",
+      "class": "MISSING_COVERAGE",
+      "doc_unit_id": "mintlify:docs-mintlify/terminal.mdx#page",
+      "fact_key": "availability.feature.terminal.platform.web",
+      "description": "The browser Terminal shipped (availability.feature.terminal.platform.web: true) and no hand-authored documentation unit mentions the surface. Every hand-authored occurrence of lowercase 'terminal' in the estate is the shell sense ('from your terminal') — the capitalized-noun vocabulary rule must not count those as coverage.",
+      "injection": null,
+      "expected_detection": true,
+      "expected_action": "EDITORIAL_REVIEW",
+      "notes": "The second half of the real production gap. Also exercises the vocabulary precision rule: shell-sense 'terminal' mentions exist and must not satisfy the check."
+    },
+    {
+      "id": "def_false_coverage_analysis_sessions",
+      "class": "MISSING_COVERAGE",
+      "doc_unit_id": "mintlify:docs-mintlify/analysis-sessions.mdx#page",
+      "fact_key": "availability.feature.analysis_sessions.platform.web",
+      "description": "NEGATIVE CONTROL: analysis_sessions is enabled AND covered by hand-authored prose (analysis-sessions.mdx and others). A missing_coverage finding here is a false positive.",
+      "injection": null,
+      "expected_detection": false,
+      "expected_action": "NO_ACTION",
+      "notes": "Asserts the covered side of the boolean: one genuine mention anywhere satisfies the check."
+    },
+    {
       "id": "def_false_matrix_dash_cells",
       "class": "WRONG_PLATFORM",
       "doc_unit_id": "generated:docs-mintlify/generated/availability-matrix.mdx#page",

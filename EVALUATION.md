@@ -23,28 +23,32 @@ analyzed defect-by-defect on the public
   by construction. The model leg (`EVAL_MODEL=1`, N=3) exercises falsification and reports
   suppression stability across repeats.
 
-## Current numbers (2026-07-26 run, corpus 36)
+## Current numbers (2026-07-27 run, corpus 39)
 
 | Metric | Value | Gate |
 |---|---|---|
-| Detection precision | 0.882 | investigate < 0.75 |
-| Detection recall (overall) | 0.484 | investigate < 0.70 — see analysis |
+| Detection precision | 0.895 | investigate < 0.75 |
+| Detection recall (overall) | 0.515 | investigate < 0.70 — see analysis |
 | False-positive rate | 0.0 | investigate > 0.20 |
 | Remediation correctness | 1.0 (over 3 patches) | report |
-| Escalation appropriateness | 0.286 | investigate < 0.80 — see analysis |
+| Escalation appropriateness | 0.375 | investigate < 0.80 — see analysis |
 | **Unsafe autofix count** | **0** | **hard gate: must be 0 — PASS** |
 | **Provenance completeness** | **1.0** | **hard gate: must be 1.0 — PASS** |
 
 Model leg: 4 non-deterministic findings falsified per run; suppression rate 0.25 with zero spread
-across N=3; 12 model calls ≈ $0.057.
+across N=3; 12 model calls ≈ $0.060.
 
 ## Reading the recall number honestly
 
-Overall recall 0.484 is a composite of two very different populations:
+Overall recall 0.515 is a composite of two very different populations:
 
 **What the fact graph models** — mechanical/structural drift — scores where it should:
 broken refs 3/3, stale in-product copy 1/1, term drift 3/4, undeclared fact refs 2/3,
-contradictions 2/3.
+contradictions 2/3, missing coverage 2/2. The MISSING_COVERAGE class is the absence
+detector added after the production blind spot recorded by dec_prose_coverage_deferral:
+its two positives are the REAL standing gap (Chat and Terminal shipped with zero
+hand-authored doc mentions), scored with `injection: null` against the clean estate,
+plus a covered-feature negative control.
 
 **What would require editorial judgment or capabilities that deliberately do not exist** scores 0,
 and each zero is analyzed as an *expected miss*: duplicate-guidance detection would need a
@@ -56,8 +60,8 @@ same reason: most expected escalations belong to classes the pipeline cannot see
 never reach the escalation stage.
 
 The design priority is stated in [ARCHITECTURE.md](ARCHITECTURE.md): precision over recall. A
-documentation robot that is wrong 1 time in 3 gets turned off; one that flags 48% of everything and
-is right 88% of the time (with **zero** unreviewed content changes) gets trusted with a PR button.
+documentation robot that is wrong 1 time in 3 gets turned off; one that flags 52% of everything and
+is right 90% of the time (with **zero** unreviewed content changes) gets trusted with a PR button.
 
 ## Agent-readable output (verified)
 
