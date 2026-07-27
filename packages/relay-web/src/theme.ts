@@ -61,6 +61,25 @@ a:focus-visible, button:focus-visible, input:focus-visible { ${c.focusRing} }
 .surface-fluid { max-width: none; }
 .terminal-panel { ${c.terminalPanel} }
 .shell-menu-toggle { display: none; }
+
+/* Chat surface (expansion Phase 4). Structural layout; colors from tokens. */
+.chat-surface { display: flex; gap: 1.5rem; align-items: flex-start; }
+.chat-threads { width: 200px; flex-shrink: 0; }
+.chat-thread-list { list-style: none; padding: 0; margin: 0.4em 0; }
+.chat-thread-list a { ${c.navItem} overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-thread-list a:hover { ${c.navItemHover} }
+.chat-thread-list a[aria-current="page"] { ${c.navItemActive} }
+.chat-main { flex: 1; min-width: 0; }
+.chat-viewport { min-height: 40vh; max-height: 62vh; overflow-y: auto; padding: 0.2em 0.2em 0.8em; }
+.chat-msg { margin: 0 0 1em; white-space: pre-wrap; overflow-wrap: break-word; }
+.chat-msg-user { background: ${theme.palette.surfaceAlt}; border-radius: 6px; padding: 0.6em 0.9em; margin-left: 15%; }
+.chat-msg-assistant { padding: 0 0.2em; }
+.chat-composer { display: flex; gap: 0.6em; align-items: flex-end; border-top: 1px solid ${theme.palette.border}; padding-top: 0.8em; }
+.chat-input { flex: 1; resize: vertical; min-height: 2.6em; }
+@media (max-width: 719px) {
+  .chat-surface { display: block; }
+  .chat-threads { width: auto; margin-bottom: 1em; }
+}
 @media (max-width: 719px) {
   .shell { display: block; }
   .shell-sidebar { width: auto; border-right: none; border-bottom: 1px solid ${theme.palette.border}; padding: 0.7em 0.8em; }

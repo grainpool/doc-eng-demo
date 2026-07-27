@@ -9,9 +9,11 @@
     "typegen": "wrangler types"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4",
     "@anthropic-ai/sdk": "^0.115.0",
     "@cloudflare/containers": "^0.0.28",
     "@relay/contracts": "workspace:*",
+    "ai": "^7",
     "hono": "^4.7.0",
     "zod": "^4.0.0"
   },

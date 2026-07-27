@@ -9,6 +9,7 @@ import { files } from "./routes/files.js";
 import { kernelInternal } from "./routes/kernel-internal.js";
 import { sessions } from "./routes/sessions.js";
 import { artifacts } from "./routes/artifacts.js";
+import { conversations } from "./routes/conversations.js";
 import { copyRegistry } from "./routes/copy-registry.js";
 import type { Env } from "./env.js";
 
@@ -38,6 +39,7 @@ app.route("/api", files);
 app.route("/api", kernelInternal);
 app.route("/api", sessions);
 app.route("/api", artifacts);
+app.route("/api", conversations);
 app.route("/api", copyRegistry);
 
 // Who the demo cookie says this browser is (expansion Phase 1). Relay-internal

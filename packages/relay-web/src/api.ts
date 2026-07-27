@@ -57,6 +57,25 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
+export interface Conversation {
+  id: string;
+  owner_id: string | null;
+  project_id: string | null;
+  title: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StoredChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  parts: unknown[];
+}
+
+export interface ConversationDetail extends Conversation {
+  messages: StoredChatMessage[];
+}
+
 export interface SessionRecord {
   id: string;
   project_id: string;
@@ -183,6 +202,29 @@ export const api = {
     ),
   deleteFile: (id: string) =>
     request<{ deleted: boolean }>(`/api/files/${id}`, { method: "DELETE" }),
+  createConversation: (fields?: { title?: string; project_id?: string }) =>
+    request<Conversation>("/api/conversations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(fields ?? {}),
+    }),
+  listConversations: () =>
+    request<{ conversations: Conversation[] }>("/api/conversations").then(
+      (r) => r.conversations,
+    ),
+  getConversation: (id: string) =>
+    request<ConversationDetail>(`/api/conversations/${id}`),
+  patchConversation: (
+    id: string,
+    fields: { title?: string; project_id?: string | null },
+  ) =>
+    request<Conversation>(`/api/conversations/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(fields),
+    }),
+  deleteConversation: (id: string) =>
+    request<{ deleted: boolean }>(`/api/conversations/${id}`, { method: "DELETE" }),
   listFiles: (projectId: string) =>
     request<{ files: FileRecord[] }>(`/api/projects/${projectId}/files`).then(
       (r) => r.files,

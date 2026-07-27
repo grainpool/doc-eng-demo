@@ -32,7 +32,7 @@ export const PRODUCT_CONFIG = Object.freeze({
     // Expansion surfaces (contracts 1.4.0). False until the phase that ships
     // each surface flips it — availability facts must never lead the product.
     chat: Object.freeze({
-      web: false,
+      web: true, // flipped by expansion Phase 4 — the surface that ships it
       ios: false,
       android: false,
       cli: false,

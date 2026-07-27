@@ -11,7 +11,11 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@ai-sdk/react": "^4",
+    "@assistant-ui/react": "^0.14.28",
+    "@assistant-ui/react-ai-sdk": "^1.4.0",
     "@relay/contracts": "workspace:*",
+    "ai": "^7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

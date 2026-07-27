@@ -15,7 +15,7 @@ export type Section =
 
 export interface RouteMatch {
   screen:
-    | { kind: "chat" }
+    | { kind: "chat"; id?: string }
     | { kind: "projects" }
     | { kind: "project"; id: string }
     | { kind: "analysis" }
@@ -37,7 +37,15 @@ export function resolveRoute(hash: string): RouteMatch | { redirect: string } {
   if (legacySession) return { redirect: `#/analysis/sessions/${legacySession[1]}` };
   if (hash === "#/health") return { redirect: "#/settings" };
 
-  if (hash === "#/chat") return { screen: { kind: "chat" }, section: "chat", width: "surface-reading" };
+  if (hash === "#/chat") return { screen: { kind: "chat" }, section: "chat", width: "surface-wide" };
+  const chatThread = new RegExp(`^#/chat/(cnv_[a-z0-9]+)$`).exec(hash);
+  if (chatThread) {
+    return {
+      screen: { kind: "chat", id: chatThread[1] as string },
+      section: "chat",
+      width: "surface-wide",
+    };
+  }
   if (hash === "#/projects") return { screen: { kind: "projects" }, section: "projects", width: "surface-reading" };
   const project = new RegExp(`^#/projects/${ID}$`).exec(hash);
   if (project) {

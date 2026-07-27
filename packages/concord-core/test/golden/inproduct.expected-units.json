@@ -126,17 +126,129 @@
     "generated": false
   },
   {
-    "id": "inproduct:in-product-copy/chat.json#chat.placeholder.title",
+    "id": "inproduct:in-product-copy/chat.json#chat.default_title",
     "path": "in-product-copy/chat.json",
-    "anchor": "chat.placeholder.title",
-    "title": "chat.placeholder.title",
+    "anchor": "chat.default_title",
+    "title": "chat.default_title",
     "generated": false
   },
   {
-    "id": "inproduct:in-product-copy/chat.json#chat.placeholder.body",
+    "id": "inproduct:in-product-copy/chat.json#chat.list.heading",
     "path": "in-product-copy/chat.json",
-    "anchor": "chat.placeholder.body",
-    "title": "chat.placeholder.body",
+    "anchor": "chat.list.heading",
+    "title": "chat.list.heading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.list.empty",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.list.empty",
+    "title": "chat.list.empty",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.new",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.new",
+    "title": "chat.new",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.loading",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.loading",
+    "title": "chat.loading",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.thread.empty",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.thread.empty",
+    "title": "chat.thread.empty",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.composer.placeholder",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.composer.placeholder",
+    "title": "chat.composer.placeholder",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.composer.send",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.composer.send",
+    "title": "chat.composer.send",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.composer.stop",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.composer.stop",
+    "title": "chat.composer.stop",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.actions.rename",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.actions.rename",
+    "title": "chat.actions.rename",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.actions.delete",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.actions.delete",
+    "title": "chat.actions.delete",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.delete.confirm",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.delete.confirm",
+    "title": "chat.delete.confirm",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.project.label",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.project.label",
+    "title": "chat.project.label",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.project.none",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.project.none",
+    "title": "chat.project.none",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.project.help",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.project.help",
+    "title": "chat.project.help",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#chat.error.generic",
+    "path": "in-product-copy/chat.json",
+    "anchor": "chat.error.generic",
+    "title": "chat.error.generic",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#error.chat.unavailable",
+    "path": "in-product-copy/chat.json",
+    "anchor": "error.chat.unavailable",
+    "title": "error.chat.unavailable",
+    "generated": false
+  },
+  {
+    "id": "inproduct:in-product-copy/chat.json#error.chat.message_too_long",
+    "path": "in-product-copy/chat.json",
+    "anchor": "error.chat.message_too_long",
+    "title": "error.chat.message_too_long",
     "generated": false
   },
   {

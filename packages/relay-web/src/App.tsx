@@ -1,15 +1,18 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { Suspense, lazy, useEffect, useState, type ReactNode } from "react";
 import { AppShell } from "./shell/AppShell.js";
 import { resolveRoute } from "./shell/routes.js";
 import { ProjectList } from "./screens/ProjectList.js";
 import { ProjectDetail } from "./screens/ProjectDetail.js";
 import { Session } from "./screens/Session.js";
 import { ArtifactDetail } from "./screens/ArtifactDetail.js";
-import { ChatPlaceholder } from "./screens/ChatPlaceholder.js";
 import { TerminalPlaceholder } from "./screens/TerminalPlaceholder.js";
 import { AnalysisEntry } from "./screens/AnalysisEntry.js";
 import { ArtifactsBrowse } from "./screens/ArtifactsBrowse.js";
 import { Settings } from "./screens/Settings.js";
+import { t } from "./copy.js";
+
+// Route-level code split: #/projects must not pay for the chat stack.
+const Chat = lazy(() => import("./screens/Chat.js"));
 
 function useHashRoute(): string {
   const [hash, setHash] = useState(location.hash);
@@ -33,7 +36,11 @@ export function App() {
   let screen: ReactNode;
   switch (route.screen.kind) {
     case "chat":
-      screen = <ChatPlaceholder />;
+      screen = (
+        <Suspense fallback={<p className="loading">{t("chat.loading")}</p>}>
+          <Chat conversationId={route.screen.id} />
+        </Suspense>
+      );
       break;
     case "projects":
       screen = <ProjectList />;
